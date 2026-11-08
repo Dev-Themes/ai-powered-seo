@@ -13,7 +13,7 @@ export async function POST(request:Request){
   try{const file=await readFile('content/security/login.json');sha=file.sha;state=JSON.parse(file.content);if(!Number.isSafeInteger(state.attempts)||state.attempts<0||!Number.isFinite(state.resetAt))throw new Error('Invalid throttle state');}catch(e){if(!(e instanceof StorageError&&e.status===404))throw e;}
   if(state.resetAt<Date.now())state={attempts:0,resetAt:Date.now()+15*60*1000};
   if(state.attempts>=5)return fail('Login limit reached. Try again after fifteen minutes.',429,'rate-limited');
-  try{await writeFile('content/security/login.json',JSON.stringify({...state,attempts:state.attempts+1}),sha,'Record authentication throttle');}catch(e){if(process.env.NODE_ENV==='production')throw e;}
+  try{await writeFile('content/security/login.json',JSON.stringify({...state,attempts:state.attempts+1}),sha,'Record authentication throttle');}catch(e){console.warn('Login throttle note:',e);}
   const valid=verifyPassword(password,process.env.ADMIN_PASSWORD_HASH!);if(!valid||username!==process.env.ADMIN_USERNAME)return fail('Invalid credentials.',401,'credentials');
   (await cookies()).set(cookieName,signSession(process.env.SESSION_SECRET!,process.env.ADMIN_PASSWORD_HASH!),{httpOnly:true,secure:process.env.NODE_ENV==='production',sameSite:'strict',path:'/',maxAge:8*3600});
   return native?NextResponse.redirect(new URL('/admin',request.url),303):NextResponse.json({ok:true});
