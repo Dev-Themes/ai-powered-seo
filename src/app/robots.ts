@@ -1,0 +1,1 @@
+import type {MetadataRoute} from 'next';import {ORIGIN} from '@/lib/schema';export default function robots():MetadataRoute.Robots{return {rules:{userAgent:'*',allow:'/',disallow:['/admin','/api','/search']},sitemap:ORIGIN+'/sitemap.xml',host:ORIGIN};}

@@ -1,0 +1,16 @@
+{
+  "measuredAt": "2026-11-08T10:25:27.826Z",
+  "url": "http://localhost:3100/",
+  "viewport": 375,
+  "metrics": {
+    "lcp": 220,
+    "cls": 0
+  },
+  "ttfbMs": 26.80000001192093,
+  "domContentLoadedMs": 199.19999998807907,
+  "transferredResourceBytes": 201822,
+  "limitations": [
+    "Local Chromium, no throttling, empty published collection; not Lighthouse or field Core Web Vitals.",
+    "No interaction-to-next-paint measurement is claimed."
+  ]
+}

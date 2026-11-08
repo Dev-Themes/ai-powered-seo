@@ -1,0 +1,70 @@
+{
+  "id": "audit-1794147101221",
+  "createdAt": "2026-11-08T14:11:41.196Z",
+  "status": "complete",
+  "data": {
+    "issues": [
+      {
+        "slug": "a-better-film-night-at-home",
+        "severity": "review",
+        "message": "Editorial and factual review pending."
+      },
+      {
+        "slug": "a-more-considered-small-living-room",
+        "severity": "review",
+        "message": "Editorial and factual review pending."
+      },
+      {
+        "slug": "a-reading-ritual-that-fits-real-life",
+        "severity": "review",
+        "message": "Editorial and factual review pending."
+      },
+      {
+        "slug": "a-slower-weekend-close-to-home",
+        "severity": "review",
+        "message": "Editorial and factual review pending."
+      },
+      {
+        "slug": "a-small-herb-garden-in-pots",
+        "severity": "review",
+        "message": "Editorial and factual review pending."
+      },
+      {
+        "slug": "book-to-screen-adaptations-how-to-watch",
+        "severity": "review",
+        "message": "Editorial and factual review pending."
+      },
+      {
+        "slug": "check-an-online-claim-before-sharing",
+        "severity": "review",
+        "message": "Editorial and factual review pending."
+      },
+      {
+        "slug": "how-to-choose-a-theatre-seat",
+        "severity": "review",
+        "message": "Editorial and factual review pending."
+      },
+      {
+        "slug": "how-to-enjoy-a-museum-without-seeing-everything",
+        "severity": "review",
+        "message": "Editorial and factual review pending."
+      },
+      {
+        "slug": "make-your-phone-less-distracting",
+        "severity": "review",
+        "message": "Editorial and factual review pending."
+      },
+      {
+        "slug": "rediscover-your-local-library",
+        "severity": "review",
+        "message": "Editorial and factual review pending."
+      },
+      {
+        "slug": "review-your-streaming-subscriptions",
+        "severity": "review",
+        "message": "Editorial and factual review pending."
+      }
+    ],
+    "scope": "Content metadata and review checks; rendered SEO and performance require separate browser checks."
+  }
+}

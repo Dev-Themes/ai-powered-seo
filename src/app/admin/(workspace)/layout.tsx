@@ -1,0 +1,1 @@
+import {requireAdmin} from '@/lib/auth';import {AdminNav} from '@/components/admin/nav';export const dynamic='force-dynamic';export default async function WorkspaceLayout({children}:{children:React.ReactNode}){await requireAdmin();return <div className="container admin-shell"><AdminNav/><div className="admin-content">{children}</div></div>;}

@@ -1,0 +1,95 @@
+{
+  "id": "monthly-1794133403914",
+  "createdAt": "2026-11-08T10:23:23.847Z",
+  "status": "partial",
+  "data": {
+    "metrics": {
+      "collectedAt": "2026-11-08T10:23:23.903Z",
+      "period": {
+        "start": "2026-10-08",
+        "end": "2026-11-04",
+        "previousStart": "2026-09-10",
+        "previousEnd": "2026-10-07"
+      },
+      "caveats": [
+        "Search Console uses final data with a four-day safety lag. Top query rows can be incomplete and anonymised.",
+        "Average position is aggregated search appearance, not a live or guaranteed rank.",
+        "GA4 organic sessions and Search Console clicks are separate measurements."
+      ],
+      "sources": {
+        "totals": {
+          "status": "unavailable",
+          "message": "Data unavailable. Check credentials, property access and API quota."
+        },
+        "trend": {
+          "status": "unavailable",
+          "message": "Data unavailable. Check credentials, property access and API quota."
+        },
+        "queries": {
+          "status": "unavailable",
+          "message": "Data unavailable. Check credentials, property access and API quota."
+        },
+        "devices": {
+          "status": "unavailable",
+          "message": "Data unavailable. Check credentials, property access and API quota."
+        },
+        "countries": {
+          "status": "unavailable",
+          "message": "Data unavailable. Check credentials, property access and API quota."
+        },
+        "branded": {
+          "status": "unavailable",
+          "message": "Data unavailable. Check credentials, property access and API quota."
+        },
+        "homepage": {
+          "status": "unavailable",
+          "message": "Data unavailable. Check credentials, property access and API quota."
+        },
+        "previousPeriod": {
+          "status": "unavailable",
+          "message": "Data unavailable. Check credentials, property access and API quota."
+        },
+        "previousBranded": {
+          "status": "unavailable",
+          "message": "Data unavailable. Check credentials, property access and API quota."
+        },
+        "previousHomepage": {
+          "status": "unavailable",
+          "message": "Data unavailable. Check credentials, property access and API quota."
+        },
+        "ga4": {
+          "status": "unavailable",
+          "message": "Data unavailable. Check credentials, property access and API quota."
+        }
+      }
+    },
+    "comparison": {
+      "site": {
+        "status": "unavailable",
+        "reason": "Both periods need returned data; absent rows are not assumed to be zero."
+      },
+      "brandedKeywords": [
+        {
+          "query": "spot magazine",
+          "status": "unavailable",
+          "reason": "Both periods need returned data; absent rows are not assumed to be zero."
+        },
+        {
+          "query": "spotmagazine.co.uk",
+          "status": "unavailable",
+          "reason": "Both periods need returned data; absent rows are not assumed to be zero."
+        }
+      ],
+      "homepagePreviousPeriod": {
+        "status": "unavailable"
+      }
+    },
+    "reviewChecklist": [
+      "Review both branded keywords and homepage visibility.",
+      "Compare the current and prior 28-day Search Console totals; do not sum average positions.",
+      "Inspect available landing pages and engagement separately from search clicks."
+    ],
+    "refreshCandidates": [],
+    "limitations": "Comparison uses adjacent final 28-day windows, not calendar months. Missing sources remain unavailable."
+  }
+}

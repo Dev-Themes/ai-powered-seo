@@ -1,0 +1,6 @@
+[
+  {"slug":"entertainment","name":"Entertainment & Celebrities","short":"Entertainment","description":"The stage, the screen and the stories that stay with us."},
+  {"slug":"lifestyle","name":"Lifestyle & Living","short":"Lifestyle","description":"Small discoveries for a more considered everyday."},
+  {"slug":"culture","name":"UK Culture & Trends","short":"Culture","description":"People, places and ideas shaping British life."},
+  {"slug":"technology","name":"Technology & Digital Life","short":"Digital life","description":"A thoughtful relationship with an increasingly connected world."}
+]

@@ -1,0 +1,42 @@
+{
+  "id": "recommend-1794147114880",
+  "createdAt": "2026-11-08T14:11:41.196Z",
+  "status": "complete",
+  "data": {
+    "summary": "Spot Magazine's current article suite provides high-quality, practical editorial content focused on 'low-friction' lifestyle management. However, technical performance metrics (GA4, Search Console) are currently unavailable, preventing data-driven prioritization of SEO efforts. The editorial strategy is strong on topical depth but requires a structured approach to internal linking and metadata refinement to improve search visibility once metrics are restored.",
+    "recommendations": [
+      {
+        "priority": "high",
+        "slug": "all",
+        "action": "Implement consistent Meta Descriptions and Open Graph tags across all articles.",
+        "evidence": "Existing articles have brief descriptions, but lack explicit structured data or optimized meta-tags for social sharing and search engines.",
+        "limitations": "Requires CMS template updates to support site-wide meta fields.",
+        "requiresApproval": true
+      },
+      {
+        "priority": "medium",
+        "slug": "a-better-film-night-at-home",
+        "action": "Add an internal link to 'book-to-screen-adaptations-how-to-watch' within the main film night article.",
+        "evidence": "The text references book-to-screen adaptations as a potential activity; direct linking would improve user navigation and topical relevance.",
+        "limitations": "Need to ensure anchor text is descriptive and fits natural reading flow.",
+        "requiresApproval": true
+      },
+      {
+        "priority": "medium",
+        "slug": "rediscover-your-local-library",
+        "action": "Refresh the article to ensure all GOV.UK and local service links are current, as library service portals often change.",
+        "evidence": "Library services are highly localized and links to search portals are prone to technical decay.",
+        "limitations": "Periodic maintenance is required as local council digital infrastructure evolves.",
+        "requiresApproval": true
+      },
+      {
+        "priority": "low",
+        "slug": "a-small-herb-garden-in-pots",
+        "action": "Create a new 'Seasonal Herb Calendar' article to fill the topical gap in the current gardening series.",
+        "evidence": "The current guide covers setup, but readers seeking specific planting times would benefit from a seasonal guide to complement the static advice.",
+        "limitations": "Requires horticultural expertise to ensure advice remains accurate and seasonal.",
+        "requiresApproval": true
+      }
+    ]
+  }
+}

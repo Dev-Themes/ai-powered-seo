@@ -1,0 +1,202 @@
+{
+  "auditedAt": "2026-11-08",
+  "method": "Read-only web retrieval of homepage and linked pages. Cached retrieval may not reflect current HTTP status. Raw headers and canonical tags were unavailable.",
+  "complete": false,
+  "limitations": [
+    "Sitemaps and robots.txt could not be retrieved.",
+    "No Google credentials: organic page value cannot be assessed.",
+    "Full WordPress export and server-level crawl remain required."
+  ],
+  "pages": [
+    {
+      "url": "https://spotmagazine.co.uk/",
+      "observedTitle": "Spotmagazine",
+      "status": null,
+      "canonical": null,
+      "discoveredFrom": "https://spotmagazine.co.uk/",
+      "internalLinks": [
+        "https://spotmagazine.co.uk/jo-blythe/",
+        "https://spotmagazine.co.uk/lee-juggurnauth-partner/",
+        "https://spotmagazine.co.uk/bbc-weather-london/",
+        "https://spotmagazine.co.uk/mark-heap/",
+        "https://spotmagazine.co.uk/fast-food-near-me/",
+        "https://spotmagazine.co.uk/ketchikan-alaska/",
+        "https://spotmagazine.co.uk/how-to-get-started-with-free-tiktok-scraping-api-on-ensembledata/",
+        "https://spotmagazine.co.uk/rosa-collier/",
+        "https://spotmagazine.co.uk/petir108win-online/",
+        "https://spotmagazine.co.uk/guts-olivia-rodrigo/",
+        "https://spotmagazine.co.uk/keine-karriere-subdomain-gefunden/",
+        "https://spotmagazine.co.uk/first-read/",
+        "https://spotmagazine.co.uk/what-are-fiis-buying-and-why-it-matters/",
+        "https://spotmagazine.co.uk/ferrari-f40-for-sale/",
+        "https://spotmagazine.co.uk/marble-for-counter/",
+        "https://spotmagazine.co.uk/about-us/",
+        "https://spotmagazine.co.uk/privacy-policy/",
+        "https://spotmagazine.co.uk/contact-us/"
+      ],
+      "decision": "Preserve homepage after launch approval"
+    },
+    {
+      "url": "https://spotmagazine.co.uk/jo-blythe/",
+      "observedTitle": "Jo Blythe: ITV Weather Presenter Career, Biography, Age & Family Life",
+      "status": null,
+      "canonical": null,
+      "discoveredFrom": "https://spotmagazine.co.uk/",
+      "internalLinks": null,
+      "decision": "Preserve/import original after review; no unrelated guide redirect"
+    },
+    {
+      "url": "https://spotmagazine.co.uk/lee-juggurnauth-partner/",
+      "observedTitle": "Lee Juggurnauth Partner: Relationship Status & Personal Life",
+      "status": null,
+      "canonical": null,
+      "discoveredFrom": "https://spotmagazine.co.uk/",
+      "internalLinks": null,
+      "decision": "Preserve/import original after review; no unrelated guide redirect"
+    },
+    {
+      "url": "https://spotmagazine.co.uk/bbc-weather-london/",
+      "observedTitle": "What Does BBC Weather London Forecast for Today and the Week Ahead?",
+      "status": null,
+      "canonical": null,
+      "discoveredFrom": "https://spotmagazine.co.uk/",
+      "internalLinks": null,
+      "decision": "Preserve/import original after review; no unrelated guide redirect"
+    },
+    {
+      "url": "https://spotmagazine.co.uk/mark-heap/",
+      "observedTitle": "What Is Mark Heap Known For? Complete Career and Life Explained",
+      "status": null,
+      "canonical": null,
+      "discoveredFrom": "https://spotmagazine.co.uk/",
+      "internalLinks": null,
+      "decision": "Preserve/import original after review; no unrelated guide redirect"
+    },
+    {
+      "url": "https://spotmagazine.co.uk/fast-food-near-me/",
+      "observedTitle": "Fast Food Near Me: How to Find the Best Options Quickly (and Actually Enjoy Your Meal)",
+      "status": null,
+      "canonical": null,
+      "discoveredFrom": "https://spotmagazine.co.uk/",
+      "internalLinks": null,
+      "decision": "Preserve/import original after review; no unrelated guide redirect"
+    },
+    {
+      "url": "https://spotmagazine.co.uk/ketchikan-alaska/",
+      "observedTitle": "Ketchikan Alaska: The Complete Guide to Alaska’s First City",
+      "status": null,
+      "canonical": null,
+      "discoveredFrom": "https://spotmagazine.co.uk/",
+      "internalLinks": null,
+      "decision": "Preserve/import original after review; no unrelated guide redirect"
+    },
+    {
+      "url": "https://spotmagazine.co.uk/how-to-get-started-with-free-tiktok-scraping-api-on-ensembledata/",
+      "observedTitle": "How to Get Started with Free TikTok Scraping API on EnsembleData?",
+      "status": null,
+      "canonical": null,
+      "discoveredFrom": "https://spotmagazine.co.uk/",
+      "internalLinks": null,
+      "decision": "Preserve/import original after review; no unrelated guide redirect"
+    },
+    {
+      "url": "https://spotmagazine.co.uk/rosa-collier/",
+      "observedTitle": "Rosa Collier: The Talented Stage Actress Behind the Headlines",
+      "status": null,
+      "canonical": null,
+      "discoveredFrom": "https://spotmagazine.co.uk/",
+      "internalLinks": null,
+      "decision": "Preserve/import original after review; no unrelated guide redirect"
+    },
+    {
+      "url": "https://spotmagazine.co.uk/petir108win-online/",
+      "observedTitle": "Petir108win.online Guide: Features, Access & Insights",
+      "status": null,
+      "canonical": null,
+      "discoveredFrom": "https://spotmagazine.co.uk/",
+      "internalLinks": null,
+      "decision": "Preserve/import original after review; no unrelated guide redirect"
+    },
+    {
+      "url": "https://spotmagazine.co.uk/guts-olivia-rodrigo/",
+      "observedTitle": "GUTS Olivia Rodrigo: A Deep Dive into the Album, Vinyl, Logo",
+      "status": null,
+      "canonical": null,
+      "discoveredFrom": "https://spotmagazine.co.uk/",
+      "internalLinks": null,
+      "decision": "Preserve/import original after review; no unrelated guide redirect"
+    },
+    {
+      "url": "https://spotmagazine.co.uk/keine-karriere-subdomain-gefunden/",
+      "observedTitle": "Keine Karriere-Subdomain Gefunden – Causes & Fixes",
+      "status": null,
+      "canonical": null,
+      "discoveredFrom": "https://spotmagazine.co.uk/",
+      "internalLinks": null,
+      "decision": "Preserve/import original after review; no unrelated guide redirect"
+    },
+    {
+      "url": "https://spotmagazine.co.uk/first-read/",
+      "observedTitle": "First Read Why Your Initial Encounter With Content Shapes",
+      "status": null,
+      "canonical": null,
+      "discoveredFrom": "https://spotmagazine.co.uk/",
+      "internalLinks": null,
+      "decision": "Preserve/import original after review; no unrelated guide redirect"
+    },
+    {
+      "url": "https://spotmagazine.co.uk/what-are-fiis-buying-and-why-it-matters/",
+      "observedTitle": "What Are FIIs Buying (And Why It Matters)",
+      "status": null,
+      "canonical": null,
+      "discoveredFrom": "https://spotmagazine.co.uk/",
+      "internalLinks": null,
+      "decision": "Preserve/import original after review; no unrelated guide redirect"
+    },
+    {
+      "url": "https://spotmagazine.co.uk/ferrari-f40-for-sale/",
+      "observedTitle": "Ferrari F40 for Sale Current Prices Rare Versions & Collector Guide",
+      "status": null,
+      "canonical": null,
+      "discoveredFrom": "https://spotmagazine.co.uk/",
+      "internalLinks": null,
+      "decision": "Preserve/import original after review; no unrelated guide redirect"
+    },
+    {
+      "url": "https://spotmagazine.co.uk/marble-for-counter/",
+      "observedTitle": "Choosing the Right Marble for Counter: A Comprehensive Guide for Homeowners",
+      "status": null,
+      "canonical": null,
+      "discoveredFrom": "https://spotmagazine.co.uk/",
+      "internalLinks": null,
+      "decision": "Preserve/import original after review; no unrelated guide redirect"
+    },
+    {
+      "url": "https://spotmagazine.co.uk/about-us/",
+      "observedTitle": "About Us - Spotmagazine",
+      "status": null,
+      "canonical": null,
+      "discoveredFrom": "https://spotmagazine.co.uk/",
+      "internalLinks": null,
+      "decision": "Equivalent redirect proposed; approval required"
+    },
+    {
+      "url": "https://spotmagazine.co.uk/privacy-policy/",
+      "observedTitle": "Privacy Policy - Spotmagazine",
+      "status": null,
+      "canonical": null,
+      "discoveredFrom": "https://spotmagazine.co.uk/",
+      "internalLinks": null,
+      "decision": "Preserve path; owner review of policy required"
+    },
+    {
+      "url": "https://spotmagazine.co.uk/contact-us/",
+      "observedTitle": "Contact Us - Spotmagazine",
+      "status": null,
+      "canonical": null,
+      "discoveredFrom": "https://spotmagazine.co.uk/",
+      "internalLinks": null,
+      "decision": "Equivalent redirect proposed; approval required"
+    }
+  ]
+}

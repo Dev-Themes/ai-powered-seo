@@ -1,0 +1,26 @@
+{
+  "recordedAt": "2026-11-08T12:37:58.753Z",
+  "build": "passed",
+  "lint": "passed",
+  "strictTypeScript": "passed",
+  "unitTests": 13,
+  "productionBrowser": {
+    "startTime": "2026-11-08T12:34:19.430Z",
+    "duration": 32686.41,
+    "expected": 11,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "localRenderedChecks": 140,
+  "mainPortForward": true,
+  "adminLogin": true,
+  "availableDetailedArticles": 12,
+  "filter": true,
+  "buttonHover": {
+    "before": "0% 100%",
+    "after": "100% 100%"
+  },
+  "browserErrors": [],
+  "notes": "No database or production changes. Local review credentials remain restricted to development."
+}

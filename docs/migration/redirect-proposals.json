@@ -1,0 +1,14 @@
+[
+  {
+    "source": "/about-us",
+    "destination": "/about",
+    "statusCode": 301,
+    "approved": false
+  },
+  {
+    "source": "/contact-us",
+    "destination": "/contact",
+    "statusCode": 301,
+    "approved": false
+  }
+]

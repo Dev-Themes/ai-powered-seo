@@ -1,0 +1,2 @@
+import {randomBytes,scryptSync} from 'node:crypto';import readline from 'node:readline';
+if(!process.stdin.isTTY){console.error('Run in an interactive terminal.');process.exit(1);}const rl=readline.createInterface({input:process.stdin,output:process.stdout});process.stdout.write('Password (input hidden): ');rl._writeToOutput=()=>{};rl.question('',password=>{rl.close();if(password.length<16){console.error('Use at least 16 characters.');process.exit(1);}const salt=randomBytes(32).toString('hex');console.log('\nscrypt:'+salt+':'+scryptSync(password,salt,64).toString('hex'));});

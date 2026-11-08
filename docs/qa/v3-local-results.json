@@ -1,0 +1,854 @@
+{
+  "recordedAt": "2026-11-08T12:33:26.508Z",
+  "checks": [
+    {
+      "path": "/",
+      "width": 320,
+      "theme": "light",
+      "overflow": false
+    },
+    {
+      "path": "/articles",
+      "width": 320,
+      "theme": "light",
+      "overflow": false
+    },
+    {
+      "path": "/category/culture",
+      "width": 320,
+      "theme": "light",
+      "overflow": false
+    },
+    {
+      "path": "/category/lifestyle",
+      "width": 320,
+      "theme": "light",
+      "overflow": false
+    },
+    {
+      "path": "/category/entertainment",
+      "width": 320,
+      "theme": "light",
+      "overflow": false
+    },
+    {
+      "path": "/category/technology",
+      "width": 320,
+      "theme": "light",
+      "overflow": false
+    },
+    {
+      "path": "/about",
+      "width": 320,
+      "theme": "light",
+      "overflow": false
+    },
+    {
+      "path": "/search?q=reading",
+      "width": 320,
+      "theme": "light",
+      "overflow": false
+    },
+    {
+      "path": "/articles/a-better-film-night-at-home",
+      "width": 320,
+      "theme": "light",
+      "overflow": false
+    },
+    {
+      "path": "/admin",
+      "width": 320,
+      "theme": "light",
+      "overflow": false
+    },
+    {
+      "path": "/",
+      "width": 375,
+      "theme": "light",
+      "overflow": false
+    },
+    {
+      "path": "/articles",
+      "width": 375,
+      "theme": "light",
+      "overflow": false
+    },
+    {
+      "path": "/category/culture",
+      "width": 375,
+      "theme": "light",
+      "overflow": false
+    },
+    {
+      "path": "/category/lifestyle",
+      "width": 375,
+      "theme": "light",
+      "overflow": false
+    },
+    {
+      "path": "/category/entertainment",
+      "width": 375,
+      "theme": "light",
+      "overflow": false
+    },
+    {
+      "path": "/category/technology",
+      "width": 375,
+      "theme": "light",
+      "overflow": false
+    },
+    {
+      "path": "/about",
+      "width": 375,
+      "theme": "light",
+      "overflow": false
+    },
+    {
+      "path": "/search?q=reading",
+      "width": 375,
+      "theme": "light",
+      "overflow": false
+    },
+    {
+      "path": "/articles/a-better-film-night-at-home",
+      "width": 375,
+      "theme": "light",
+      "overflow": false
+    },
+    {
+      "path": "/admin",
+      "width": 375,
+      "theme": "light",
+      "overflow": false
+    },
+    {
+      "path": "/",
+      "width": 425,
+      "theme": "light",
+      "overflow": false
+    },
+    {
+      "path": "/articles",
+      "width": 425,
+      "theme": "light",
+      "overflow": false
+    },
+    {
+      "path": "/category/culture",
+      "width": 425,
+      "theme": "light",
+      "overflow": false
+    },
+    {
+      "path": "/category/lifestyle",
+      "width": 425,
+      "theme": "light",
+      "overflow": false
+    },
+    {
+      "path": "/category/entertainment",
+      "width": 425,
+      "theme": "light",
+      "overflow": false
+    },
+    {
+      "path": "/category/technology",
+      "width": 425,
+      "theme": "light",
+      "overflow": false
+    },
+    {
+      "path": "/about",
+      "width": 425,
+      "theme": "light",
+      "overflow": false
+    },
+    {
+      "path": "/search?q=reading",
+      "width": 425,
+      "theme": "light",
+      "overflow": false
+    },
+    {
+      "path": "/articles/a-better-film-night-at-home",
+      "width": 425,
+      "theme": "light",
+      "overflow": false
+    },
+    {
+      "path": "/admin",
+      "width": 425,
+      "theme": "light",
+      "overflow": false
+    },
+    {
+      "path": "/",
+      "width": 768,
+      "theme": "light",
+      "overflow": false
+    },
+    {
+      "path": "/articles",
+      "width": 768,
+      "theme": "light",
+      "overflow": false
+    },
+    {
+      "path": "/category/culture",
+      "width": 768,
+      "theme": "light",
+      "overflow": false
+    },
+    {
+      "path": "/category/lifestyle",
+      "width": 768,
+      "theme": "light",
+      "overflow": false
+    },
+    {
+      "path": "/category/entertainment",
+      "width": 768,
+      "theme": "light",
+      "overflow": false
+    },
+    {
+      "path": "/category/technology",
+      "width": 768,
+      "theme": "light",
+      "overflow": false
+    },
+    {
+      "path": "/about",
+      "width": 768,
+      "theme": "light",
+      "overflow": false
+    },
+    {
+      "path": "/search?q=reading",
+      "width": 768,
+      "theme": "light",
+      "overflow": false
+    },
+    {
+      "path": "/articles/a-better-film-night-at-home",
+      "width": 768,
+      "theme": "light",
+      "overflow": false
+    },
+    {
+      "path": "/admin",
+      "width": 768,
+      "theme": "light",
+      "overflow": false
+    },
+    {
+      "path": "/",
+      "width": 1024,
+      "theme": "light",
+      "overflow": false
+    },
+    {
+      "path": "/articles",
+      "width": 1024,
+      "theme": "light",
+      "overflow": false
+    },
+    {
+      "path": "/category/culture",
+      "width": 1024,
+      "theme": "light",
+      "overflow": false
+    },
+    {
+      "path": "/category/lifestyle",
+      "width": 1024,
+      "theme": "light",
+      "overflow": false
+    },
+    {
+      "path": "/category/entertainment",
+      "width": 1024,
+      "theme": "light",
+      "overflow": false
+    },
+    {
+      "path": "/category/technology",
+      "width": 1024,
+      "theme": "light",
+      "overflow": false
+    },
+    {
+      "path": "/about",
+      "width": 1024,
+      "theme": "light",
+      "overflow": false
+    },
+    {
+      "path": "/search?q=reading",
+      "width": 1024,
+      "theme": "light",
+      "overflow": false
+    },
+    {
+      "path": "/articles/a-better-film-night-at-home",
+      "width": 1024,
+      "theme": "light",
+      "overflow": false
+    },
+    {
+      "path": "/admin",
+      "width": 1024,
+      "theme": "light",
+      "overflow": false
+    },
+    {
+      "path": "/",
+      "width": 1440,
+      "theme": "light",
+      "overflow": false
+    },
+    {
+      "path": "/articles",
+      "width": 1440,
+      "theme": "light",
+      "overflow": false
+    },
+    {
+      "path": "/category/culture",
+      "width": 1440,
+      "theme": "light",
+      "overflow": false
+    },
+    {
+      "path": "/category/lifestyle",
+      "width": 1440,
+      "theme": "light",
+      "overflow": false
+    },
+    {
+      "path": "/category/entertainment",
+      "width": 1440,
+      "theme": "light",
+      "overflow": false
+    },
+    {
+      "path": "/category/technology",
+      "width": 1440,
+      "theme": "light",
+      "overflow": false
+    },
+    {
+      "path": "/about",
+      "width": 1440,
+      "theme": "light",
+      "overflow": false
+    },
+    {
+      "path": "/search?q=reading",
+      "width": 1440,
+      "theme": "light",
+      "overflow": false
+    },
+    {
+      "path": "/articles/a-better-film-night-at-home",
+      "width": 1440,
+      "theme": "light",
+      "overflow": false
+    },
+    {
+      "path": "/admin",
+      "width": 1440,
+      "theme": "light",
+      "overflow": false
+    },
+    {
+      "path": "/",
+      "width": 1920,
+      "theme": "light",
+      "overflow": false
+    },
+    {
+      "path": "/articles",
+      "width": 1920,
+      "theme": "light",
+      "overflow": false
+    },
+    {
+      "path": "/category/culture",
+      "width": 1920,
+      "theme": "light",
+      "overflow": false
+    },
+    {
+      "path": "/category/lifestyle",
+      "width": 1920,
+      "theme": "light",
+      "overflow": false
+    },
+    {
+      "path": "/category/entertainment",
+      "width": 1920,
+      "theme": "light",
+      "overflow": false
+    },
+    {
+      "path": "/category/technology",
+      "width": 1920,
+      "theme": "light",
+      "overflow": false
+    },
+    {
+      "path": "/about",
+      "width": 1920,
+      "theme": "light",
+      "overflow": false
+    },
+    {
+      "path": "/search?q=reading",
+      "width": 1920,
+      "theme": "light",
+      "overflow": false
+    },
+    {
+      "path": "/articles/a-better-film-night-at-home",
+      "width": 1920,
+      "theme": "light",
+      "overflow": false
+    },
+    {
+      "path": "/admin",
+      "width": 1920,
+      "theme": "light",
+      "overflow": false
+    },
+    {
+      "path": "/",
+      "width": 320,
+      "theme": "dark",
+      "overflow": false
+    },
+    {
+      "path": "/articles",
+      "width": 320,
+      "theme": "dark",
+      "overflow": false
+    },
+    {
+      "path": "/category/culture",
+      "width": 320,
+      "theme": "dark",
+      "overflow": false
+    },
+    {
+      "path": "/category/lifestyle",
+      "width": 320,
+      "theme": "dark",
+      "overflow": false
+    },
+    {
+      "path": "/category/entertainment",
+      "width": 320,
+      "theme": "dark",
+      "overflow": false
+    },
+    {
+      "path": "/category/technology",
+      "width": 320,
+      "theme": "dark",
+      "overflow": false
+    },
+    {
+      "path": "/about",
+      "width": 320,
+      "theme": "dark",
+      "overflow": false
+    },
+    {
+      "path": "/search?q=reading",
+      "width": 320,
+      "theme": "dark",
+      "overflow": false
+    },
+    {
+      "path": "/articles/a-better-film-night-at-home",
+      "width": 320,
+      "theme": "dark",
+      "overflow": false
+    },
+    {
+      "path": "/admin",
+      "width": 320,
+      "theme": "dark",
+      "overflow": false
+    },
+    {
+      "path": "/",
+      "width": 375,
+      "theme": "dark",
+      "overflow": false
+    },
+    {
+      "path": "/articles",
+      "width": 375,
+      "theme": "dark",
+      "overflow": false
+    },
+    {
+      "path": "/category/culture",
+      "width": 375,
+      "theme": "dark",
+      "overflow": false
+    },
+    {
+      "path": "/category/lifestyle",
+      "width": 375,
+      "theme": "dark",
+      "overflow": false
+    },
+    {
+      "path": "/category/entertainment",
+      "width": 375,
+      "theme": "dark",
+      "overflow": false
+    },
+    {
+      "path": "/category/technology",
+      "width": 375,
+      "theme": "dark",
+      "overflow": false
+    },
+    {
+      "path": "/about",
+      "width": 375,
+      "theme": "dark",
+      "overflow": false
+    },
+    {
+      "path": "/search?q=reading",
+      "width": 375,
+      "theme": "dark",
+      "overflow": false
+    },
+    {
+      "path": "/articles/a-better-film-night-at-home",
+      "width": 375,
+      "theme": "dark",
+      "overflow": false
+    },
+    {
+      "path": "/admin",
+      "width": 375,
+      "theme": "dark",
+      "overflow": false
+    },
+    {
+      "path": "/",
+      "width": 425,
+      "theme": "dark",
+      "overflow": false
+    },
+    {
+      "path": "/articles",
+      "width": 425,
+      "theme": "dark",
+      "overflow": false
+    },
+    {
+      "path": "/category/culture",
+      "width": 425,
+      "theme": "dark",
+      "overflow": false
+    },
+    {
+      "path": "/category/lifestyle",
+      "width": 425,
+      "theme": "dark",
+      "overflow": false
+    },
+    {
+      "path": "/category/entertainment",
+      "width": 425,
+      "theme": "dark",
+      "overflow": false
+    },
+    {
+      "path": "/category/technology",
+      "width": 425,
+      "theme": "dark",
+      "overflow": false
+    },
+    {
+      "path": "/about",
+      "width": 425,
+      "theme": "dark",
+      "overflow": false
+    },
+    {
+      "path": "/search?q=reading",
+      "width": 425,
+      "theme": "dark",
+      "overflow": false
+    },
+    {
+      "path": "/articles/a-better-film-night-at-home",
+      "width": 425,
+      "theme": "dark",
+      "overflow": false
+    },
+    {
+      "path": "/admin",
+      "width": 425,
+      "theme": "dark",
+      "overflow": false
+    },
+    {
+      "path": "/",
+      "width": 768,
+      "theme": "dark",
+      "overflow": false
+    },
+    {
+      "path": "/articles",
+      "width": 768,
+      "theme": "dark",
+      "overflow": false
+    },
+    {
+      "path": "/category/culture",
+      "width": 768,
+      "theme": "dark",
+      "overflow": false
+    },
+    {
+      "path": "/category/lifestyle",
+      "width": 768,
+      "theme": "dark",
+      "overflow": false
+    },
+    {
+      "path": "/category/entertainment",
+      "width": 768,
+      "theme": "dark",
+      "overflow": false
+    },
+    {
+      "path": "/category/technology",
+      "width": 768,
+      "theme": "dark",
+      "overflow": false
+    },
+    {
+      "path": "/about",
+      "width": 768,
+      "theme": "dark",
+      "overflow": false
+    },
+    {
+      "path": "/search?q=reading",
+      "width": 768,
+      "theme": "dark",
+      "overflow": false
+    },
+    {
+      "path": "/articles/a-better-film-night-at-home",
+      "width": 768,
+      "theme": "dark",
+      "overflow": false
+    },
+    {
+      "path": "/admin",
+      "width": 768,
+      "theme": "dark",
+      "overflow": false
+    },
+    {
+      "path": "/",
+      "width": 1024,
+      "theme": "dark",
+      "overflow": false
+    },
+    {
+      "path": "/articles",
+      "width": 1024,
+      "theme": "dark",
+      "overflow": false
+    },
+    {
+      "path": "/category/culture",
+      "width": 1024,
+      "theme": "dark",
+      "overflow": false
+    },
+    {
+      "path": "/category/lifestyle",
+      "width": 1024,
+      "theme": "dark",
+      "overflow": false
+    },
+    {
+      "path": "/category/entertainment",
+      "width": 1024,
+      "theme": "dark",
+      "overflow": false
+    },
+    {
+      "path": "/category/technology",
+      "width": 1024,
+      "theme": "dark",
+      "overflow": false
+    },
+    {
+      "path": "/about",
+      "width": 1024,
+      "theme": "dark",
+      "overflow": false
+    },
+    {
+      "path": "/search?q=reading",
+      "width": 1024,
+      "theme": "dark",
+      "overflow": false
+    },
+    {
+      "path": "/articles/a-better-film-night-at-home",
+      "width": 1024,
+      "theme": "dark",
+      "overflow": false
+    },
+    {
+      "path": "/admin",
+      "width": 1024,
+      "theme": "dark",
+      "overflow": false
+    },
+    {
+      "path": "/",
+      "width": 1440,
+      "theme": "dark",
+      "overflow": false
+    },
+    {
+      "path": "/articles",
+      "width": 1440,
+      "theme": "dark",
+      "overflow": false
+    },
+    {
+      "path": "/category/culture",
+      "width": 1440,
+      "theme": "dark",
+      "overflow": false
+    },
+    {
+      "path": "/category/lifestyle",
+      "width": 1440,
+      "theme": "dark",
+      "overflow": false
+    },
+    {
+      "path": "/category/entertainment",
+      "width": 1440,
+      "theme": "dark",
+      "overflow": false
+    },
+    {
+      "path": "/category/technology",
+      "width": 1440,
+      "theme": "dark",
+      "overflow": false
+    },
+    {
+      "path": "/about",
+      "width": 1440,
+      "theme": "dark",
+      "overflow": false
+    },
+    {
+      "path": "/search?q=reading",
+      "width": 1440,
+      "theme": "dark",
+      "overflow": false
+    },
+    {
+      "path": "/articles/a-better-film-night-at-home",
+      "width": 1440,
+      "theme": "dark",
+      "overflow": false
+    },
+    {
+      "path": "/admin",
+      "width": 1440,
+      "theme": "dark",
+      "overflow": false
+    },
+    {
+      "path": "/",
+      "width": 1920,
+      "theme": "dark",
+      "overflow": false
+    },
+    {
+      "path": "/articles",
+      "width": 1920,
+      "theme": "dark",
+      "overflow": false
+    },
+    {
+      "path": "/category/culture",
+      "width": 1920,
+      "theme": "dark",
+      "overflow": false
+    },
+    {
+      "path": "/category/lifestyle",
+      "width": 1920,
+      "theme": "dark",
+      "overflow": false
+    },
+    {
+      "path": "/category/entertainment",
+      "width": 1920,
+      "theme": "dark",
+      "overflow": false
+    },
+    {
+      "path": "/category/technology",
+      "width": 1920,
+      "theme": "dark",
+      "overflow": false
+    },
+    {
+      "path": "/about",
+      "width": 1920,
+      "theme": "dark",
+      "overflow": false
+    },
+    {
+      "path": "/search?q=reading",
+      "width": 1920,
+      "theme": "dark",
+      "overflow": false
+    },
+    {
+      "path": "/articles/a-better-film-night-at-home",
+      "width": 1920,
+      "theme": "dark",
+      "overflow": false
+    },
+    {
+      "path": "/admin",
+      "width": 1920,
+      "theme": "dark",
+      "overflow": false
+    }
+  ],
+  "mainPortForward": true,
+  "adminLogin": true,
+  "articleCount": 12,
+  "categoryFilter": true,
+  "hoverFill": {
+    "before": "0% 100%",
+    "after": "100% 100%"
+  },
+  "browserErrors": []
+}

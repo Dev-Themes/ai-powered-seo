@@ -1,0 +1,51 @@
+{
+  "recordedAt": "2026-11-08T10:27:53.032Z",
+  "browser": {
+    "startTime": "2026-11-08T10:22:09.841Z",
+    "duration": 200388.049,
+    "expected": 23,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "unitTests": {
+    "passed": 10,
+    "failed": 0
+  },
+  "responsiveMatrix": {
+    "widths": [
+      320,
+      375,
+      425,
+      768,
+      1024,
+      1440,
+      1920
+    ],
+    "themes": [
+      "light",
+      "dark"
+    ],
+    "publicPagesPerCase": 15,
+    "privatePagesPerCase": 14,
+    "combinations": 406
+  },
+  "performance": {
+    "measuredAt": "2026-11-08T10:25:27.826Z",
+    "url": "http://localhost:3100/",
+    "viewport": 375,
+    "metrics": {
+      "lcp": 220,
+      "cls": 0
+    },
+    "ttfbMs": 26.80000001192093,
+    "domContentLoadedMs": 199.19999998807907,
+    "transferredResourceBytes": 201822,
+    "limitations": [
+      "Local Chromium, no throttling, empty published collection; not Lighthouse or field Core Web Vitals.",
+      "No interaction-to-next-paint measurement is claimed."
+    ]
+  },
+  "externalIntegrations": "Live credentials unavailable; transport tests use isolated fixtures.",
+  "production": "Not deployed; no DNS or published-content changes."
+}

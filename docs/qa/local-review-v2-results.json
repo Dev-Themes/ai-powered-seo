@@ -1,0 +1,429 @@
+{
+  "createdAt": "2026-11-08T11:48:18.948Z",
+  "checks": [
+    {
+      "url": "/",
+      "theme": "light",
+      "width": 320,
+      "overflow": false
+    },
+    {
+      "url": "/articles",
+      "theme": "light",
+      "width": 320,
+      "overflow": false
+    },
+    {
+      "url": "/articles/a-slower-weekend-close-to-home",
+      "theme": "light",
+      "width": 320,
+      "overflow": false
+    },
+    {
+      "url": "/admin",
+      "theme": "light",
+      "width": 320,
+      "overflow": false
+    },
+    {
+      "url": "/admin/articles/a-slower-weekend-close-to-home",
+      "theme": "light",
+      "width": 320,
+      "overflow": false
+    },
+    {
+      "url": "/",
+      "theme": "light",
+      "width": 375,
+      "overflow": false
+    },
+    {
+      "url": "/articles",
+      "theme": "light",
+      "width": 375,
+      "overflow": false
+    },
+    {
+      "url": "/articles/a-slower-weekend-close-to-home",
+      "theme": "light",
+      "width": 375,
+      "overflow": false
+    },
+    {
+      "url": "/admin",
+      "theme": "light",
+      "width": 375,
+      "overflow": false
+    },
+    {
+      "url": "/admin/articles/a-slower-weekend-close-to-home",
+      "theme": "light",
+      "width": 375,
+      "overflow": false
+    },
+    {
+      "url": "/",
+      "theme": "light",
+      "width": 425,
+      "overflow": false
+    },
+    {
+      "url": "/articles",
+      "theme": "light",
+      "width": 425,
+      "overflow": false
+    },
+    {
+      "url": "/articles/a-slower-weekend-close-to-home",
+      "theme": "light",
+      "width": 425,
+      "overflow": false
+    },
+    {
+      "url": "/admin",
+      "theme": "light",
+      "width": 425,
+      "overflow": false
+    },
+    {
+      "url": "/admin/articles/a-slower-weekend-close-to-home",
+      "theme": "light",
+      "width": 425,
+      "overflow": false
+    },
+    {
+      "url": "/",
+      "theme": "light",
+      "width": 768,
+      "overflow": false
+    },
+    {
+      "url": "/articles",
+      "theme": "light",
+      "width": 768,
+      "overflow": false
+    },
+    {
+      "url": "/articles/a-slower-weekend-close-to-home",
+      "theme": "light",
+      "width": 768,
+      "overflow": false
+    },
+    {
+      "url": "/admin",
+      "theme": "light",
+      "width": 768,
+      "overflow": false
+    },
+    {
+      "url": "/admin/articles/a-slower-weekend-close-to-home",
+      "theme": "light",
+      "width": 768,
+      "overflow": false
+    },
+    {
+      "url": "/",
+      "theme": "light",
+      "width": 1024,
+      "overflow": false
+    },
+    {
+      "url": "/articles",
+      "theme": "light",
+      "width": 1024,
+      "overflow": false
+    },
+    {
+      "url": "/articles/a-slower-weekend-close-to-home",
+      "theme": "light",
+      "width": 1024,
+      "overflow": false
+    },
+    {
+      "url": "/admin",
+      "theme": "light",
+      "width": 1024,
+      "overflow": false
+    },
+    {
+      "url": "/admin/articles/a-slower-weekend-close-to-home",
+      "theme": "light",
+      "width": 1024,
+      "overflow": false
+    },
+    {
+      "url": "/",
+      "theme": "light",
+      "width": 1440,
+      "overflow": false
+    },
+    {
+      "url": "/articles",
+      "theme": "light",
+      "width": 1440,
+      "overflow": false
+    },
+    {
+      "url": "/articles/a-slower-weekend-close-to-home",
+      "theme": "light",
+      "width": 1440,
+      "overflow": false
+    },
+    {
+      "url": "/admin",
+      "theme": "light",
+      "width": 1440,
+      "overflow": false
+    },
+    {
+      "url": "/admin/articles/a-slower-weekend-close-to-home",
+      "theme": "light",
+      "width": 1440,
+      "overflow": false
+    },
+    {
+      "url": "/",
+      "theme": "light",
+      "width": 1920,
+      "overflow": false
+    },
+    {
+      "url": "/articles",
+      "theme": "light",
+      "width": 1920,
+      "overflow": false
+    },
+    {
+      "url": "/articles/a-slower-weekend-close-to-home",
+      "theme": "light",
+      "width": 1920,
+      "overflow": false
+    },
+    {
+      "url": "/admin",
+      "theme": "light",
+      "width": 1920,
+      "overflow": false
+    },
+    {
+      "url": "/admin/articles/a-slower-weekend-close-to-home",
+      "theme": "light",
+      "width": 1920,
+      "overflow": false
+    },
+    {
+      "url": "/",
+      "theme": "dark",
+      "width": 320,
+      "overflow": false
+    },
+    {
+      "url": "/articles",
+      "theme": "dark",
+      "width": 320,
+      "overflow": false
+    },
+    {
+      "url": "/articles/a-slower-weekend-close-to-home",
+      "theme": "dark",
+      "width": 320,
+      "overflow": false
+    },
+    {
+      "url": "/admin",
+      "theme": "dark",
+      "width": 320,
+      "overflow": false
+    },
+    {
+      "url": "/admin/articles/a-slower-weekend-close-to-home",
+      "theme": "dark",
+      "width": 320,
+      "overflow": false
+    },
+    {
+      "url": "/",
+      "theme": "dark",
+      "width": 375,
+      "overflow": false
+    },
+    {
+      "url": "/articles",
+      "theme": "dark",
+      "width": 375,
+      "overflow": false
+    },
+    {
+      "url": "/articles/a-slower-weekend-close-to-home",
+      "theme": "dark",
+      "width": 375,
+      "overflow": false
+    },
+    {
+      "url": "/admin",
+      "theme": "dark",
+      "width": 375,
+      "overflow": false
+    },
+    {
+      "url": "/admin/articles/a-slower-weekend-close-to-home",
+      "theme": "dark",
+      "width": 375,
+      "overflow": false
+    },
+    {
+      "url": "/",
+      "theme": "dark",
+      "width": 425,
+      "overflow": false
+    },
+    {
+      "url": "/articles",
+      "theme": "dark",
+      "width": 425,
+      "overflow": false
+    },
+    {
+      "url": "/articles/a-slower-weekend-close-to-home",
+      "theme": "dark",
+      "width": 425,
+      "overflow": false
+    },
+    {
+      "url": "/admin",
+      "theme": "dark",
+      "width": 425,
+      "overflow": false
+    },
+    {
+      "url": "/admin/articles/a-slower-weekend-close-to-home",
+      "theme": "dark",
+      "width": 425,
+      "overflow": false
+    },
+    {
+      "url": "/",
+      "theme": "dark",
+      "width": 768,
+      "overflow": false
+    },
+    {
+      "url": "/articles",
+      "theme": "dark",
+      "width": 768,
+      "overflow": false
+    },
+    {
+      "url": "/articles/a-slower-weekend-close-to-home",
+      "theme": "dark",
+      "width": 768,
+      "overflow": false
+    },
+    {
+      "url": "/admin",
+      "theme": "dark",
+      "width": 768,
+      "overflow": false
+    },
+    {
+      "url": "/admin/articles/a-slower-weekend-close-to-home",
+      "theme": "dark",
+      "width": 768,
+      "overflow": false
+    },
+    {
+      "url": "/",
+      "theme": "dark",
+      "width": 1024,
+      "overflow": false
+    },
+    {
+      "url": "/articles",
+      "theme": "dark",
+      "width": 1024,
+      "overflow": false
+    },
+    {
+      "url": "/articles/a-slower-weekend-close-to-home",
+      "theme": "dark",
+      "width": 1024,
+      "overflow": false
+    },
+    {
+      "url": "/admin",
+      "theme": "dark",
+      "width": 1024,
+      "overflow": false
+    },
+    {
+      "url": "/admin/articles/a-slower-weekend-close-to-home",
+      "theme": "dark",
+      "width": 1024,
+      "overflow": false
+    },
+    {
+      "url": "/",
+      "theme": "dark",
+      "width": 1440,
+      "overflow": false
+    },
+    {
+      "url": "/articles",
+      "theme": "dark",
+      "width": 1440,
+      "overflow": false
+    },
+    {
+      "url": "/articles/a-slower-weekend-close-to-home",
+      "theme": "dark",
+      "width": 1440,
+      "overflow": false
+    },
+    {
+      "url": "/admin",
+      "theme": "dark",
+      "width": 1440,
+      "overflow": false
+    },
+    {
+      "url": "/admin/articles/a-slower-weekend-close-to-home",
+      "theme": "dark",
+      "width": 1440,
+      "overflow": false
+    },
+    {
+      "url": "/",
+      "theme": "dark",
+      "width": 1920,
+      "overflow": false
+    },
+    {
+      "url": "/articles",
+      "theme": "dark",
+      "width": 1920,
+      "overflow": false
+    },
+    {
+      "url": "/articles/a-slower-weekend-close-to-home",
+      "theme": "dark",
+      "width": 1920,
+      "overflow": false
+    },
+    {
+      "url": "/admin",
+      "theme": "dark",
+      "width": 1920,
+      "overflow": false
+    },
+    {
+      "url": "/admin/articles/a-slower-weekend-close-to-home",
+      "theme": "dark",
+      "width": 1920,
+      "overflow": false
+    }
+  ],
+  "login": true,
+  "localFilesystemCrud": true,
+  "faqAccordion": true,
+  "browserErrors": []
+}

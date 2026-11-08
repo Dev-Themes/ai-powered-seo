@@ -1,0 +1,2 @@
+import {localReview} from '@/lib/review-mode';
+﻿import {publicArticles,siteSettings} from '@/lib/content';import {Magazine} from '@/components/editorial';import {metadata as meta} from '@/lib/seo';export const dynamic='force-dynamic';export async function generateMetadata(){const settings=await siteSettings();return meta('Spot Magazine | UK Lifestyle, Entertainment & Culture',settings.description);}export default async function Home(){return <Magazine articles={await publicArticles()} localPreview={localReview()}/>;}

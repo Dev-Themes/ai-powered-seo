@@ -1,0 +1,11 @@
+import categoryConfig from '../../content/config/categories.json';
+import { z } from 'zod';
+export const categories=categoryConfig;
+export const slugSchema=z.string().min(1).max(100).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
+export const articleSchema=z.object({slug:slugSchema,title:z.string().min(12).max(120),description:z.string().min(50).max(180),category:z.enum(['entertainment','lifestyle','culture','technology']),tags:z.array(z.string().min(1).max(40)).max(10),author:z.literal('editorial-desk'),status:z.enum(['draft','published','scheduled','archived']),createdAt:z.iso.datetime(),updatedAt:z.iso.datetime(),publishedAt:z.iso.datetime().nullable(),scheduledAt:z.iso.datetime().nullable(),cover:z.string().regex(/^\/images\/[a-zA-Z0-9_/-]+\.(?:jpg|jpeg|png|webp|svg)$/),alt:z.string().min(10).max(240),featured:z.boolean(),editorPick:z.boolean(),reviewed:z.boolean(),reviewNote:z.string().max(1000),related:z.array(slugSchema).max(6),body:z.string().min(150).max(100000)}).superRefine((a,ctx)=>{if(['published','scheduled'].includes(a.status)&&(!a.reviewed||!a.reviewNote.trim()))ctx.addIssue({code:'custom',message:'A factual and editorial review note is required for publication.'});if(a.status==='published'&&(!a.publishedAt||Date.parse(a.publishedAt)>Date.now()))ctx.addIssue({code:'custom',message:'Publication date must not be in the future.'});if(a.status==='scheduled'&&!a.scheduledAt)ctx.addIssue({code:'custom',message:'Scheduled publication requires a date.'});});
+export type Article=z.infer<typeof articleSchema>;
+export const settingsSchema=z.object({name:z.literal('Spot Magazine'),description:z.string().min(40).max(180),contactEmail:z.union([z.literal(''),z.email()]),publishingEnabled:z.boolean()});
+export const recommendationSchema=z.object({summary:z.string().max(3000),recommendations:z.array(z.object({priority:z.enum(['high','medium','low']),slug:z.string(),action:z.string().max(3000),evidence:z.string().max(3000),limitations:z.string().max(2000),requiresApproval:z.literal(true)})).max(30)});
+export const ORIGIN='https://spotmagazine.co.uk';
+export function readingTime(body:string){return Math.max(1,Math.ceil(body.split(/\s+/).length/220));}
+export function isPublic(a:Article){return a.status==='published'&&a.reviewed&&!!a.publishedAt&&Date.parse(a.publishedAt)<=Date.now();}

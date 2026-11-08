@@ -1,0 +1,1 @@
+import {Editor} from '@/components/admin/editor';export default async function EditPage({params}:{params:Promise<{slug:string}>}){return <Editor slug={(await params).slug}/>;}

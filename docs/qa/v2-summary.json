@@ -1,0 +1,55 @@
+{
+  "recordedAt": "2026-11-08T11:52:06.094Z",
+  "unit": {
+    "passed": 11
+  },
+  "productionBrowser": {
+    "functionalAndResponsivePassed": 23,
+    "performanceProbePassedOnRerun": 1,
+    "note": "The original performance probe selector matched both redesigned logos; it was scoped to the header and rerun successfully. The 23 functional and responsive cases passed in the full run."
+  },
+  "localReview": {
+    "combinations": 70,
+    "login": true,
+    "actualFilesystemCrud": true,
+    "faqAccordion": true,
+    "browserErrors": []
+  },
+  "performance": {
+    "measuredAt": "2026-11-08T11:44:10.099Z",
+    "url": "http://localhost:3100/",
+    "viewport": 375,
+    "metrics": {
+      "lcp": 588,
+      "cls": 0
+    },
+    "ttfbMs": 44.5,
+    "domContentLoadedMs": 310.70000000298023,
+    "transferredResourceBytes": 336246,
+    "limitations": [
+      "Local Chromium, no throttling, empty published collection; not Lighthouse or field Core Web Vitals.",
+      "No interaction-to-next-paint measurement is claimed."
+    ]
+  },
+  "images": {
+    "generated": 7,
+    "format": "WebP",
+    "manifest": "docs/IMAGE_ASSETS.json",
+    "manualVisualCheck": "No people or nudity visible in the selected images"
+  },
+  "content": {
+    "draftArticles": 12,
+    "wordRange": [
+      1917,
+      2026
+    ],
+    "readingMinutes": [
+      9,
+      10
+    ],
+    "faqPerArticle": 5,
+    "inlineImagesPerArticle": 2,
+    "homepageSections": 11
+  },
+  "production": "Unchanged; source articles remain drafts."
+}

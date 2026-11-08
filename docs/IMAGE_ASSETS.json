@@ -1,0 +1,109 @@
+{
+  "method": "Built-in image_gen, then deterministic WebP compression with Sharp",
+  "prompts": [
+    [
+      "neighbourhood",
+      "Use case: photorealistic-natural. Asset: premium British lifestyle magazine cover, landscape 3:2. An empty picturesque British village lane with honey-coloured stone cottages, climbing ivy, a weathered blue-green door, soft autumn foliage and a small independent bookshop with no legible signage, warm early morning light after rain, subtle film grain, professionally composed editorial architectural photography. Rich natural greens, stone, copper, warm highlights. No people whatsoever: no women, no men, no children, no faces, no human silhouettes, no human figures in posters or reflections, no statues. No nudity, no text, no logos, no watermarks. This is an illustrative imagined place, not a documented named real location. Fill the frame with detailed architecture and quiet atmosphere, not empty graphic space."
+    ],
+    [
+      "reading-room",
+      "Use case: photorealistic-natural. Asset: premium magazine lifestyle and reading article cover, landscape 3:2. A richly detailed unoccupied British reading room with walnut shelves of books, a rust-coloured armchair, an open book on a small wooden table, ceramic tea cup, a potted herb by an old sash window, soft afternoon light, cosy understated interiors, naturally textured linen and wood. Editorial interiors photography, real-looking subtle film grain, warm organic tones, tasteful high-end magazine art direction. No people or human imagery at all, no women, no men, no faces, no paintings or photographs of people, no sculptures of human bodies, no reflections of people, no nudity. No legible book text, no logos, no watermark. Entire frame composed with interesting room detail."
+    ],
+    [
+      "theatre",
+      "Use case: photorealistic-natural. Asset: entertainment magazine cover, landscape 3:2. Inside a beautiful empty historic British theatre viewed from the back of an ornate balcony toward a warmly lit empty stage, rows of deep burgundy velvet seats, gilt detailing, wooden stage and heavy theatrical curtains, dramatic but natural amber light, premium cinematic architectural editorial photograph with tactile detail and subtle grain. Absolutely no people, no performers, no women or men, no human figures on posters, no human statues, no silhouettes, no nudity. No text, no branding, no watermark. Empty theatre is the subject and must feel rich in detail."
+    ],
+    [
+      "quiet-desk",
+      "Use case: photorealistic-natural. Asset: digital life magazine cover, landscape 3:2. A beautifully considered empty home-office desk near a rain-speckled window looking onto blurred British brick houses; unbranded closed slim laptop, smartphone face down, ceramic mug, small notebook, fountain pen and green houseplant on oak surface. Moody bright natural window light, premium contemporary editorial still life photography with realistic wood and ceramic textures and subtle film grain, forest green, warm stone, ink accents. No people whatsoever, no women, no men, no faces, no hands, no human figures in art or reflections, no nudity. No logos, no readable text, no watermarks. Richly composed editorial photograph."
+    ],
+    [
+      "quiet-desk-v2",
+      "Create a landscape 3:2 PHOTOGRAPH ONLY, not a magazine cover, not a graphic, no typography of any kind. A premium natural editorial photograph of an empty oak home office desk near a rain-speckled sash window looking onto out-of-focus British brick houses. Closed unbranded slim laptop, mobile phone face down, blank closed notebook, ceramic mug, pen, green plant, beautiful natural light and tactile surfaces. Forest green and warm stone. The whole image is a continuous photograph. Absolutely no text, letters, headlines, labels, logos, watermark, borders or graphic overlays anywhere. No people, no women, no men, no children, no hands, no faces, no human pictures or sculptures or reflections, no nudity."
+    ],
+    [
+      "museum",
+      "A landscape 3:2 natural editorial architecture photograph only, an imagined quiet British design museum gallery, warm white walls, oak floor, sunlight, beautifully displayed ceramic vessels and abstract geometric framed artworks, an empty bench, refined cultural magazine photography with tactile real detail. All artworks must be abstract geometric shapes or ceramics, no figurative human art, no statues. NO people, no women or men, no hands, faces or human silhouettes anywhere, no nudity. No text or typography, no magazine page design, no logos, no watermarks."
+    ],
+    [
+      "herb-garden",
+      "A landscape 3:2 editorial still-life photograph only, terracotta pots of rosemary thyme parsley and mint on a weathered stone windowsill of a British cottage, small brass watering can, gardening twine, soft fresh morning light, green leaves richly detailed, warm understated tones, premium garden magazine photography. No people whatsoever, no women, no men, no hands, no faces, no nude or human figures in any form. No text, letters, logos, watermarks, borders, typography or magazine cover layout."
+    ],
+    [
+      "film-night",
+      "A landscape 3:2 professional editorial still life photograph only: a cosy empty sitting room at dusk, compact unbranded projector projecting a simple soft rectangle of warm light on a blank wall, a shelf of books without readable words, a bowl of popcorn and ceramic cups on an oak coffee table, cushions and linen curtains, forest green and amber palette, realistic subtle film grain, cinematic interiors photography. No people, no women, men, hands, faces, human art or reflections, no nudity. Projected image contains no person or film scene. Absolutely no typography, words, lettering, logos, watermarks or magazine cover design."
+    ]
+  ],
+  "assets": [
+    {
+      "name": "neighbourhood",
+      "path": "/images/neighbourhood.webp",
+      "bytes": 313120,
+      "width": 1200,
+      "height": 800,
+      "origin": "Built-in image_gen",
+      "description": "AI-generated imagined editorial scene; not a documentary photograph.",
+      "review": "Visually inspected: no people or nudity visible."
+    },
+    {
+      "name": "reading-room",
+      "path": "/images/reading-room.webp",
+      "bytes": 159494,
+      "width": 1200,
+      "height": 800,
+      "origin": "Built-in image_gen",
+      "description": "AI-generated imagined editorial scene; not a documentary photograph.",
+      "review": "Visually inspected: no people or nudity visible."
+    },
+    {
+      "name": "theatre",
+      "path": "/images/theatre.webp",
+      "bytes": 203330,
+      "width": 1200,
+      "height": 800,
+      "origin": "Built-in image_gen",
+      "description": "AI-generated imagined editorial scene; not a documentary photograph.",
+      "review": "Visually inspected: no people or nudity visible."
+    },
+    {
+      "name": "quiet-desk",
+      "path": "/images/quiet-desk.webp",
+      "bytes": 117798,
+      "width": 1200,
+      "height": 800,
+      "origin": "Built-in image_gen",
+      "description": "AI-generated imagined editorial scene; not a documentary photograph.",
+      "review": "Visually inspected: no people or nudity visible."
+    },
+    {
+      "name": "museum",
+      "path": "/images/museum.webp",
+      "bytes": 71280,
+      "width": 1200,
+      "height": 800,
+      "origin": "Built-in image_gen",
+      "description": "AI-generated imagined editorial scene; not a documentary photograph.",
+      "review": "Visually inspected: no people or nudity visible."
+    },
+    {
+      "name": "herb-garden",
+      "path": "/images/herb-garden.webp",
+      "bytes": 227336,
+      "width": 1200,
+      "height": 800,
+      "origin": "Built-in image_gen",
+      "description": "AI-generated imagined editorial scene; not a documentary photograph.",
+      "review": "Visually inspected: no people or nudity visible."
+    },
+    {
+      "name": "film-night",
+      "path": "/images/film-night.webp",
+      "bytes": 71222,
+      "width": 1200,
+      "height": 800,
+      "origin": "Built-in image_gen",
+      "description": "AI-generated imagined editorial scene; not a documentary photograph.",
+      "review": "Visually inspected: no people or nudity visible."
+    }
+  ]
+}

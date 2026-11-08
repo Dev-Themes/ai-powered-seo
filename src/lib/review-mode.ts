@@ -1,0 +1,1 @@
+﻿export function localReview(){if(process.env.NODE_ENV!=='development'||process.env.SPOT_LOCAL_REVIEW!=='true')return false;try{return ['localhost','127.0.0.1','[::1]'].includes(new URL(process.env.APP_URL||'').hostname);}catch{return false;}}
