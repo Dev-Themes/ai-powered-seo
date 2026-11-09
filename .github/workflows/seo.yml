@@ -1,37 +1,30 @@
-name: SEO monitoring and approved schedules
+name: FirstRead AI SEO Monitoring
 on:
   workflow_dispatch:
     inputs:
       mode:
         type: choice
-        default: daily
-        options: [daily, weekly, monthly, publish, firstread]
-        description: Read-only monitoring or previously approved schedules
+        default: audit
+        options: [audit, recommend]
+        description: Scheduled read-only audit or AI recommendations
   schedule:
-    - cron: '17 6 * * *'
-    - cron: '27 7 * * 1'
-    - cron: '37 8 1 * *'
-    - cron: '13 * * * *'
+    - cron: '17 6 * * *' # Daily at 06:17 UTC
+    - cron: '27 7 * * 1' # Weekly on Monday at 07:27 UTC
 permissions:
   contents: read
 concurrency:
-  group: spot-seo-automation
+  group: firstread-seo-monitoring
   cancel-in-progress: false
 jobs:
-  prepare:
+  monitor:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
       contents: write
       pull-requests: write
     env:
-      GOOGLE_CLIENT_EMAIL: ${{ secrets.GOOGLE_CLIENT_EMAIL }}
-      GOOGLE_PRIVATE_KEY: ${{ secrets.GOOGLE_PRIVATE_KEY }}
-      GSC_PROPERTY: ${{ vars.GSC_PROPERTY }}
-      GA4_PROPERTY_ID: ${{ vars.GA4_PROPERTY_ID }}
       GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
       GEMINI_MODEL: ${{ vars.GEMINI_MODEL }}
-      APPROVED_SCHEDULES: ${{ vars.APPROVED_SCHEDULES }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -45,48 +38,30 @@ jobs:
         id: mode
         env:
           INPUT_MODE: ${{ inputs.mode }}
-          CRON: ${{ github.event.schedule }}
         run: |
-          mode="$INPUT_MODE"
-          if [ -z "$mode" ]; then
-            case "$CRON" in
-              '27 7 * * 1') mode=weekly ;;
-              '37 8 1 * *') mode=monthly ;;
-              '13 * * * *') mode=publish ;;
-              *) mode=daily ;;
-            esac
-          fi
+          mode="${INPUT_MODE:-audit}"
           echo "mode=$mode" >> "$GITHUB_OUTPUT"
-      - name: Run monitoring
-        id: monitor
-        continue-on-error: true
+      - name: Run FirstRead Read-Only SEO Monitoring
         env:
           MODE: ${{ steps.mode.outputs.mode }}
         run: npm run automation -- "$MODE"
-      - name: Validate proposed files
+      - name: Validate Tests & Types
         run: |
           npm run typecheck
           npm run lint
           npm test
           npm run build
-      - name: Prepare review pull request
-        if: always() && steps.monitor.outcome != 'skipped'
+      - name: Save Audit Snapshot to History Branch
+        if: always()
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          git add content/articles content/reports
+          git add content/reports
           if git diff --cached --quiet; then exit 0; fi
-          branch="automation/seo-review-${{ github.run_id }}"
+          branch="monitoring/firstread-audit-${{ github.run_id }}"
           git switch -c "$branch"
-          git config user.name "spot-editorial-automation"
+          git config user.name "firstread-seo-automation"
           git config user.email "automation@users.noreply.github.com"
-          git add content/articles content/reports
-          git commit -m "Prepare SEO reports or previously approved publication"
+          git add content/reports
+          git commit -m "chore: save FirstRead read-only SEO audit snapshot [skip ci]"
           git push origin "$branch"
-          printf '%s\n' 'Review generated reports and any previously approved scheduled articles. No merge or production deployment is automatic. Check workflow validation before approving.' > "$RUNNER_TEMP/spot-pr.md"
-          gh pr create --head "$branch" --title "Spot Magazine: SEO and editorial review" --body-file "$RUNNER_TEMP/spot-pr.md"
-      - name: Mark integration failures
-        if: steps.monitor.outcome == 'failure'
-        run: |
-          echo '::error::One or more integrations failed. Inspect partial reports; no fabricated metrics were substituted.'
-          exit 1

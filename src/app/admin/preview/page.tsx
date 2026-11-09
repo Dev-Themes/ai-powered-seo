@@ -1,1 +1,0 @@
-import {requireAdmin} from '@/lib/auth';import {allArticles} from '@/lib/content';import {Magazine} from '@/components/editorial';export const dynamic='force-dynamic';export default async function Preview(){await requireAdmin();return <Magazine articles={(await allArticles()).filter(a=>a.status!=='archived')} preview/>;}

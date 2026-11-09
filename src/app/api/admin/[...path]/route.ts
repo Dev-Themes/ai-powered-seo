@@ -1,24 +1,138 @@
-import {localReview} from '@/lib/review-mode';
-import sharp from 'sharp';import {boundedBody,boundedJson} from '@/lib/request';
-import {NextResponse} from 'next/server';import {session,authorize} from '@/lib/auth';import {allArticles,parseArticle,serialiseArticle,siteSettings} from '@/lib/content';import {articleSchema,settingsSchema,slugSchema} from '@/lib/schema';import {github,readFile,writeFile,deleteFile,StorageError,configured} from '@/lib/github';import {auditArticles} from '@/lib/audit';import {collectGoogle} from '@/lib/google';import {recommendations} from '@/lib/gemini';import {randomUUID} from 'node:crypto';import {revalidatePath,revalidateTag} from 'next/cache';
-import {runFirstReadAudit} from '@/lib/firstread/audit';
-import {generateFirstReadRecommendations} from '@/lib/firstread/ai';
-import {getFirstReadGoogleStatus} from '@/lib/firstread/google-interfaces';
-import {fetchSiteInfo} from '@/lib/firstread/client';
-export const runtime='nodejs';export const dynamic='force-dynamic';
-function error(e:unknown){if(e instanceof StorageError)return NextResponse.json({error:e.message},{status:e.status});if(e instanceof Error&&['UNAUTHORIZED','FORBIDDEN'].includes(e.message))return NextResponse.json({error:'Unauthorised request.'},{status:e.message==='UNAUTHORIZED'?401:403});if(e&&typeof e==='object'&&'issues'in e)return NextResponse.json({error:'Validation failed',issues:e.issues},{status:400});return NextResponse.json({error:'Operation unavailable. Check integration configuration and try again.'},{status:503});}
-async function reports(){if(configured()){try{const list=await github('contents/content/reports?ref='+encodeURIComponent(process.env.GITHUB_BRANCH!));if(Array.isArray(list))return list.filter((f:{name:string})=>/^[a-z0-9-]+\.json$/.test(f.name));}catch(e){if(e instanceof StorageError&&e.status===404){try{const fs=await import('node:fs/promises');const path=await import('node:path');const list=await fs.readdir(path.join(process.cwd(),'content/reports'));return list.filter((f:string)=>/^[a-z0-9-]+\.json$/.test(f)).map((name:string)=>({name,path:'content/reports/'+name}));}catch{return [];}}throw e;}}try{const fs=await import('node:fs/promises');const path=await import('node:path');const list=await fs.readdir(path.join(process.cwd(),'content/reports'));return list.filter((f:string)=>/^[a-z0-9-]+\.json$/.test(f)).map((name:string)=>({name,path:'content/reports/'+name}));}catch{return [];}}
-export async function GET(request:Request,{params}:{params:Promise<{path:string[]}>}){try{const s=await session();if(!s)return NextResponse.json({error:'Unauthorised'},{status:401});const p=(await params).path;let data:unknown;if(p[0]==='session')data={csrf:s.csrf};else if(p[0]==='articles'&&p[1]){const slug=slugSchema.parse(p[1]);if(configured()){try{const f=await readFile('content/articles/'+slug+'.md');data={article:parseArticle(f.content),sha:f.sha};}catch(e){if(e instanceof StorageError&&e.status===404){const article=(await allArticles()).find(a=>a.slug===slug);if(!article)throw new StorageError('Article not found',404);data={article,sha:null};}else throw e;}}else{const article=(await allArticles()).find(a=>a.slug===slug);if(!article)throw new StorageError('Article not found',404);data={article,sha:null};}}else if(p[0]==='articles')data={articles:await allArticles(),connected:configured(),storageMode:localReview()?'local':'github'};else if(p[0]==='history'&&p[1]){const slug=slugSchema.parse(p[1]);data=await github('commits?path='+encodeURIComponent('content/articles/'+slug+'.md')+'&sha='+encodeURIComponent(process.env.GITHUB_BRANCH!)+'&per_page=20');}else if(p[0]==='reports'&&p[1]){const id=slugSchema.parse(p[1]);if(configured()){try{data=JSON.parse((await readFile('content/reports/'+id+'.json')).content);}catch(e){if(e instanceof StorageError&&e.status===404){const fs=await import('node:fs/promises');const path=await import('node:path');data=JSON.parse(await fs.readFile(path.join(process.cwd(),'content/reports/'+id+'.json'),'utf8'));}else throw e;}}else{const fs=await import('node:fs/promises');const path=await import('node:path');data=JSON.parse(await fs.readFile(path.join(process.cwd(),'content/reports/'+id+'.json'),'utf8'));}}else if(p[0]==='reports')data=(await reports()).map((f:{name:string})=>({id:f.name.replace('.json','')})).reverse();else if(p[0]==='settings'){if(configured()){try{const f=await readFile('content/config/settings.json');data={settings:settingsSchema.parse(JSON.parse(f.content)),sha:f.sha};}catch(e){if(e instanceof StorageError&&e.status===404){data={settings:await siteSettings(),sha:null};}else throw e;}}else data={settings:await siteSettings(),sha:null};}else if(p[0]==='media'){data={images:['/images/culture.svg','/images/lifestyle.svg','/images/entertainment.svg','/images/technology.svg']};if(configured()){const f=await github('contents/public/images?ref='+encodeURIComponent(process.env.GITHUB_BRANCH!));data={images:f.filter((x:{name:string})=>/\.(png|jpg|webp|svg)$/.test(x.name)).map((x:{name:string})=>'/images/'+x.name)};}}else if(p[0]==='firstread'){if(p[1]==='audit')data=await runFirstReadAudit(50);else if(p[1]==='recommend'){const audit=await runFirstReadAudit(30);data=await generateFirstReadRecommendations(audit);}else if(p[1]==='google')data=getFirstReadGoogleStatus();else data=await fetchSiteInfo();}else throw new StorageError('Not found',404);return NextResponse.json(data,{headers:{'Cache-Control':'private, no-store'}});}catch(e){return error(e);}}
-export async function POST(request:Request,{params}:{params:Promise<{path:string[]}>}){try{await authorize(request);if(!configured())throw new StorageError('Configure GitHub storage before making changes.');const p=(await params).path;
-if(p[0]==='media'){if(Number(request.headers.get('content-length')||0)>2900000)throw new StorageError('Maximum upload size is 2 MB.',413);const raw=await boundedBody(request,2900000);const form=await new Request(request.url,{method:'POST',headers:request.headers,body:raw}).formData();const file=form.get('file');if(!(file instanceof File)||file.size>2*1024*1024||file.size<12)throw new StorageError('Choose a PNG, JPEG or WebP image up to 2 MB.',400);const bytes=Buffer.from(await file.arrayBuffer());let ext='';if(bytes.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10])))ext='png';else if(bytes[0]===255&&bytes[1]===216&&bytes[2]===255)ext='jpg';else if(bytes.toString('ascii',0,4)==='RIFF'&&bytes.toString('ascii',8,12)==='WEBP')ext='webp';if(!ext)throw new StorageError('Unsupported image signature.',400);let normalised:Buffer;try{normalised=await sharp(bytes,{limitInputPixels:25000000,animated:false}).rotate().resize({width:2400,height:2400,fit:'inside',withoutEnlargement:true}).webp({quality:84}).toBuffer();}catch{throw new StorageError('Image decoding failed or dimensions exceed the supported limit.',400);}if(normalised.length>2*1024*1024)throw new StorageError('Optimised image is too large.',413);const existing=await github('contents/public/images?ref='+encodeURIComponent(process.env.GITHUB_BRANCH!));if(existing.length>=200)throw new StorageError('Image limit reached (200). Review unused assets in a pull request.',400);const name=randomUUID()+'.webp';await writeFile('public/images/'+name,normalised.toString('base64'),null,'Upload validated editorial image',true);return NextResponse.json({path:'/images/'+name,note:'Image will be served after the next approved deployment. Confirm image rights and remove private metadata before uploading.'});}
-const b=await boundedJson(request);
-if(p[0]==='articles'){const a=articleSchema.parse(b.article);const oldSlug=b.originalSlug?slugSchema.parse(b.originalSlug):a.slug;const target='content/articles/'+a.slug+'.md';if(!b.sha&&(await allArticles()).length>=200)throw new StorageError('Article limit reached (200); review storage before adding more.',400);if(b.sha){const f=await readFile('content/articles/'+oldSlug+'.md');if(f.sha!==b.sha)throw new StorageError('This article changed. Reload before saving.',409);const previous=parseArticle(f.content);if(oldSlug!==a.slug&&previous.status!=='draft')throw new StorageError('Only draft URLs can be changed here. Published URL changes need a reviewed redirect pull request.',400);if(a.createdAt!==previous.createdAt)throw new StorageError('Creation date cannot be changed.',400);if(oldSlug!==a.slug&&a.status!=='draft')throw new StorageError('Rename as a draft before publication.',400);}else if(a.status!=='draft')throw new StorageError('Create a draft before publication.',400);
-if(['published','scheduled'].includes(a.status)){const settings=settingsSchema.parse(await siteSettings());if(!settings.publishingEnabled)throw new StorageError('Publishing is disabled in website settings.',400);if(b.approvePublication!==true)throw new StorageError('Explicit publication approval is required.',400);}
-const saved={...a,updatedAt:new Date().toISOString()};const result=await writeFile(target,serialiseArticle(saved),oldSlug===a.slug?b.sha||null:null,'Editorial: '+a.status+' '+a.title);if(oldSlug!==a.slug)await deleteFile('content/articles/'+oldSlug+'.md',b.sha);revalidateTag('articles',{expire:0});revalidatePath('/','layout');return NextResponse.json({article:saved,sha:result.content.sha,note:'Saved to GitHub. Publication remains subject to your deployment branch approval.'});}
-if(p[0]==='delete'){const slug=slugSchema.parse(b.slug);const f=await readFile('content/articles/'+slug+'.md');const a=parseArticle(f.content);if(f.sha!==b.sha)throw new StorageError('This file changed.',409);if(a.status!=='archived'||b.confirm!==slug)throw new StorageError('Archive first and confirm the slug to delete.',400);await deleteFile('content/articles/'+slug+'.md',b.sha);revalidateTag('articles',{expire:0});revalidatePath('/','layout');return NextResponse.json({ok:true});}
-if(p[0]==='rollback'){const slug=slugSchema.parse(b.slug);if(!/^[a-f0-9]{40}$/.test(b.commit))throw new StorageError('Invalid revision',400);const current=await readFile('content/articles/'+slug+'.md');if(current.sha!==b.sha)throw new StorageError('Article changed. Reload first.',409);const old=parseArticle((await readFile('content/articles/'+slug+'.md',b.commit)).content);const restored={...old,status:'draft' as const,reviewed:false,reviewNote:'',publishedAt:null,scheduledAt:null,updatedAt:new Date().toISOString()};const r=await writeFile('content/articles/'+slug+'.md',serialiseArticle(restored),b.sha,'Restore draft revision '+b.commit);revalidateTag('articles',{expire:0});revalidatePath('/','layout');return NextResponse.json({article:restored,sha:r.content.sha});}
-if(p[0]==='settings'){const settings=settingsSchema.parse(b.settings);await writeFile('content/config/settings.json',JSON.stringify(settings,null,2),b.sha,'Update reviewed site settings');revalidateTag('articles',{expire:0});revalidatePath('/','layout');return NextResponse.json({ok:true});}
-if(p[0]==='firstread'){const action=p[1];if(action==='audit'||action==='recommend'){let reportData:unknown;if(action==='audit')reportData=await runFirstReadAudit(50);else{const audit=await runFirstReadAudit(30);reportData=await generateFirstReadRecommendations(audit);}const id='firstread-'+action+'-'+Date.now();const report={id,createdAt:new Date().toISOString(),status:'complete',data:reportData};try{if(configured()){await writeFile('content/reports/'+id+'.json',JSON.stringify(report,null,2),null,'FirstRead read-only SEO '+action);}else{const fs=await import('node:fs/promises');const pathMod=await import('node:path');await fs.mkdir(pathMod.join(process.cwd(),'content/reports'),{recursive:true});await fs.writeFile(pathMod.join(process.cwd(),'content/reports',id+'.json'),JSON.stringify(report,null,2)+'\n');}}catch{const fs=await import('node:fs/promises');const pathMod=await import('node:path');await fs.mkdir(pathMod.join(process.cwd(),'content/reports'),{recursive:true});await fs.writeFile(pathMod.join(process.cwd(),'content/reports',id+'.json'),JSON.stringify(report,null,2)+'\n');}return NextResponse.json(report);}throw new StorageError('Forbidden operation on FirstRead.',403);}
-if(['audit','collect','recommend'].includes(p[0])){const articles=await allArticles();let data:unknown;let failed=false;if(p[0]==='audit')data={issues:auditArticles(articles),articleCount:articles.length,scope:'Content metadata checks. This is not a substitute for a rendered crawl or Lighthouse.'};else if(p[0]==='collect'){data=await collectGoogle();failed=Object.values((data as Awaited<ReturnType<typeof collectGoogle>>).sources).some(s=>s.status==='unavailable');}else{const list=await reports();const last=list.filter((f:{name:string})=>f.name.startsWith('collect-')).sort((a:{name:string},b:{name:string})=>b.name.localeCompare(a.name))[0];const metrics=last?JSON.parse((await readFile(last.path)).content):{status:'unavailable',reason:'No collected analytics report.'};data=await recommendations(articles,metrics);}const id=p[0]+'-'+Date.now();const report={id,createdAt:new Date().toISOString(),status:failed?'partial':'complete',data};await writeFile('content/reports/'+id+'.json',JSON.stringify(report,null,2),null,'Read-only SEO '+p[0]);return NextResponse.json(report);}
-throw new StorageError('Not found',404);
-}catch(e){return error(e);}}
+import { NextResponse } from 'next/server';
+import { session, authorize } from '@/lib/auth';
+import { runFirstReadAudit } from '@/lib/firstread/audit';
+import { generateFirstReadRecommendations } from '@/lib/firstread/ai';
+import { getFirstReadGoogleStatus } from '@/lib/firstread/google-interfaces';
+import { fetchSiteInfo } from '@/lib/firstread/client';
+import {
+  saveAuditReport,
+  saveRecommendationsReport,
+  listReports,
+  getReportById,
+  getLatestAuditReport,
+  getLatestRecommendationsReport,
+  getApprovals,
+  setApproval
+} from '@/lib/firstread/storage';
+import { boundedJson } from '@/lib/request';
+
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
+function formatError(e: unknown) {
+  if (e instanceof Error && ['UNAUTHORIZED', 'FORBIDDEN'].includes(e.message)) {
+    return NextResponse.json(
+      { error: 'Unauthorised request.' },
+      { status: e.message === 'UNAUTHORIZED' ? 401 : 403 }
+    );
+  }
+  return NextResponse.json(
+    { error: e instanceof Error ? e.message : 'Operation unavailable.' },
+    { status: 500 }
+  );
+}
+
+export async function GET(
+  request: Request,
+  { params }: { params: Promise<{ path: string[] }> }
+) {
+  try {
+    const s = await session();
+    if (!s) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
+
+    const p = (await params).path;
+    let data: unknown;
+
+    if (p[0] === 'session') {
+      data = { csrf: s.csrf };
+    } else if (p[0] === 'firstread' || p[0] === 'reports') {
+      const sub = p[0] === 'reports' ? 'reports' : p[1];
+      const param = p[0] === 'reports' ? p[1] : p[2];
+
+      if (sub === 'audit') {
+        const latest = await getLatestAuditReport();
+        data = latest || (await runFirstReadAudit(50));
+      } else if (sub === 'recommend') {
+        const latest = await getLatestRecommendationsReport();
+        if (latest) {
+          data = latest;
+        } else {
+          const audit = (await getLatestAuditReport()) || (await runFirstReadAudit(30));
+          data = await generateFirstReadRecommendations(audit);
+        }
+      } else if (sub === 'reports' && param) {
+        data = await getReportById(param);
+        if (!data) return NextResponse.json({ error: 'Report not found' }, { status: 404 });
+      } else if (sub === 'reports') {
+        data = await listReports();
+      } else if (sub === 'approvals') {
+        data = { approvedIds: await getApprovals() };
+      } else if (sub === 'google') {
+        data = getFirstReadGoogleStatus();
+      } else {
+        data = await fetchSiteInfo();
+      }
+    } else {
+      return NextResponse.json({ error: 'Endpoint not found or legacy route removed' }, { status: 404 });
+    }
+
+    return NextResponse.json(data, {
+      headers: { 'Cache-Control': 'private, no-store' }
+    });
+  } catch (e) {
+    return formatError(e);
+  }
+}
+
+export async function POST(
+  request: Request,
+  { params }: { params: Promise<{ path: string[] }> }
+) {
+  try {
+    await authorize(request);
+    const p = (await params).path;
+
+    if (p[0] === 'firstread') {
+      const action = p[1];
+
+      if (action === 'audit') {
+        const audit = await runFirstReadAudit(50);
+        const stored = await saveAuditReport(audit);
+        return NextResponse.json(stored);
+      }
+
+      if (action === 'recommend') {
+        const audit = (await getLatestAuditReport()) || (await runFirstReadAudit(30));
+        const recs = await generateFirstReadRecommendations(audit);
+        const stored = await saveRecommendationsReport(recs);
+        return NextResponse.json(stored);
+      }
+
+      if (action === 'approve') {
+        const body = (await boundedJson(request)) as { id: string; approved: boolean };
+        if (!body.id || typeof body.approved !== 'boolean') {
+          return NextResponse.json({ error: 'Invalid approval payload' }, { status: 400 });
+        }
+        const updated = await setApproval(body.id, body.approved);
+        return NextResponse.json({
+          ok: true,
+          approvedIds: updated,
+          note: 'Approval status saved internally. No changes made to FirstRead.'
+        });
+      }
+
+      // Any other action targeting firstread is forbidden
+      return NextResponse.json(
+        { error: 'Forbidden. Write operations to FirstRead are permanently blocked.' },
+        { status: 403 }
+      );
+    }
+
+    return NextResponse.json(
+      { error: 'Legacy publishing and write operations have been safely removed.' },
+      { status: 404 }
+    );
+  } catch (e) {
+    return formatError(e);
+  }
+}

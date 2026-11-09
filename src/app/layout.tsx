@@ -1,3 +1,29 @@
-import type {Metadata} from 'next';import './globals.css';import {Theme} from '@/components/theme';import {Header} from '@/components/header';import {Footer} from '@/components/footer';import {JsonLd} from '@/lib/seo';import {ORIGIN} from '@/lib/schema';
-export const metadata:Metadata={metadataBase:new URL(ORIGIN),robots:{index:process.env.ALLOW_INDEXING==='true',follow:process.env.ALLOW_INDEXING==='true'},title:{default:'Spot Magazine | UK Lifestyle, Entertainment & Culture',template:'%s | Spot Magazine'},description:'Spot Magazine brings a considered perspective to UK lifestyle, entertainment, culture and digital life.'};
-export default function RootLayout({children}:{children:React.ReactNode}){return <html data-scroll-behavior="smooth" lang="en-GB" suppressHydrationWarning><body><Theme><a href="#main" className="skip-link">Skip to content</a><Header/><main id="main">{children}</main><Footer/></Theme><JsonLd value={{'@context':'https://schema.org','@type':'Organization','@id':ORIGIN+'/#organisation',name:'Spot Magazine',url:ORIGIN,logo:ORIGIN+'/icon.svg'}}/><JsonLd value={{'@context':'https://schema.org','@type':'WebSite',name:'Spot Magazine',url:ORIGIN,inLanguage:'en-GB'}}/></body></html>;}
+import type { Metadata } from 'next';
+import './globals.css';
+
+export const metadata: Metadata = {
+  metadataBase: new URL(process.env.APP_URL || 'http://localhost:3000'),
+  robots: {
+    index: false,
+    follow: false
+  },
+  title: {
+    default: 'FirstRead SEO Dashboard',
+    template: '%s | FirstRead SEO'
+  },
+  description: 'AI-Powered SEO monitoring and recommendations for FirstRead (https://firstread.co.uk)'
+};
+
+export default function RootLayout({
+  children
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="en-GB">
+      <body>
+        <main id="main">{children}</main>
+      </body>
+    </html>
+  );
+}

@@ -1,2 +1,27 @@
-﻿import {Login} from '@/components/admin/login';import {authReady,session} from '@/lib/auth';import {configured} from '@/lib/github';import {redirect} from 'next/navigation';export const dynamic='force-dynamic';
-export default async function LoginPage({searchParams}:{searchParams:Promise<{error?:string;username?:string;password?:string}>}){const query=await searchParams;if(query.username||query.password)redirect('/admin/login');if(await session())redirect('/admin');const messages:Record<string,string>={credentials:'The username or password was not recognised. Please try again.','rate-limited':'Login limit reached. Please wait fifteen minutes before trying again.',unavailable:'Sign-in is temporarily unavailable. Please try again shortly.'};return <div className="container"><Login ready={authReady()&&configured()} initialError={messages[query.error||'']||''}/></div>;}
+﻿import { Login } from '@/components/admin/login';
+import { authReady, session } from '@/lib/auth';
+import { redirect } from 'next/navigation';
+
+export const dynamic = 'force-dynamic';
+
+export default async function LoginPage({
+  searchParams
+}: {
+  searchParams: Promise<{ error?: string; username?: string; password?: string }>;
+}) {
+  const query = await searchParams;
+  if (query.username || query.password) redirect('/admin/login');
+  if (await session()) redirect('/admin');
+
+  const messages: Record<string, string> = {
+    credentials: 'The username or password was not recognised. Please try again.',
+    'rate-limited': 'Login limit reached. Please wait fifteen minutes before trying again.',
+    unavailable: 'Sign-in is temporarily unavailable. Please try again shortly.'
+  };
+
+  return (
+    <div className="container">
+      <Login ready={authReady()} initialError={messages[query.error || ''] || ''} />
+    </div>
+  );
+}
