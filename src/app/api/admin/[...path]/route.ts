@@ -3,7 +3,7 @@ import { session, authorize } from '@/lib/auth';
 import { runFirstReadAudit } from '@/lib/firstread/audit';
 import { generateFirstReadRecommendations } from '@/lib/firstread/ai';
 import { getFirstReadGoogleStatus } from '@/lib/firstread/google-interfaces';
-import { fetchSiteInfo } from '@/lib/firstread/client';
+import { fetchSiteInfo, fetchPublishedPosts, fetchCategories } from '@/lib/firstread/client';
 import {
   saveAuditReport,
   saveRecommendationsReport,
@@ -49,7 +49,23 @@ export async function GET(
       const sub = p[0] === 'reports' ? 'reports' : p[1];
       const param = p[0] === 'reports' ? p[1] : p[2];
 
-      if (sub === 'audit') {
+      if (sub === 'posts') {
+        const { searchParams } = new URL(request.url);
+        const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
+        const perPage = Math.min(100, Math.max(1, parseInt(searchParams.get('perPage') || '10', 10)));
+        const [postsData, categories] = await Promise.all([
+          fetchPublishedPosts(page, perPage),
+          fetchCategories().catch(() => [])
+        ]);
+        data = {
+          ...postsData,
+          page,
+          perPage,
+          categories
+        };
+      } else if (sub === 'info') {
+        data = await fetchSiteInfo();
+      } else if (sub === 'audit') {
         const latest = await getLatestAuditReport();
         data = latest || (await runFirstReadAudit(50));
       } else if (sub === 'recommend') {

@@ -7,7 +7,7 @@ export default async function Section({
   params: Promise<{ section: string }>;
 }) {
   const { section } = await params;
-  if (!['overview', 'technical', 'homepage', 'articles', 'recommendations', 'history', 'google', 'settings'].includes(section)) {
+  if (!['overview', 'posts', 'homepage', 'articles', 'technical', 'recommendations', 'history', 'google', 'settings'].includes(section)) {
     notFound();
   }
   return <AdminPanel section={section} />;

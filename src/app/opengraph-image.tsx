@@ -1,1 +1,58 @@
-﻿import {ImageResponse} from 'next/og';export const runtime='nodejs';export const alt='Spot Magazine — Good stories. Fresh perspective.';export const size={width:1200,height:630};export const contentType='image/png';export default function Image(){return new ImageResponse(<div style={{background:'#f5f3ed',width:'100%',height:'100%',display:'flex',flexDirection:'column',justifyContent:'center',padding:85,color:'#214c3a'}}><div style={{display:'flex',alignItems:'center',gap:25,marginBottom:60}}><svg width="110" height="110" viewBox="0 0 64 64"><circle cx="32" cy="32" r="25" stroke="#214c3a" strokeWidth="1.5" fill="none"/><path d="M39 21c-2-2-5-3-8-2-4 1-6 3-6 6 0 4 4 5 8 6s7 3 7 6c0 4-4 7-8 7-4 0-7-2-9-4" fill="none" stroke="#214c3a" strokeWidth="2.8" strokeLinecap="round"/><circle cx="51" cy="14" r="5" fill="#b27b4e"/></svg><div style={{display:'flex',flexDirection:'column'}}><div style={{fontSize:89,fontWeight:900,letterSpacing:-5,display:'flex'}}>SPOT<span style={{color:'#b66d42'}}>.</span></div><div style={{fontSize:17,letterSpacing:13,marginTop:-5}}>MAGAZINE</div></div></div><div style={{fontSize:55,lineHeight:1.2,display:'flex',flexDirection:'column'}}><span>Good stories.</span><span>Fresh perspective.</span></div><div style={{fontSize:17,letterSpacing:3,marginTop:35}}>CULTURE · LIFESTYLE · ENTERTAINMENT · DIGITAL LIFE</div></div>,size);}
+﻿import { ImageResponse } from 'next/og';
+
+export const runtime = 'nodejs';
+export const alt = 'FirstRead SEO Monitor — Read-Only AI SEO Monitoring Dashboard';
+export const size = { width: 1200, height: 630 };
+export const contentType = 'image/png';
+
+export default function Image() {
+  return new ImageResponse(
+    <div
+      style={{
+        background: '#090d16',
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        padding: 80,
+        color: '#f8fafc',
+        fontFamily: 'sans-serif'
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginBottom: 40 }}>
+        <div
+          style={{
+            width: 56,
+            height: 56,
+            borderRadius: 12,
+            background: '#0284c7',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: 28,
+            fontWeight: 800,
+            color: '#ffffff'
+          }}
+        >
+          FR
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <div style={{ fontSize: 44, fontWeight: 800, letterSpacing: -1, color: '#f8fafc' }}>
+            FirstRead SEO Monitor
+          </div>
+          <div style={{ fontSize: 18, color: '#94a3b8', letterSpacing: 1 }}>
+            STRICT READ-ONLY AUDITING & AI RECOMMENDATIONS
+          </div>
+        </div>
+      </div>
+      <div style={{ fontSize: 32, lineHeight: 1.4, color: '#cbd5e1', maxWidth: 900 }}>
+        Continuous monitoring for https://firstread.co.uk
+      </div>
+      <div style={{ fontSize: 16, color: '#38bdf8', marginTop: 40, letterSpacing: 2 }}>
+        TECHNICAL SEO · CONTENT AUDIT · SCHEMA · ACCESSIBILITY
+      </div>
+    </div>,
+    size
+  );
+}

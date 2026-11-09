@@ -13,6 +13,7 @@ import {
 } from '../src/lib/firstread/audit';
 import { generateFirstReadRecommendations } from '../src/lib/firstread/ai';
 import { getFirstReadGoogleStatus } from '../src/lib/firstread/google-interfaces';
+import { fetchPublishedPosts, fetchSiteInfo } from '../src/lib/firstread/client';
 import type { WordPressPost, FirstReadAuditReport } from '../src/lib/firstread/types';
 
 test('FirstRead security policy strictly enforces read-only GET requests and fails closed on write methods', () => {
@@ -282,4 +283,19 @@ test('Google integrations interface reports unconfigured status truthfully witho
   assert.equal(status.analytics4.status, 'unconfigured');
   assert.ok(!('metrics' in status.searchConsole) || status.searchConsole.metrics === undefined);
   assert.ok(status.notes.some(n => n.includes('aggregated search appearance')));
+});
+
+test('Live WordPress client fetches real site information and published posts with pagination', async () => {
+  const siteInfo = await fetchSiteInfo();
+  assert.ok(siteInfo.name.length > 0, 'Site name should not be empty');
+  assert.ok(siteInfo.totalPosts > 0, 'Total posts should be greater than 0');
+  assert.ok(siteInfo.totalCategories > 0, 'Total categories should be greater than 0');
+
+  const { posts, totalPosts, totalPages } = await fetchPublishedPosts(1, 2);
+  assert.ok(posts.length > 0, 'Should fetch at least one published post');
+  assert.ok(totalPosts > 0, 'Total posts header should be greater than 0');
+  assert.ok(totalPages >= 1, 'Total pages should be at least 1');
+  assert.ok(posts[0].id > 0, 'Post ID should be positive integer');
+  assert.ok(posts[0].title.rendered.length > 0, 'Post title should be non-empty');
+  assert.ok(posts[0].link.startsWith('https://firstread.co.uk/'), 'Post link should target FirstRead');
 });

@@ -9,9 +9,10 @@ import { FirstReadPanel } from './firstread-panel';
 
 const titles: Record<string, string> = {
   overview: 'Website health & SEO audit overview.',
-  technical: 'Robots.txt, XML Sitemaps & Schema validation.',
+  posts: 'Browse published articles from FirstRead WordPress.',
   homepage: 'Homepage title, meta description & heading structure.',
   articles: 'Article-level SEO audit & content metrics.',
+  technical: 'Robots.txt, XML Sitemaps & Schema validation.',
   recommendations: 'AI-assisted SEO proposals & editorial review.',
   history: 'Historical audit runs & monitoring snapshots.',
   google: 'Google Search Console & GA4 readiness.',

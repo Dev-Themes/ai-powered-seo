@@ -4,9 +4,10 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard,
-  ShieldCheck,
+  BookOpen,
   Globe,
   FileText,
+  ShieldCheck,
   Sparkles,
   History,
   SearchCheck,
@@ -15,9 +16,10 @@ import {
 
 const links = [
   ['', 'Overview', LayoutDashboard],
-  ['technical', 'Technical SEO', ShieldCheck],
+  ['posts', 'WordPress Articles', BookOpen],
   ['homepage', 'Homepage SEO', Globe],
-  ['articles', 'Article SEO', FileText],
+  ['articles', 'Articles SEO', FileText],
+  ['technical', 'Technical SEO', ShieldCheck],
   ['recommendations', 'AI Recommendations', Sparkles],
   ['history', 'Audit History', History],
   ['google', 'Google Integrations', SearchCheck],
