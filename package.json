@@ -12,6 +12,7 @@
     "test:e2e": "playwright test",
     "audit:site": "node scripts/run-tool.mjs audit",
     "automation": "node scripts/run-tool.mjs automation",
+    "firstread:audit": "node scripts/run-tool.mjs automation firstread",
     "admin:hash": "node scripts/hash-password.mjs",
     "review": "node scripts/review.mjs",
     "dev:connected": "next dev"

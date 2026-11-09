@@ -5,7 +5,7 @@ on:
       mode:
         type: choice
         default: daily
-        options: [daily, weekly, monthly, publish]
+        options: [daily, weekly, monthly, publish, firstread]
         description: Read-only monitoring or previously approved schedules
   schedule:
     - cron: '17 6 * * *'
