@@ -48,21 +48,44 @@ export async function readOnlyFetch(
 
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
-      const response = await fetch(validatedUrl.toString(), {
-        method: 'GET',
-        headers,
-        signal: options?.signal || AbortSignal.timeout(15000),
-        cache: 'no-store'
-      });
+      let currentUrl = validatedUrl;
+      let redirectHops = 0;
+      const MAX_REDIRECTS = 3;
 
-      if (response.status === 429 || (response.status >= 500 && response.status <= 504)) {
-        if (attempt === 2) return response;
-        // Exponential backoff for rate limits or server errors
-        await new Promise(r => setTimeout(r, 1000 * Math.pow(2, attempt)));
-        continue;
+      while (true) {
+        const response = await fetch(currentUrl.toString(), {
+          method: 'GET',
+          headers,
+          redirect: 'manual', // Never follow redirects blindly; validate every hop
+          signal: options?.signal || AbortSignal.timeout(15000),
+          cache: 'no-store'
+        });
+
+        // If redirect returned, strictly validate redirect destination against security allowlist
+        if ([301, 302, 307, 308].includes(response.status)) {
+          const location = response.headers.get('location');
+          if (!location) return response;
+
+          redirectHops++;
+          if (redirectHops > MAX_REDIRECTS) {
+            throw new Error(`Exceeded maximum allowed redirect hops (${MAX_REDIRECTS}).`);
+          }
+
+          // Validate target URL against strict read-only security allowlist (fails closed on unapproved endpoints)
+          const targetUrl = new URL(location, currentUrl);
+          currentUrl = validateReadOnlyRequest(targetUrl, { method: 'GET' });
+          continue;
+        }
+
+        if (response.status === 429 || (response.status >= 500 && response.status <= 504)) {
+          if (attempt === 2) return response;
+          // Exponential backoff for rate limits or server errors
+          await new Promise(r => setTimeout(r, 1000 * Math.pow(2, attempt)));
+          break;
+        }
+
+        return response;
       }
-
-      return response;
     } catch (err) {
       if (attempt === 2) throw err;
       await new Promise(r => setTimeout(r, 1000 * Math.pow(2, attempt)));

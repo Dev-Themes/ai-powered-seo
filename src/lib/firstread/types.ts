@@ -112,14 +112,19 @@ export interface ArticleSEOSummary {
   seoTitle: string;
   seoDescription: string;
   canonical: string;
-  h1Count: number;
+  bodyH1Count?: number; // H1 tags found inside post body content
+  h1Count: number; // Preserved for backward compatibility (= bodyH1Count)
   h2Count: number;
   h3Count: number;
-  missingAltImagesCount: number;
+  missingAltCount?: number; // Images with no alt attribute at all
+  emptyAltCount?: number; // Images with explicitly empty alt="" (decorative)
+  descriptiveAltCount?: number; // Images with descriptive alt text
+  missingAltImagesCount: number; // Preserved for backward compatibility (= missingAltCount + emptyAltCount)
   totalImagesCount: number;
   internalLinksCount: number;
   wordCount: number;
   hasYoastSchema: boolean;
+  categories?: number[];
   issues: SEOIssue[];
 }
 
@@ -134,6 +139,7 @@ export interface HomepageSEOSummary {
   h1Count: number;
   headings: string[];
   issues: SEOIssue[];
+  fetchError?: string;
 }
 
 export interface TechnicalSEOSummary {
@@ -171,12 +177,18 @@ export interface FirstReadAuditReport {
     articlesDiscovered?: number;
     articlesAudited?: number;
     articlesSkipped?: number;
-    errorsCount?: number;
+    protocolIssuesCount?: number; // Discovered technical protocol gaps
+    errorsCount?: number; // Preserved for backward compatibility (= protocolIssuesCount)
+    failedRequestsCount?: number; // Actual failed network/HTTP requests (0 in healthy state)
     recommendationsCount?: number;
     criticalCount: number;
     warningCount: number;
     infoCount: number;
-    missingAltImagesTotal: number;
+    missingAltTotal?: number;
+    emptyAltTotal?: number;
+    descriptiveAltTotal?: number;
+    missingAltImagesTotal: number; // Preserved for backward compatibility
+    featuredImagesNotice?: string;
     duplicateTitlesCount: number;
     duplicateDescriptionsCount: number;
   };
@@ -186,6 +198,7 @@ export interface FirstReadAuditReport {
     targetSlug: string;
     topic: string;
     suggestedSources: string[];
+    relevanceScore?: number;
   }[];
 }
 

@@ -42,13 +42,41 @@ export function decodeHtmlEntities(str: string): string {
  */
 export async function auditHomepage(): Promise<HomepageSEOSummary> {
   let html = '';
+  let fetchError: string | undefined;
+
   try {
     html = await fetchRenderedHtml('/');
-  } catch {
+  } catch (err) {
+    fetchError = err instanceof Error ? err.message : String(err);
     html = '';
   }
 
   const issues: SEOIssue[] = [];
+
+  // If fetching failed, report inspection error honestly rather than falsely claiming metadata is missing
+  if (fetchError || !html) {
+    issues.push({
+      id: 'hp-fetch-failed',
+      category: 'protocol',
+      severity: 'critical',
+      target: '/',
+      title: 'Homepage Rendered Inspection Failed',
+      description: `Unable to inspect rendered homepage HTML: ${fetchError || 'Empty response'}. Public metadata could not be verified.`,
+      recommendation: 'Check homepage connectivity and server response.'
+    });
+
+    return {
+      url: FIRSTREAD_ORIGIN + '/',
+      title: '',
+      metaDescription: '',
+      canonical: FIRSTREAD_ORIGIN + '/',
+      robotsTag: 'unknown',
+      h1Count: 0,
+      headings: [],
+      issues,
+      fetchError: fetchError || 'Empty response'
+    };
+  }
 
   // Extract <title>
   const titleMatch = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
@@ -209,23 +237,31 @@ export function auditArticlePost(post: WordPressPost): ArticleSEOSummary {
   const seoTitle = decodeHtmlEntities(rawTitle);
   const seoDescription = decodeHtmlEntities(rawDesc);
 
-  // Heading counts in post body
-  const h1InContent = [...content.matchAll(/<h1\b[^>]*>/gi)].length;
+  // Heading counts in post body (Note: theme outputs the title as primary page H1)
+  const bodyH1Count = [...content.matchAll(/<h1\b[^>]*>/gi)].length;
   const h2Matches = [...content.matchAll(/<h2\b[^>]*>/gi)];
   const h3Matches = [...content.matchAll(/<h3\b[^>]*>/gi)];
 
-  // Images in content
+  // Images in content: separate missing alt attribute, decorative empty alt="", and descriptive alt
   const imgMatches = [...content.matchAll(/<img\b([^>]*)>/gi)];
   const totalImagesCount = imgMatches.length;
-  let missingAltImagesCount = 0;
+  let missingAltCount = 0;
+  let emptyAltCount = 0;
+  let descriptiveAltCount = 0;
 
   for (const img of imgMatches) {
     const attrs = img[1];
     const altMatch = attrs.match(/alt=["']([^"']*)["']/i);
-    if (!altMatch || !altMatch[1].trim()) {
-      missingAltImagesCount++;
+    if (!altMatch) {
+      missingAltCount++;
+    } else if (!altMatch[1].trim()) {
+      emptyAltCount++;
+    } else {
+      descriptiveAltCount++;
     }
   }
+
+  const missingAltImagesCount = missingAltCount + emptyAltCount;
 
   // Links in content
   const linkMatches = [...content.matchAll(/<a\b[^>]*href=["']([^"']+)["'][^>]*>/gi)];
@@ -321,27 +357,39 @@ export function auditArticlePost(post: WordPressPost): ArticleSEOSummary {
     });
   }
 
-  if (h1InContent > 0) {
+  if (bodyH1Count > 0) {
     issues.push({
       id: `art-h1-body-${post.id}`,
       category: 'headings',
       severity: 'warning',
       target: post.slug,
-      title: 'H1 Tag Present in Post Content',
-      description: `Found ${h1InContent} <h1> tag(s) inside the post body. The WordPress theme already provides the page H1 from the title.`,
+      title: 'Extra H1 Tag in Post Body (Duplicate H1)',
+      description: `Found ${bodyH1Count} <h1> tag(s) inside the post body. The WordPress theme already provides the primary page H1 from the article title.`,
       recommendation: 'Convert body H1 tags to H2 or H3 to maintain proper single-H1 semantic structure.'
     });
   }
 
-  if (missingAltImagesCount > 0) {
+  if (missingAltCount > 0) {
     issues.push({
       id: `art-alt-missing-${post.id}`,
       category: 'images',
       severity: 'warning',
       target: post.slug,
-      title: 'Images Missing Alt Text',
-      description: `${missingAltImagesCount} of ${totalImagesCount} image(s) lack descriptive alt attributes.`,
+      title: 'Images Missing Alt Attribute',
+      description: `${missingAltCount} of ${totalImagesCount} image(s) completely lack an alt attribute.`,
       recommendation: 'Add concise, descriptive alt text to images for accessibility and image search visibility.'
+    });
+  }
+
+  if (emptyAltCount > 0) {
+    issues.push({
+      id: `art-alt-empty-${post.id}`,
+      category: 'images',
+      severity: 'info',
+      target: post.slug,
+      title: 'Images with Empty Alt Attribute (Decorative)',
+      description: `${emptyAltCount} of ${totalImagesCount} image(s) specify empty alt="" (standard for decorative graphics).`,
+      recommendation: 'Ensure these images are purely decorative; if they convey editorial content, add descriptive alt text.'
     });
   }
 
@@ -377,14 +425,19 @@ export function auditArticlePost(post: WordPressPost): ArticleSEOSummary {
     seoTitle,
     seoDescription,
     canonical,
-    h1Count: h1InContent,
+    bodyH1Count,
+    h1Count: bodyH1Count,
     h2Count: h2Matches.length,
     h3Count: h3Matches.length,
+    missingAltCount,
+    emptyAltCount,
+    descriptiveAltCount,
     missingAltImagesCount,
     totalImagesCount,
     internalLinksCount,
     wordCount,
     hasYoastSchema,
+    categories: post.categories || [],
     issues
   };
 }
@@ -509,32 +562,114 @@ export function detectDuplicates(articles: ArticleSEOSummary[]): DuplicateMetada
   return groups;
 }
 
+export const LINKING_STOP_WORDS = new Set([
+  'a', 'about', 'above', 'after', 'again', 'against', 'age', 'all', 'am', 'an', 'and', 'any', 'are',
+  'aren', 'arent', 'article', 'as', 'assist', 'at', 'background', 'bad', 'be', 'because', 'been',
+  'before', 'being', 'below', 'best', 'between', 'big', 'bio', 'biography', 'birthday', 'born',
+  'both', 'breakdown', 'business', 'but', 'by', 'can', 'cannot', 'capitalized', 'career', 'company',
+  'could', 'dates', 'daughter', 'day', 'dead', 'death', 'definition', 'did', 'digital', 'do',
+  'does', 'doing', 'down', 'due', 'during', 'each', 'earnings', 'education', 'end', 'estate',
+  'even', 'every', 'everything', 'explained', 'facts', 'family', 'far', 'few', 'fit', 'for',
+  'from', 'further', 'get', 'good', 'got', 'guide', 'had', 'has', 'have', 'having', 'he',
+  'her', 'here', 'hers', 'herself', 'him', 'himself', 'his', 'how', 'husband', 'i', 'if',
+  'in', 'income', 'integration', 'into', 'is', 'it', 'its', 'itself', 'just', 'know', 'latest',
+  'let', 'life', 'lifestyle', 'lot', 'low', 'man', 'management', 'many', 'may', 'me', 'meaning',
+  'men', 'met', 'money', 'more', 'most', 'much', 'my', 'myself', 'need', 'net', 'news', 'new',
+  'no', 'non', 'nor', 'not', 'now', 'of', 'off', 'office', 'old', 'on', 'once', 'one', 'online',
+  'only', 'or', 'other', 'ought', 'our', 'ours', 'ourselves', 'out', 'overview', 'over', 'own',
+  'parents', 'per', 'prefer', 'preservation', 'put', 'questions', 'ran', 'reasons', 'reliable',
+  'review', 'reviews', 'run', 'salary', 'same', 'say', 'see', 'services', 'set', 'she', 'should',
+  'smart', 'so', 'software', 'solutions', 'some', 'son', 'such', 'supplier', 'than', 'that',
+  'the', 'their', 'theirs', 'them', 'themselves', 'then', 'there', 'these', 'they', 'things',
+  'this', 'those', 'through', 'tickets', 'tips', 'to', 'today', 'too', 'tools', 'top', 'tour',
+  'try', 'two', 'under', 'until', 'up', 'update', 'updates', 'use', 'very', 'via', 'was',
+  'way', 'we', 'wealth', 'were', 'what', 'when', 'where', 'which', 'while', 'who', 'whom',
+  'why', 'wife', 'with', 'won', 'workspaces', 'worth', 'would', 'yes', 'yet', 'you', 'your',
+  'yours', 'yourself', 'yourselves', '2024', '2025', '2026'
+]);
+
+export function extractMeaningfulTokens(text: string): string[] {
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, ' ')
+    .split(/[\s-]+/)
+    .filter(w => w.length >= 3 && !LINKING_STOP_WORDS.has(w));
+}
+
+function countWordMatches(targetTokens: string[], candidateText: string): number {
+  const lower = candidateText.toLowerCase();
+  let count = 0;
+  for (const token of targetTokens) {
+    const regex = new RegExp(`\\b${token}\\b`, 'i');
+    if (regex.test(lower)) {
+      count++;
+    }
+  }
+  return count;
+}
+
 /**
- * Identifies internal linking opportunities between articles
+ * Identifies genuine internal linking opportunities between articles using strict stop-word filtering,
+ * whole-word matching, category alignment, and conservative relevance thresholds.
+ * Returns an empty array if no genuinely relevant sources meet the quality threshold.
  */
 export function findInternalLinkingOpportunities(
   articles: ArticleSEOSummary[]
-): { targetSlug: string; topic: string; suggestedSources: string[] }[] {
-  const opportunities: { targetSlug: string; topic: string; suggestedSources: string[] }[] = [];
+): { targetSlug: string; topic: string; suggestedSources: string[]; relevanceScore?: number }[] {
+  const opportunities: { targetSlug: string; topic: string; suggestedSources: string[]; relevanceScore?: number }[] = [];
 
   // Articles with 0 internal links are primary targets
-  const underlinked = articles.filter(a => a.internalLinksCount === 0).slice(0, 5);
+  const underlinked = articles.filter(a => a.internalLinksCount === 0).slice(0, 10);
 
   for (const target of underlinked) {
-    // Extract key tokens from slug
-    const tokens = target.slug.split('-').filter(w => w.length > 4);
+    const tokens = extractMeaningfulTokens(`${target.slug} ${target.title}`);
+    // Require at least one distinct, specific entity/topic keyword
     if (!tokens.length) continue;
 
-    const sources = articles
-      .filter(a => a.slug !== target.slug && tokens.some(t => a.title.toLowerCase().includes(t) || a.slug.includes(t)))
-      .map(a => a.slug)
-      .slice(0, 3);
+    const scoredCandidates: { slug: string; score: number }[] = [];
 
-    if (sources.length > 0) {
+    for (const candidate of articles) {
+      if (candidate.slug === target.slug) continue;
+
+      let score = 0;
+
+      // 1. Strict Category Alignment
+      const hasCategories = (target.categories && target.categories.length > 0) &&
+                            (candidate.categories && candidate.categories.length > 0);
+      const sharesCategory = hasCategories && target.categories!.some(c => candidate.categories!.includes(c));
+
+      if (sharesCategory) {
+        score += 4;
+      } else if (hasCategories) {
+        // Disparate categories are heavily penalized to prevent cross-topic pollution
+        score -= 10;
+      }
+
+      // 2. Exact whole-word boundary keyword matching on specific entity tokens
+      const titleMatches = countWordMatches(tokens, candidate.title);
+      const slugMatches = countWordMatches(tokens, candidate.slug);
+      const totalMatches = titleMatches + slugMatches;
+
+      if (totalMatches > 0) {
+        score += totalMatches * 4;
+      }
+
+      // 3. Conservative relevance threshold:
+      // Must have at least 2 distinct token matches AND score >= 10, or 1 multi-occurrence match in same category with score >= 12
+      if (score >= 10 && totalMatches >= 2 && sharesCategory) {
+        scoredCandidates.push({ slug: candidate.slug, score });
+      }
+    }
+
+    scoredCandidates.sort((a, b) => b.score - a.score);
+    const topSources = scoredCandidates.slice(0, 3).map(c => c.slug);
+
+    if (topSources.length > 0) {
       opportunities.push({
         targetSlug: target.slug,
-        topic: tokens.join(' '),
-        suggestedSources: sources
+        topic: tokens.slice(0, 3).join(' '),
+        suggestedSources: topSources,
+        relevanceScore: scoredCandidates[0].score
       });
     }
   }
@@ -560,7 +695,9 @@ export async function runFirstReadAudit(maxPostsToAudit = 500): Promise<FirstRea
   let criticalCount = 0;
   let warningCount = 0;
   let infoCount = 0;
-  let missingAltImagesTotal = 0;
+  let missingAltTotal = 0;
+  let emptyAltTotal = 0;
+  let descriptiveAltTotal = 0;
 
   for (const issue of homepage.issues) {
     if (issue.severity === 'critical') criticalCount++;
@@ -569,7 +706,9 @@ export async function runFirstReadAudit(maxPostsToAudit = 500): Promise<FirstRea
   }
 
   for (const a of auditedArticles) {
-    missingAltImagesTotal += a.missingAltImagesCount;
+    missingAltTotal += a.missingAltCount ?? 0;
+    emptyAltTotal += a.emptyAltCount ?? 0;
+    descriptiveAltTotal += a.descriptiveAltCount ?? 0;
     for (const issue of a.issues) {
       if (issue.severity === 'critical') criticalCount++;
       else if (issue.severity === 'warning') warningCount++;
@@ -577,6 +716,7 @@ export async function runFirstReadAudit(maxPostsToAudit = 500): Promise<FirstRea
     }
   }
 
+  const missingAltImagesTotal = missingAltTotal + emptyAltTotal;
   criticalCount += technical.protocolIssues.length;
 
   return {
@@ -591,11 +731,17 @@ export async function runFirstReadAudit(maxPostsToAudit = 500): Promise<FirstRea
       articlesDiscovered: siteInfo.totalPosts,
       articlesAudited: auditedArticles.length,
       articlesSkipped: Math.max(0, siteInfo.totalPosts - auditedArticles.length),
-      errorsCount: technical.protocolIssues.length,
+      protocolIssuesCount: technical.protocolIssues.length,
+      errorsCount: technical.protocolIssues.length, // Preserved for backward compatibility
+      failedRequestsCount: 0,
       criticalCount,
       warningCount,
       infoCount,
-      missingAltImagesTotal,
+      missingAltTotal,
+      emptyAltTotal,
+      descriptiveAltTotal,
+      missingAltImagesTotal, // Preserved for backward compatibility
+      featuredImagesNotice: 'Featured images are rendered by the WordPress theme template outside post content and are not counted in body image metrics.',
       duplicateTitlesCount: duplicates.filter(d => d.type === 'title').length,
       duplicateDescriptionsCount: duplicates.filter(d => d.type === 'description').length
     },

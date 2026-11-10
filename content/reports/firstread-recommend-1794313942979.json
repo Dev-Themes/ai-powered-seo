@@ -1,0 +1,285 @@
+{
+  "id": "firstread-recommend-1794313942979",
+  "kind": "recommend",
+  "createdAt": "2026-11-10T12:32:22.979Z",
+  "status": "complete",
+  "data": {
+    "generatedAt": "2026-11-10T12:32:22.976Z",
+    "summary": "Heuristic-verified SEO recommendations generated from live FirstRead audit data. (Configure GEMINI_API_KEY for dynamic generative refinement).",
+    "recommendations": [
+      {
+        "id": "rec-proto-site-url",
+        "priority": "high",
+        "confidence": "high",
+        "category": "technical",
+        "targetUrl": "https://firstread.co.uk",
+        "slug": "site-configuration",
+        "issue": "WordPress Site URL Inconsistency (HTTP vs HTTPS)",
+        "reasoning": "Inconsistent protocol declarations between HTTP and HTTPS can confuse search engine crawlers, trigger unnecessary 301 redirects, and cause canonical mixed-content issues.",
+        "currentValue": {
+          "structure": "WordPress site_url is configured as \"http://firstread.co.uk\" (HTTP) while home is \"https://firstread.co.uk\" (HTTPS). This can cause plugins and REST API links to generate insecure URLs."
+        },
+        "recommendedValue": {
+          "structure": "Ensure WordPress General Settings (WordPress Address URL and Site Address URL) both use https://firstread.co.uk."
+        },
+        "evidence": "WordPress site_url is configured as \"http://firstread.co.uk\" (HTTP) while home is \"https://firstread.co.uk\" (HTTPS). This can cause plugins and REST API links to generate insecure URLs.",
+        "limitations": "Changes to WordPress site settings must be executed manually by an authorized WordPress administrator.",
+        "source": "deterministic_audit",
+        "requiresApproval": true,
+        "approved": false
+      },
+      {
+        "id": "rec-proto-sitemaps",
+        "priority": "high",
+        "confidence": "high",
+        "category": "technical",
+        "targetUrl": "https://firstread.co.uk",
+        "slug": "site-configuration",
+        "issue": "Insecure HTTP Sitemap Directives in robots.txt / Index",
+        "reasoning": "6 sitemap reference(s) declare HTTP URLs instead of HTTPS. All XML sitemaps should be served and declared under HTTPS.",
+        "currentValue": {
+          "structure": "Robots.txt declares an insecure HTTP sitemap directive: \"http://firstread.co.uk/sitemap_index.xml\". Best practice is HTTPS.; Sitemap index references insecure sub-sitemap: \"http://firstread.co.uk/post-sitemap.xml\".; Sitemap index references insecure sub-sitemap: \"http://firstread.co.uk/page-sitemap.xml\".; Sitemap index references insecure sub-sitemap: \"http://firstread.co.uk/category-sitemap.xml\".; Sitemap index references insecure sub-sitemap: \"http://firstread.co.uk/post_tag-sitemap.xml\".; Sitemap index references insecure sub-sitemap: \"http://firstread.co.uk/author-sitemap.xml\"."
+        },
+        "recommendedValue": {
+          "structure": "Update Yoast SEO and robots.txt to ensure the sitemap index and all sub-sitemaps (post, page, category, tag, author) use https:// URLs."
+        },
+        "evidence": "Robots.txt declares an insecure HTTP sitemap directive: \"http://firstread.co.uk/sitemap_index.xml\". Best practice is HTTPS.; Sitemap index references insecure sub-sitemap: \"http://firstread.co.uk/post-sitemap.xml\".; Sitemap index references insecure sub-sitemap: \"http://firstread.co.uk/page-sitemap.xml\".; Sitemap index references insecure sub-sitemap: \"http://firstread.co.uk/category-sitemap.xml\".; Sitemap index references insecure sub-sitemap: \"http://firstread.co.uk/post_tag-sitemap.xml\".; Sitemap index references insecure sub-sitemap: \"http://firstread.co.uk/author-sitemap.xml\".",
+        "limitations": "Requires regenerating Yoast sitemaps and saving robots.txt.",
+        "source": "deterministic_audit",
+        "requiresApproval": true,
+        "approved": false
+      },
+      {
+        "id": "rec-title-1794",
+        "priority": "medium",
+        "confidence": "high",
+        "category": "metadata",
+        "targetUrl": "https://firstread.co.uk/simpler-or-more-simple/",
+        "slug": "simpler-or-more-simple",
+        "issue": "SEO Title Exceeds SERP Pixel Display Threshold",
+        "reasoning": "The current title is 85 characters long. In desktop and mobile SERPs, titles longer than ~60 characters or ~600px are truncated with an ellipsis (...).",
+        "currentValue": {
+          "title": "Simpler or More Simple: Which One Is Correct? Meaning, Grammar & Examples - Firstread"
+        },
+        "recommendedValue": {
+          "title": "Simpler or More Simple: Which One Is Correct? - Firstread"
+        },
+        "evidence": "Current length: 85 characters. Refined candidate: 57 characters (natural, complete clause preserving primary entity).",
+        "limitations": "Length guidelines are advisory constraints for snippet visibility, not algorithmic ranking penalties.",
+        "source": "deterministic_audit",
+        "requiresApproval": true,
+        "approved": false
+      },
+      {
+        "id": "rec-title-1790",
+        "priority": "medium",
+        "confidence": "high",
+        "category": "metadata",
+        "targetUrl": "https://firstread.co.uk/tate-mcrae-tour/",
+        "slug": "tate-mcrae-tour",
+        "issue": "SEO Title Exceeds SERP Pixel Display Threshold",
+        "reasoning": "The current title is 75 characters long. In desktop and mobile SERPs, titles longer than ~60 characters or ~600px are truncated with an ellipsis (...).",
+        "currentValue": {
+          "title": "Tate McRae Tour 2026 Happening? Latest Dates, Tickets & Updates - Firstread"
+        },
+        "recommendedValue": {
+          "title": "Tate McRae Tour 2026: Latest Dates & Tickets - Firstread"
+        },
+        "evidence": "Current length: 75 characters. Refined candidate: 56 characters (natural, complete clause preserving primary entity).",
+        "limitations": "Length guidelines are advisory constraints for snippet visibility, not algorithmic ranking penalties.",
+        "source": "deterministic_audit",
+        "requiresApproval": true,
+        "approved": false
+      },
+      {
+        "id": "rec-title-1457",
+        "priority": "medium",
+        "confidence": "high",
+        "category": "metadata",
+        "targetUrl": "https://firstread.co.uk/hailey-bieber-net-worth-2026-income-wealth-breakdown/",
+        "slug": "hailey-bieber-net-worth-2026-income-wealth-breakdown",
+        "issue": "SEO Title Exceeds SERP Pixel Display Threshold",
+        "reasoning": "The current title is 67 characters long. In desktop and mobile SERPs, titles longer than ~60 characters or ~600px are truncated with an ellipsis (...).",
+        "currentValue": {
+          "title": "Hailey Bieber Net Worth 2026: Income & Wealth Explained - Firstread"
+        },
+        "recommendedValue": {
+          "title": "Hailey Bieber Net Worth 2026 - Firstread"
+        },
+        "evidence": "Current length: 67 characters. Refined candidate: 40 characters (natural, complete clause preserving primary entity).",
+        "limitations": "Length guidelines are advisory constraints for snippet visibility, not algorithmic ranking penalties.",
+        "source": "deterministic_audit",
+        "requiresApproval": true,
+        "approved": false
+      },
+      {
+        "id": "rec-title-1330",
+        "priority": "medium",
+        "confidence": "high",
+        "category": "metadata",
+        "targetUrl": "https://firstread.co.uk/alec-baldwin-net-worth/",
+        "slug": "alec-baldwin-net-worth",
+        "issue": "SEO Title Exceeds SERP Pixel Display Threshold",
+        "reasoning": "The current title is 69 characters long. In desktop and mobile SERPs, titles longer than ~60 characters or ~600px are truncated with an ellipsis (...).",
+        "currentValue": {
+          "title": "Alec Baldwin Net Worth 2025–2026: Income, Assets & Career - Firstread"
+        },
+        "recommendedValue": {
+          "title": "Alec Baldwin Net Worth 2025–2026 - Firstread"
+        },
+        "evidence": "Current length: 69 characters. Refined candidate: 44 characters (natural, complete clause preserving primary entity).",
+        "limitations": "Length guidelines are advisory constraints for snippet visibility, not algorithmic ranking penalties.",
+        "source": "deterministic_audit",
+        "requiresApproval": true,
+        "approved": false
+      },
+      {
+        "id": "rec-title-1312",
+        "priority": "medium",
+        "confidence": "high",
+        "category": "metadata",
+        "targetUrl": "https://firstread.co.uk/sabrina-carpenter-new-album-cover/",
+        "slug": "sabrina-carpenter-new-album-cover",
+        "issue": "SEO Title Exceeds SERP Pixel Display Threshold",
+        "reasoning": "The current title is 78 characters long. In desktop and mobile SERPs, titles longer than ~60 characters or ~600px are truncated with an ellipsis (...).",
+        "currentValue": {
+          "title": "Sabrina Carpenter New Album Cover: Meaning, Design & Fan Reactions - Firstread"
+        },
+        "recommendedValue": {
+          "title": "Sabrina Carpenter New Album Cover - Firstread"
+        },
+        "evidence": "Current length: 78 characters. Refined candidate: 45 characters (natural, complete clause preserving primary entity).",
+        "limitations": "Length guidelines are advisory constraints for snippet visibility, not algorithmic ranking penalties.",
+        "source": "deterministic_audit",
+        "requiresApproval": true,
+        "approved": false
+      },
+      {
+        "id": "rec-title-1245",
+        "priority": "medium",
+        "confidence": "high",
+        "category": "metadata",
+        "targetUrl": "https://firstread.co.uk/keyshia-cole-this-is-my-story/",
+        "slug": "keyshia-cole-this-is-my-story",
+        "issue": "SEO Title Exceeds SERP Pixel Display Threshold",
+        "reasoning": "The current title is 73 characters long. In desktop and mobile SERPs, titles longer than ~60 characters or ~600px are truncated with an ellipsis (...).",
+        "currentValue": {
+          "title": "Keyshia Cole: This Is My Story — A Powerful Musical Biography - Firstread"
+        },
+        "recommendedValue": {
+          "title": "Keyshia Cole: This Is My Story - Firstread"
+        },
+        "evidence": "Current length: 73 characters. Refined candidate: 42 characters (natural, complete clause preserving primary entity).",
+        "limitations": "Length guidelines are advisory constraints for snippet visibility, not algorithmic ranking penalties.",
+        "source": "deterministic_audit",
+        "requiresApproval": true,
+        "approved": false
+      },
+      {
+        "id": "rec-title-1237",
+        "priority": "medium",
+        "confidence": "high",
+        "category": "metadata",
+        "targetUrl": "https://firstread.co.uk/jenna-ortega-plastic-surgery/",
+        "slug": "jenna-ortega-plastic-surgery",
+        "issue": "SEO Title Exceeds SERP Pixel Display Threshold",
+        "reasoning": "The current title is 76 characters long. In desktop and mobile SERPs, titles longer than ~60 characters or ~600px are truncated with an ellipsis (...).",
+        "currentValue": {
+          "title": "Jenna Ortega Plastic Surgery: Truth, Rumors, and Reality in 2026 - Firstread"
+        },
+        "recommendedValue": {
+          "title": "Jenna Ortega Plastic Surgery: Rumors & Reality - Firstread"
+        },
+        "evidence": "Current length: 76 characters. Refined candidate: 58 characters (natural, complete clause preserving primary entity).",
+        "limitations": "Length guidelines are advisory constraints for snippet visibility, not algorithmic ranking penalties.",
+        "source": "deterministic_audit",
+        "requiresApproval": true,
+        "approved": false
+      },
+      {
+        "id": "rec-title-1222",
+        "priority": "medium",
+        "confidence": "high",
+        "category": "metadata",
+        "targetUrl": "https://firstread.co.uk/zoey-stark/",
+        "slug": "zoey-stark",
+        "issue": "SEO Title Exceeds SERP Pixel Display Threshold",
+        "reasoning": "The current title is 75 characters long. In desktop and mobile SERPs, titles longer than ~60 characters or ~600px are truncated with an ellipsis (...).",
+        "currentValue": {
+          "title": "Zoey Stark: WWE Career, Age, Injury, Husband, and Personal Life - Firstread"
+        },
+        "recommendedValue": {
+          "title": "Zoey Stark: WWE Career & Life - Firstread"
+        },
+        "evidence": "Current length: 75 characters. Refined candidate: 41 characters (natural, complete clause preserving primary entity).",
+        "limitations": "Length guidelines are advisory constraints for snippet visibility, not algorithmic ranking penalties.",
+        "source": "deterministic_audit",
+        "requiresApproval": true,
+        "approved": false
+      },
+      {
+        "id": "rec-title-1203",
+        "priority": "medium",
+        "confidence": "high",
+        "category": "metadata",
+        "targetUrl": "https://firstread.co.uk/aisling-franciosi/",
+        "slug": "aisling-franciosi",
+        "issue": "SEO Title Exceeds SERP Pixel Display Threshold",
+        "reasoning": "The current title is 74 characters long. In desktop and mobile SERPs, titles longer than ~60 characters or ~600px are truncated with an ellipsis (...).",
+        "currentValue": {
+          "title": "Aisling Franciosi: Career, Movies, TV Shows, and Personal Life - Firstread"
+        },
+        "recommendedValue": {
+          "title": "Aisling Franciosi: Movies, TV Shows & Career - Firstread"
+        },
+        "evidence": "Current length: 74 characters. Refined candidate: 56 characters (natural, complete clause preserving primary entity).",
+        "limitations": "Length guidelines are advisory constraints for snippet visibility, not algorithmic ranking penalties.",
+        "source": "deterministic_audit",
+        "requiresApproval": true,
+        "approved": false
+      },
+      {
+        "id": "rec-title-1182",
+        "priority": "medium",
+        "confidence": "high",
+        "category": "metadata",
+        "targetUrl": "https://firstread.co.uk/callum-kerr/",
+        "slug": "callum-kerr",
+        "issue": "SEO Title Exceeds SERP Pixel Display Threshold",
+        "reasoning": "The current title is 69 characters long. In desktop and mobile SERPs, titles longer than ~60 characters or ~600px are truncated with an ellipsis (...).",
+        "currentValue": {
+          "title": "Callum Kerr: Biography, Career, TV Shows, and Rising Fame - Firstread"
+        },
+        "recommendedValue": {
+          "title": "Callum Kerr: Movies, TV Shows & Career - Firstread"
+        },
+        "evidence": "Current length: 69 characters. Refined candidate: 50 characters (natural, complete clause preserving primary entity).",
+        "limitations": "Length guidelines are advisory constraints for snippet visibility, not algorithmic ranking penalties.",
+        "source": "deterministic_audit",
+        "requiresApproval": true,
+        "approved": false
+      },
+      {
+        "id": "rec-link-top-10-tips-for-securing-a-rental-property-faster-in-canterburys-competitive-market",
+        "priority": "low",
+        "confidence": "high",
+        "category": "internal_linking",
+        "targetUrl": "https://firstread.co.uk/top-10-tips-for-securing-a-rental-property-faster-in-canterburys-competitive-market/",
+        "slug": "top-10-tips-for-securing-a-rental-property-faster-in-canterburys-competitive-market",
+        "issue": "Underlinked Article Opportunity",
+        "reasoning": "Articles with zero internal links from related content receive less crawl frequency and user discovery.",
+        "currentValue": {
+          "structure": "0 internal links from audited articles."
+        },
+        "recommendedValue": {
+          "structure": "Add a contextual internal link pointing to /how-can-first-time-buyers-navigate-the-uk-property-market-successfully/ with natural anchor text: \"how first-time buyers navigate the UK property market\" in a section discussing long-term rental vs homeownership."
+        },
+        "evidence": "Found shared topical tokens (\"securing rental property\") with relevance score 36 in verified category-matching published posts.",
+        "limitations": "Internal links should only be added where natural and genuinely helpful to the human reader.",
+        "source": "deterministic_audit",
+        "requiresApproval": true,
+        "approved": false
+      }
+    ]
+  }
+}

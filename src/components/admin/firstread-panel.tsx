@@ -337,7 +337,7 @@ export function FirstReadPanel({ initialSection = 'overview' }: { initialSection
 
       if (filterIssue === 'all') return true;
       if (filterIssue === 'issues') return a.issues.length > 0;
-      if (filterIssue === 'missing_alt') return a.missingAltImagesCount > 0;
+      if (filterIssue === 'missing_alt') return (a.missingAltCount ?? a.missingAltImagesCount) > 0;
       if (filterIssue === 'long_title') return a.seoTitle.length > 65;
       if (filterIssue === 'missing_desc') return !a.seoDescription;
       if (filterIssue === 'no_links') return a.internalLinksCount === 0;
@@ -566,11 +566,11 @@ export function FirstReadPanel({ initialSection = 'overview' }: { initialSection
                       <small className="text-[var(--muted-light)]">Draft / Non-public</small>
                     </div>
                     <div className="p-3 rounded-lg border border-[var(--border)] bg-[var(--card)]">
-                      <span className="text-[var(--muted)] block font-medium mb-1">Errors Detected</span>
-                      <strong className={`text-lg font-bold block ${audit.summary.errorsCount ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
-                        {audit.summary.errorsCount ?? audit.summary.criticalCount}
+                      <span className="text-[var(--muted)] block font-medium mb-1">Protocol Issues</span>
+                      <strong className={`text-lg font-bold block ${(audit.summary.protocolIssuesCount ?? audit.summary.errorsCount ?? 0) > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
+                        {audit.summary.protocolIssuesCount ?? audit.summary.errorsCount ?? 0}
                       </strong>
-                      <small className="text-[var(--muted-light)]">Protocol &amp; Critical Gaps</small>
+                      <small className="text-[var(--muted-light)]">Config &amp; Sitemap Gaps</small>
                     </div>
                     <div className="p-3 rounded-lg border border-[var(--border)] bg-[var(--card)]">
                       <span className="text-[var(--muted)] block font-medium mb-1">AI Recommendations</span>
@@ -587,17 +587,17 @@ export function FirstReadPanel({ initialSection = 'overview' }: { initialSection
               {audit && (
                 <div className="stats-grid">
                   <div className="stat">
-                    <span className="label">Sampled Articles Audited</span>
+                    <span className="label">Articles Audited</span>
                     <strong>{audit.summary.totalChecked}</strong>
-                    <small>Sampled from {audit.siteInfo.totalPosts} posts</small>
+                    <small>Full scope: {audit.siteInfo.totalPosts} published posts</small>
                   </div>
 
                   <div className="stat">
-                    <span className="label">Critical Protocol Issues</span>
-                    <strong className={audit.summary.criticalCount > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}>
-                      {audit.summary.criticalCount}
+                    <span className="label">Protocol Issues</span>
+                    <strong className={(audit.summary.protocolIssuesCount ?? audit.summary.criticalCount) > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}>
+                      {audit.summary.protocolIssuesCount ?? audit.summary.criticalCount}
                     </strong>
-                    <small>Protocol &amp; missing canonicals</small>
+                    <small>HTTP sitemap &amp; site URL config</small>
                   </div>
 
                   <div className="stat">
@@ -610,10 +610,14 @@ export function FirstReadPanel({ initialSection = 'overview' }: { initialSection
 
                   <div className="stat">
                     <span className="label">Missing Image Alt</span>
-                    <strong className={audit.summary.missingAltImagesTotal > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}>
-                      {audit.summary.missingAltImagesTotal}
+                    <strong className={(audit.summary.missingAltTotal ?? audit.summary.missingAltImagesTotal ?? 0) > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}>
+                      {audit.summary.missingAltTotal ?? audit.summary.missingAltImagesTotal ?? 0}
                     </strong>
-                    <small>Images without alt text</small>
+                    <small>
+                      {audit.summary.emptyAltTotal !== undefined
+                        ? `${audit.summary.emptyAltTotal} decorative (empty alt)`
+                        : 'Images without alt text'}
+                    </small>
                   </div>
 
                   <div className="stat">
@@ -641,13 +645,14 @@ export function FirstReadPanel({ initialSection = 'overview' }: { initialSection
                       </div>
                     ))}
 
-                    {audit.summary.missingAltImagesTotal > 0 && (
+                    {(audit.summary.missingAltTotal ?? audit.summary.missingAltImagesTotal ?? 0) > 0 && (
                       <div className="p-3.5 rounded-lg border border-amber-300 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/20 flex items-start gap-3">
                         <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
                         <div className="text-xs">
                           <strong className="text-amber-900 dark:text-amber-200 block font-semibold">Image Accessibility Gaps</strong>
                           <span className="text-amber-800 dark:text-amber-300">
-                            {audit.summary.missingAltImagesTotal} images lack descriptive alt attributes across sampled articles.
+                            {audit.summary.missingAltTotal ?? audit.summary.missingAltImagesTotal} images completely lack alt attributes across audited articles.
+                            {audit.summary.emptyAltTotal !== undefined && ` (${audit.summary.emptyAltTotal} decorative images have empty alt="")`}
                           </span>
                         </div>
                       </div>
@@ -1033,6 +1038,7 @@ export function FirstReadPanel({ initialSection = 'overview' }: { initialSection
                         <tr>
                           <th>Article</th>
                           <th>Words</th>
+                          <th>Headings</th>
                           <th>SEO Title</th>
                           <th>Meta Description</th>
                           <th>Images</th>
@@ -1054,6 +1060,20 @@ export function FirstReadPanel({ initialSection = 'overview' }: { initialSection
                                 <div className="text-[var(--muted)] text-xs font-mono">/{a.slug}/</div>
                               </td>
                               <td className="text-xs">{a.wordCount} words</td>
+                              <td className="text-xs">
+                                {(a.bodyH1Count ?? a.h1Count ?? 0) > 0 ? (
+                                  <span className="badge badge-warning" title={`${a.bodyH1Count ?? a.h1Count} H1 tags in content body (duplicate with theme title H1)`}>
+                                    {a.bodyH1Count ?? a.h1Count} Body H1
+                                  </span>
+                                ) : (
+                                  <span className="text-[var(--muted)]" title="Theme renders post title as primary H1; content uses clean H2/H3 hierarchy">
+                                    Theme H1
+                                  </span>
+                                )}
+                                <div className="text-[10px] text-[var(--muted-light)] mt-0.5">
+                                  {a.h2Count} H2 &bull; {a.h3Count} H3
+                                </div>
+                              </td>
                               <td>
                                 <span className={a.seoTitle.length > 65 ? 'badge badge-warning' : 'text-xs'}>
                                   {a.seoTitle.length} chars
@@ -1067,12 +1087,17 @@ export function FirstReadPanel({ initialSection = 'overview' }: { initialSection
                                 )}
                               </td>
                               <td>
-                                {a.missingAltImagesCount > 0 ? (
+                                {(a.missingAltCount ?? a.missingAltImagesCount ?? 0) > 0 ? (
                                   <span className="badge badge-warning">
-                                    {a.missingAltImagesCount} missing alt
+                                    {a.missingAltCount ?? a.missingAltImagesCount} missing alt
                                   </span>
                                 ) : (
                                   <span className="text-xs text-[var(--muted)]">{a.totalImagesCount} ok</span>
+                                )}
+                                {(a.emptyAltCount ?? 0) > 0 && (
+                                  <div className="text-[10px] text-[var(--muted-light)] mt-0.5">
+                                    {a.emptyAltCount} decorative
+                                  </div>
                                 )}
                               </td>
                               <td className="text-xs">{a.internalLinksCount} links</td>
@@ -1116,6 +1141,38 @@ export function FirstReadPanel({ initialSection = 'overview' }: { initialSection
                           <Button variant="ghost" size="sm" onClick={() => setExpandedArticle(null)}>
                             Close Details
                           </Button>
+                        </div>
+
+                        {/* Heading & Image KPI Breakdown */}
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+                          <div className="p-2.5 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
+                            <span className="text-[var(--muted)] block">Heading Structure</span>
+                            <strong className="text-sm font-semibold text-[var(--foreground)] block">
+                              {(a.bodyH1Count ?? a.h1Count ?? 0) > 0 ? `${a.bodyH1Count ?? a.h1Count} Body H1 (Defect)` : 'Clean Hierarchy'}
+                            </strong>
+                            <small className="text-[var(--muted-light)]">Theme H1 + {a.h2Count} H2, {a.h3Count} H3</small>
+                          </div>
+                          <div className="p-2.5 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
+                            <span className="text-[var(--muted)] block">Image Alt Coverage</span>
+                            <strong className="text-sm font-semibold text-[var(--foreground)] block">
+                              {(a.missingAltCount ?? a.missingAltImagesCount ?? 0) === 0 ? '100% Covered' : `${a.missingAltCount ?? a.missingAltImagesCount} Missing`}
+                            </strong>
+                            <small className="text-[var(--muted-light)]">{a.totalImagesCount} total &bull; {a.emptyAltCount ?? 0} decorative</small>
+                          </div>
+                          <div className="p-2.5 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
+                            <span className="text-[var(--muted)] block">Word Count</span>
+                            <strong className="text-sm font-semibold text-[var(--foreground)] block">
+                              {a.wordCount} words
+                            </strong>
+                            <small className="text-[var(--muted-light)]">{a.internalLinksCount} internal links</small>
+                          </div>
+                          <div className="p-2.5 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
+                            <span className="text-[var(--muted)] block">SEO Description</span>
+                            <strong className="text-sm font-semibold text-[var(--foreground)] block">
+                              {a.seoDescription ? `${a.seoDescription.length} chars` : 'Missing'}
+                            </strong>
+                            <small className="text-[var(--muted-light)]">Title: {a.seoTitle.length} chars</small>
+                          </div>
                         </div>
 
                         <div className="space-y-3 text-xs">

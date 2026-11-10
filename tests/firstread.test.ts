@@ -9,9 +9,16 @@ import {
   auditArticlePost,
   auditTechnical,
   detectDuplicates,
-  decodeHtmlEntities
+  decodeHtmlEntities,
+  extractMeaningfulTokens,
+  findInternalLinkingOpportunities,
+  auditHomepage
 } from '../src/lib/firstread/audit';
-import { generateFirstReadRecommendations } from '../src/lib/firstread/ai';
+import {
+  generateFirstReadRecommendations,
+  generateRefinedTitle,
+  validateRefinedTitle
+} from '../src/lib/firstread/ai';
 import { getFirstReadGoogleStatus } from '../src/lib/firstread/google-interfaces';
 import { fetchPublishedPosts, fetchSiteInfo } from '../src/lib/firstread/client';
 import type { WordPressPost, FirstReadAuditReport } from '../src/lib/firstread/types';
@@ -298,4 +305,497 @@ test('Live WordPress client fetches real site information and published posts wi
   assert.ok(posts[0].id > 0, 'Post ID should be positive integer');
   assert.ok(posts[0].title.rendered.length > 0, 'Post title should be non-empty');
   assert.ok(posts[0].link.startsWith('https://firstread.co.uk/'), 'Post link should target FirstRead');
+});
+
+test('Security allowlist permits root homepage URL and article slugs while blocking non-allowlisted routes', () => {
+  // Root URL paths should be permitted
+  const rootTrailing = validateReadOnlyRequest('https://firstread.co.uk/', { method: 'GET' });
+  assert.equal(rootTrailing.pathname, '/');
+
+  const rootBare = validateReadOnlyRequest('https://firstread.co.uk', { method: 'GET' });
+  assert.equal(rootBare.pathname, '/');
+
+  // Slug paths should be permitted
+  const articlePath = validateReadOnlyRequest('https://firstread.co.uk/sample-article-slug/', { method: 'GET' });
+  assert.equal(articlePath.pathname, '/sample-article-slug/');
+
+  // Disallowed admin / internal paths should be blocked
+  assert.throws(
+    () => validateReadOnlyRequest('https://firstread.co.uk/wp-admin/options-general.php'),
+    (err: unknown) => err instanceof FirstReadSecurityError
+  );
+  assert.throws(
+    () => validateReadOnlyRequest('https://firstread.co.uk/xmlrpc.php'),
+    (err: unknown) => err instanceof FirstReadSecurityError
+  );
+});
+
+test('Image alt reporting accurately separates missing alt, decorative empty alt, and descriptive alt', () => {
+  const post: WordPressPost = {
+    id: 201,
+    date: '2026-10-10T10:00:00',
+    date_gmt: '2026-10-10T10:00:00',
+    modified: '2026-10-10T10:00:00',
+    modified_gmt: '2026-10-10T10:00:00',
+    slug: 'image-alt-test',
+    status: 'publish',
+    type: 'post',
+    link: 'https://firstread.co.uk/image-alt-test/',
+    title: { rendered: 'Image Alt Test Post' },
+    content: {
+      rendered: `
+        <p>Introductory paragraph.</p>
+        <img src="/img-missing.jpg" />
+        <img src="/img-empty.jpg" alt="" />
+        <img src="/img-decorative.jpg" alt="   " />
+        <img src="/img-descriptive.jpg" alt="Chart showing Q3 financial performance" />
+        <p>Concluding paragraph.</p>
+      `,
+      protected: false
+    },
+    excerpt: { rendered: '<p>Excerpt</p>', protected: false },
+    author: 1,
+    featured_media: 0,
+    categories: [1],
+    tags: [],
+    yoast_head_json: {
+      title: 'Image Alt Test Post - Firstread',
+      description: 'A test post for image alt attributes.',
+      canonical: 'https://firstread.co.uk/image-alt-test/'
+    }
+  };
+
+  const audit = auditArticlePost(post);
+  assert.equal(audit.totalImagesCount, 4);
+  assert.equal(audit.missingAltCount, 1, 'Only the image with no alt attribute is counted as missing');
+  assert.equal(audit.emptyAltCount, 2, 'Images with empty or whitespace-only alt="" are decorative');
+  assert.equal(audit.descriptiveAltCount, 1, 'Image with descriptive alt text is recognized');
+  assert.equal(audit.missingAltImagesCount, 3, 'Backward compatible total includes missing + decorative');
+
+  // Verify issue severity: missing alt gets warning, decorative empty alt gets info
+  const missingAltIssue = audit.issues.find(i => i.id.startsWith('art-alt-missing'));
+  assert.ok(missingAltIssue, 'Should flag missing alt issue');
+  assert.equal(missingAltIssue?.severity, 'warning');
+
+  const emptyAltIssue = audit.issues.find(i => i.id.startsWith('art-alt-empty'));
+  assert.ok(emptyAltIssue, 'Should flag decorative alt note');
+  assert.equal(emptyAltIssue?.severity, 'info');
+});
+
+test('Heading audit distinguishes body H1 from theme template H1 and detects duplicate H1 defect', () => {
+  // Case A: Clean post with zero body H1s (theme renders title as H1)
+  const cleanPost: WordPressPost = {
+    id: 301,
+    date: '2026-10-10T10:00:00',
+    date_gmt: '2026-10-10T10:00:00',
+    modified: '2026-10-10T10:00:00',
+    modified_gmt: '2026-10-10T10:00:00',
+    slug: 'clean-post',
+    status: 'publish',
+    type: 'post',
+    link: 'https://firstread.co.uk/clean-post/',
+    title: { rendered: 'Clean Post With Semantic Structure' },
+    content: {
+      rendered: `
+        <p>Post intro paragraph.</p>
+        <h2>First Subheading</h2>
+        <p>Paragraph under H2.</p>
+        <h3>Detail Subsection</h3>
+        <p>Paragraph under H3.</p>
+      `,
+      protected: false
+    },
+    excerpt: { rendered: '', protected: false },
+    author: 1,
+    featured_media: 0,
+    categories: [],
+    tags: [],
+    yoast_head_json: {
+      title: 'Clean Post - Firstread',
+      description: 'Clean post description.',
+      canonical: 'https://firstread.co.uk/clean-post/'
+    }
+  };
+
+  const cleanAudit = auditArticlePost(cleanPost);
+  assert.equal(cleanAudit.bodyH1Count, 0, 'Clean post has 0 body H1s');
+  assert.equal(cleanAudit.h1Count, 0);
+  assert.equal(cleanAudit.h2Count, 1);
+  assert.equal(cleanAudit.h3Count, 1);
+  // Zero body H1 should NOT flag an art-h1-body issue
+  assert.ok(!cleanAudit.issues.some(i => i.id.startsWith('art-h1-body')));
+
+  // Case B: Post with author-inserted body H1 (defect)
+  const defectPost: WordPressPost = {
+    ...cleanPost,
+    id: 302,
+    slug: 'defect-post',
+    content: {
+      rendered: `
+        <h1>Extra Body Heading</h1>
+        <p>Paragraph.</p>
+      `,
+      protected: false
+    }
+  };
+
+  const defectAudit = auditArticlePost(defectPost);
+  assert.equal(defectAudit.bodyH1Count, 1);
+  assert.equal(defectAudit.h1Count, 1);
+  const h1Issue = defectAudit.issues.find(i => i.id.startsWith('art-h1-body'));
+  assert.ok(h1Issue, 'Should flag duplicate body H1 issue');
+  assert.equal(h1Issue?.severity, 'warning');
+});
+
+test('Internal linking algorithm filters stop-words and rejects naive substring matches', () => {
+  // Test token extraction
+  const tokens = extractMeaningfulTokens('everything-you-need-to-know-about-cpa-and-finance');
+  assert.ok(tokens.includes('finance'));
+  assert.ok(tokens.includes('cpa'));
+  // Stop words must be filtered
+  assert.ok(!tokens.includes('everything'));
+  assert.ok(!tokens.includes('about'));
+  assert.ok(!tokens.includes('you'));
+  assert.ok(!tokens.includes('need'));
+
+  // Test linking opportunities algorithm with mock articles
+  const mockArticles = [
+    {
+      id: 401,
+      slug: 'everything-you-need-to-know-about-cpa-accountant-qualifications',
+      link: 'https://firstread.co.uk/cpa-qualifications/',
+      title: 'Everything You Need to Know About CPA Accountant Qualifications',
+      seoTitle: 'CPA Qualifications Guide',
+      seoDescription: 'Guide to CPA accounting.',
+      canonical: 'https://firstread.co.uk/cpa-qualifications/',
+      bodyH1Count: 0,
+      h1Count: 0,
+      h2Count: 2,
+      h3Count: 0,
+      missingAltImagesCount: 0,
+      totalImagesCount: 1,
+      internalLinksCount: 0,
+      wordCount: 800,
+      hasYoastSchema: true,
+      categories: [10], // Category: Finance/Business
+      issues: []
+    },
+    {
+      id: 402,
+      slug: 'zoe-kravitz-biography-career-and-lifestyle',
+      link: 'https://firstread.co.uk/zoe-kravitz-biography/',
+      title: 'Zoë Kravitz Biography, Career, and Lifestyle',
+      seoTitle: 'Zoë Kravitz Biography',
+      seoDescription: 'Biography of Zoë Kravitz.',
+      canonical: 'https://firstread.co.uk/zoe-kravitz-biography/',
+      bodyH1Count: 0,
+      h1Count: 0,
+      h2Count: 2,
+      h3Count: 0,
+      missingAltImagesCount: 0,
+      totalImagesCount: 1,
+      internalLinksCount: 1,
+      wordCount: 750,
+      hasYoastSchema: true,
+      categories: [20], // Category: Biography/Entertainment
+      issues: []
+    },
+    {
+      id: 403,
+      slug: 'chartered-accountant-salary-and-career-path-in-uk',
+      link: 'https://firstread.co.uk/accountant-salary-uk/',
+      title: 'Chartered Accountant Salary and Career Path in UK',
+      seoTitle: 'Accountant Salary UK',
+      seoDescription: 'Salaries for UK accountants.',
+      canonical: 'https://firstread.co.uk/accountant-salary-uk/',
+      bodyH1Count: 0,
+      h1Count: 0,
+      h2Count: 2,
+      h3Count: 0,
+      missingAltImagesCount: 0,
+      totalImagesCount: 1,
+      internalLinksCount: 2,
+      wordCount: 900,
+      hasYoastSchema: true,
+      categories: [10], // Category: Finance/Business (same as CPA article)
+      issues: []
+    }
+  ];
+
+  const opportunities = findInternalLinkingOpportunities(mockArticles);
+  const cpaOpportunity = opportunities.find(o => o.targetSlug.includes('cpa'));
+
+  if (cpaOpportunity) {
+    // Biography should NEVER be suggested for CPA/Finance article
+    assert.ok(
+      !cpaOpportunity.suggestedSources.some(s => s.includes('zoe-kravitz')),
+      'Unrelated biography article must not be suggested for CPA finance topic'
+    );
+    // Relevant accounting article should be suggested if threshold met
+    if (cpaOpportunity.suggestedSources.length > 0) {
+      assert.ok(
+        cpaOpportunity.suggestedSources.some(s => s.includes('accountant')),
+        'Related accounting article should match topic'
+      );
+    }
+  }
+});
+
+test('Homepage audit extracts live metadata without false-positive missing title or description', async () => {
+  const hp = await auditHomepage();
+  assert.equal(hp.url, FIRSTREAD_ORIGIN + '/');
+  if (!hp.fetchError) {
+    assert.ok(hp.title.length > 0, 'Homepage title should be present');
+    assert.ok(!hp.issues.some(i => i.id === 'hp-title-missing'), 'Should not flag missing title');
+    assert.ok(hp.metaDescription.length > 0, 'Homepage meta description should be present');
+    assert.ok(!hp.issues.some(i => i.id === 'hp-desc-missing'), 'Should not flag missing description');
+    assert.ok(hp.h1Count >= 1, 'Homepage should have at least 1 H1');
+  } else {
+    assert.ok(hp.issues.some(i => i.id === 'hp-fetch-failed'));
+    assert.ok(!hp.issues.some(i => i.id === 'hp-title-missing'));
+    assert.ok(!hp.issues.some(i => i.id === 'hp-desc-missing'));
+  }
+});
+
+test('Internal linking engine specifically rejects CPA/Salesforce and Estate/Hailey Bieber mismatches', () => {
+  const articles = [
+    {
+      id: 1319,
+      slug: '3-questions-every-business-owner-should-ask-their-cpa',
+      link: 'https://firstread.co.uk/3-questions-every-business-owner-should-ask-their-cpa/',
+      title: '3 Questions Every Business Owner Should Ask Their Cpa',
+      seoTitle: '3 Questions Every Business Owner Should Ask Their Cpa - Firstread',
+      seoDescription: 'CPA guide.',
+      canonical: 'https://firstread.co.uk/3-questions-every-business-owner-should-ask-their-cpa/',
+      bodyH1Count: 0,
+      h1Count: 0,
+      h2Count: 2,
+      h3Count: 0,
+      missingAltImagesCount: 0,
+      totalImagesCount: 1,
+      internalLinksCount: 0,
+      wordCount: 800,
+      hasYoastSchema: true,
+      categories: [148], // Category: Business
+      issues: []
+    },
+    {
+      id: 9999,
+      slug: 'nothing2hide-net-salesforce',
+      link: 'https://firstread.co.uk/nothing2hide-net-salesforce/',
+      title: 'Nothing2hide.net Salesforce Smart CRM Integration for Business',
+      seoTitle: 'Nothing2hide.net Salesforce Smart CRM Integration for Business - Firstread',
+      seoDescription: 'Salesforce CRM guide.',
+      canonical: 'https://firstread.co.uk/nothing2hide-net-salesforce/',
+      bodyH1Count: 0,
+      h1Count: 0,
+      h2Count: 2,
+      h3Count: 0,
+      missingAltImagesCount: 0,
+      totalImagesCount: 1,
+      internalLinksCount: 2,
+      wordCount: 850,
+      hasYoastSchema: true,
+      categories: [148], // Category: Business (Same category, but different topic)
+      issues: []
+    },
+    {
+      id: 1316,
+      slug: 'how-cp-as-assist-with-estate-and-wealth-preservation',
+      link: 'https://firstread.co.uk/how-cp-as-assist-with-estate-and-wealth-preservation/',
+      title: 'How Cp As Assist With Estate And Wealth Preservation',
+      seoTitle: 'How Cp As Assist With Estate And Wealth Preservation - Firstread',
+      seoDescription: 'Estate wealth planning.',
+      canonical: 'https://firstread.co.uk/how-cp-as-assist-with-estate-and-wealth-preservation/',
+      bodyH1Count: 0,
+      h1Count: 0,
+      h2Count: 2,
+      h3Count: 0,
+      missingAltImagesCount: 0,
+      totalImagesCount: 1,
+      internalLinksCount: 0,
+      wordCount: 900,
+      hasYoastSchema: true,
+      categories: [148], // Category: Business
+      issues: []
+    },
+    {
+      id: 1457,
+      slug: 'hailey-bieber-net-worth-2026-income-wealth-breakdown',
+      link: 'https://firstread.co.uk/hailey-bieber-net-worth-2026-income-wealth-breakdown/',
+      title: 'Hailey Bieber Net Worth 2026: Income & Wealth Explained',
+      seoTitle: 'Hailey Bieber Net Worth 2026: Income & Wealth Explained - Firstread',
+      seoDescription: 'Hailey Bieber celebrity net worth.',
+      canonical: 'https://firstread.co.uk/hailey-bieber-net-worth-2026-income-wealth-breakdown/',
+      bodyH1Count: 0,
+      h1Count: 0,
+      h2Count: 2,
+      h3Count: 0,
+      missingAltImagesCount: 0,
+      totalImagesCount: 2,
+      internalLinksCount: 3,
+      wordCount: 950,
+      hasYoastSchema: true,
+      categories: [5], // Category: Celebrity Net Worth (Disparate category)
+      issues: []
+    }
+  ];
+
+  const opportunities = findInternalLinkingOpportunities(articles);
+
+  // 1. CPA article must NEVER be matched with Nothing2Hide / Salesforce
+  const cpaOpp = opportunities.find(o => o.targetSlug === '3-questions-every-business-owner-should-ask-their-cpa');
+  if (cpaOpp) {
+    assert.ok(
+      !cpaOpp.suggestedSources.includes('nothing2hide-net-salesforce'),
+      'Salesforce CRM article must not be suggested for CPA financial advice article'
+    );
+  }
+
+  // 2. Estate preservation article must NEVER be matched with Hailey Bieber celebrity net worth
+  const estateOpp = opportunities.find(o => o.targetSlug === 'how-cp-as-assist-with-estate-and-wealth-preservation');
+  if (estateOpp) {
+    assert.ok(
+      !estateOpp.suggestedSources.includes('hailey-bieber-net-worth-2026-income-wealth-breakdown'),
+      'Hailey Bieber celebrity gossip must not be suggested for legal estate preservation article'
+    );
+  }
+});
+
+test('Title refinement validator strictly rejects dangling punctuation, incomplete phrases, and keyword loss', () => {
+  // Test dangling punctuation rejection
+  const danglingComma = validateRefinedTitle('Zoey Stark: WWE Career, - Firstread', 'Zoey Stark: WWE Career, Age, Injury');
+  assert.equal(danglingComma.valid, false);
+  assert.ok(danglingComma.reason?.includes('dangling punctuation'));
+
+  const danglingHyphen = validateRefinedTitle('Tate McRae Tour - - Firstread', 'Tate McRae Tour 2026');
+  assert.equal(danglingHyphen.valid, false);
+
+  // Test incomplete phrase rejection
+  const incompleteAdjective = validateRefinedTitle('Kitchen Upgrading Tips Mintpalment: Smart - Firstread', 'Kitchen Upgrading Tips Mintpalment: Smart Renovation Guide');
+  assert.equal(incompleteAdjective.valid, false);
+  assert.ok(incompleteAdjective.reason?.includes('incomplete dangling word'));
+
+  const incompleteWord = validateRefinedTitle('Keyshia Cole: This Is My Story — A Powerful - Firstread', 'Keyshia Cole: This Is My Story — A Powerful Musical Biography');
+  assert.equal(incompleteWord.valid, false);
+  assert.ok(incompleteWord.reason?.includes('incomplete dangling word'));
+
+  // Test natural, high-quality generation on real FirstRead titles
+  const t1 = generateRefinedTitle('Simpler or More Simple: Which One Is Correct? Meaning, Grammar & Examples - Firstread');
+  assert.equal(t1.valid, true);
+  assert.equal(t1.title, 'Simpler or More Simple: Which One Is Correct? - Firstread');
+
+  const t2 = generateRefinedTitle('Tate McRae Tour 2026 Happening? Latest Dates, Tickets & Updates - Firstread');
+  assert.equal(t2.valid, true);
+  assert.equal(t2.title, 'Tate McRae Tour 2026: Latest Dates & Tickets - Firstread');
+
+  const t3 = generateRefinedTitle('Keyshia Cole: This Is My Story — A Powerful Musical Biography - Firstread');
+  assert.equal(t3.valid, true);
+  assert.equal(t3.title, 'Keyshia Cole: This Is My Story - Firstread');
+
+  const t4 = generateRefinedTitle('Alec Baldwin Net Worth 2025–2026: Income, Assets & Career - Firstread');
+  assert.equal(t4.valid, true);
+  assert.equal(t4.title, 'Alec Baldwin Net Worth 2025–2026 - Firstread');
+
+  const t5 = generateRefinedTitle('Hailey Bieber Net Worth 2026: Income & Wealth Explained - Firstread');
+  assert.equal(t5.valid, true);
+  assert.equal(t5.title, 'Hailey Bieber Net Worth 2026 - Firstread');
+
+  const t6 = generateRefinedTitle('Jenna Ortega Plastic Surgery: Truth, Rumors, and Reality in 2026 - Firstread');
+  assert.equal(t6.valid, true);
+  assert.equal(t6.title, 'Jenna Ortega Plastic Surgery: Rumors & Reality - Firstread');
+
+  const t7 = generateRefinedTitle('Sabrina Carpenter New Album Cover: Meaning, Design & Fan Reactions - Firstread');
+  assert.equal(t7.valid, true);
+  assert.equal(t7.title, 'Sabrina Carpenter New Album Cover - Firstread');
+
+  const t8 = generateRefinedTitle('Aisling Franciosi: Career, Movies, TV Shows, and Personal Life - Firstread');
+  assert.equal(t8.valid, true);
+  assert.equal(t8.title, 'Aisling Franciosi: Movies, TV Shows & Career - Firstread');
+
+  // Verify rejection of weak recommendation that removes essential editorial context
+  const tWeak = generateRefinedTitle('Kitchen Upgrading Tips Mintpalment: Smart Renovation Guide - Firstread');
+  assert.equal(tWeak.valid, false, 'Weak recommendation that drops essential editorial context should be rejected');
+});
+
+test('Security allowlist strictly enforces exact endpoints, blocks traversal, malformed URLs, and embedded credentials', () => {
+  // 1. Permitted exact endpoints must succeed
+  const permitted = [
+    'https://firstread.co.uk/',
+    'https://firstread.co.uk/wp-json/',
+    'https://firstread.co.uk/wp-json/wp/v2/posts',
+    'https://firstread.co.uk/wp-json/wp/v2/pages',
+    'https://firstread.co.uk/wp-json/wp/v2/categories',
+    'https://firstread.co.uk/wp-json/wp/v2/tags',
+    'https://firstread.co.uk/robots.txt',
+    'https://firstread.co.uk/sitemap_index.xml',
+    'https://firstread.co.uk/post-sitemap.xml',
+    'https://firstread.co.uk/sample-article-slug/'
+  ];
+  for (const url of permitted) {
+    const valid = validateReadOnlyRequest(url, { method: 'GET' });
+    assert.equal(valid.origin, FIRSTREAD_ORIGIN);
+  }
+
+  // 2. Traversal and malformed URLs must be rejected
+  const malformed = [
+    'https://firstread.co.uk/wp-json/wp/v2/posts/../../users',
+    'https://firstread.co.uk/%2e%2e/wp-admin',
+    'https://firstread.co.uk/wp-json//wp/v2/posts',
+    'https://firstread.co.uk/wp-json/wp/v2/posts\\..',
+    'https://firstread.co.uk/wp-json/wp/v2/posts%00'
+  ];
+  for (const url of malformed) {
+    assert.throws(
+      () => validateReadOnlyRequest(url, { method: 'GET' }),
+      (err: unknown) => err instanceof FirstReadSecurityError && err.message.includes('traversal or malformed')
+    );
+  }
+
+  // 3. Embedded credentials must be rejected
+  assert.throws(
+    () => validateReadOnlyRequest('https://admin:password@firstread.co.uk/wp-json/wp/v2/posts'),
+    (err: unknown) => err instanceof FirstReadSecurityError && err.message.includes('Embedded URL credentials')
+  );
+
+  // 4. Subdomains and external ports must be rejected
+  assert.throws(
+    () => validateReadOnlyRequest('https://api.firstread.co.uk/wp-json/wp/v2/posts'),
+    (err: unknown) => err instanceof FirstReadSecurityError
+  );
+  assert.throws(
+    () => validateReadOnlyRequest('https://firstread.co.uk:8443/wp-json/wp/v2/posts'),
+    (err: unknown) => err instanceof FirstReadSecurityError
+  );
+
+  // 5. Disallowed REST endpoints must be blocked
+  const disallowedPaths = [
+    '/wp-json/wp/v2/',
+    '/wp-json/wp/v2/users',
+    '/wp-json/wp/v2/settings',
+    '/wp-json/wp/v2/plugins',
+    '/wp-json/wp/v2/themes',
+    '/wp-json/wp/v2/comments',
+    '/wp-json/oembed/1.0/embed',
+    '/wp-admin/',
+    '/wp-admin/admin-ajax.php',
+    '/wp-login.php',
+    '/xmlrpc.php'
+  ];
+
+  for (const path of disallowedPaths) {
+    assert.throws(
+      () => validateReadOnlyRequest(`https://firstread.co.uk${path}`, { method: 'GET' }),
+      (err: unknown) => err instanceof FirstReadSecurityError,
+      `Path "${path}" must be blocked by security policy`
+    );
+  }
+
+  // 6. Mutating HTTP methods must be blocked
+  for (const method of ['POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']) {
+    assert.throws(
+      () => validateReadOnlyRequest('https://firstread.co.uk/wp-json/wp/v2/posts', { method }),
+      (err: unknown) => err instanceof FirstReadSecurityError && err.message.includes('Forbidden HTTP method')
+    );
+  }
 });

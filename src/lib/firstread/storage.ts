@@ -15,8 +15,53 @@ export interface ApprovalsRecord {
   approvedIds: string[];
 }
 
-const REPORTS_DIR = path.join(process.cwd(), 'content', 'reports');
+const REPORTS_DIR = process.env.REPORTS_DIR || path.join(process.cwd(), 'content', 'reports');
 const APPROVALS_FILE = path.join(REPORTS_DIR, 'firstread-approvals.json');
+
+/**
+ * Normalizes an audit report to guarantee backward-compatibility for renamed fields
+ */
+export function normalizeAuditReport(report: FirstReadAuditReport): FirstReadAuditReport {
+  if (!report || !report.summary) return report;
+  if (report.summary.protocolIssuesCount === undefined) {
+    report.summary.protocolIssuesCount = report.summary.errorsCount ?? report.technical?.protocolIssues?.length ?? 0;
+  }
+  if (report.summary.errorsCount === undefined) {
+    report.summary.errorsCount = report.summary.protocolIssuesCount;
+  }
+  if (report.summary.failedRequestsCount === undefined) {
+    report.summary.failedRequestsCount = 0;
+  }
+  if (report.summary.missingAltTotal === undefined) {
+    report.summary.missingAltTotal = report.summary.missingAltImagesTotal ?? 0;
+  }
+  if (report.summary.emptyAltTotal === undefined) {
+    report.summary.emptyAltTotal = 0;
+  }
+  if (report.summary.descriptiveAltTotal === undefined) {
+    report.summary.descriptiveAltTotal = 0;
+  }
+  if (Array.isArray(report.articles)) {
+    for (const a of report.articles) {
+      if (a.bodyH1Count === undefined) {
+        a.bodyH1Count = a.h1Count ?? 0;
+      }
+      if (a.h1Count === undefined) {
+        a.h1Count = a.bodyH1Count;
+      }
+      if (a.missingAltCount === undefined) {
+        a.missingAltCount = a.missingAltImagesCount ?? 0;
+      }
+      if (a.emptyAltCount === undefined) {
+        a.emptyAltCount = 0;
+      }
+      if (a.descriptiveAltCount === undefined) {
+        a.descriptiveAltCount = Math.max(0, (a.totalImagesCount || 0) - (a.missingAltCount || 0));
+      }
+    }
+  }
+  return report;
+}
 
 /**
  * Ensures reports directory exists
@@ -122,7 +167,11 @@ export async function getReportById(id: string): Promise<StoredReport | null> {
   const filePath = path.join(REPORTS_DIR, `${id}.json`);
   try {
     const raw = await fs.readFile(filePath, 'utf8');
-    return JSON.parse(raw) as StoredReport;
+    const parsed = JSON.parse(raw) as StoredReport;
+    if (parsed.kind === 'audit' && parsed.data) {
+      parsed.data = normalizeAuditReport(parsed.data as FirstReadAuditReport);
+    }
+    return parsed;
   } catch {
     return null;
   }
