@@ -183,10 +183,31 @@ export function auditArticlePost(post: WordPressPost): ArticleSEOSummary {
   const issues: SEOIssue[] = [];
   const content = post.content?.rendered || '';
 
-  // Extract Title & Description (prefer Yoast SEO metadata, fall back to WP post title)
-  const seoTitle = decodeHtmlEntities(post.yoast_head_json?.title || post.title.rendered || '');
-  const seoDescription = decodeHtmlEntities(post.yoast_head_json?.description || '');
-  const canonical = post.yoast_head_json?.canonical || post.link || '';
+  // Extract Title & Description (prefer Yoast SEO metadata, inspect raw yoast_head HTML, fall back to WP post title)
+  let rawTitle = post.yoast_head_json?.title || '';
+  let rawDesc = post.yoast_head_json?.description || '';
+  let canonical = post.yoast_head_json?.canonical || post.link || '';
+
+  if (!rawTitle && post.yoast_head) {
+    const tMatch = post.yoast_head.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+    if (tMatch) rawTitle = tMatch[1].trim();
+  }
+  if (!rawTitle) {
+    rawTitle = post.title?.rendered || '';
+  }
+
+  if (!rawDesc && post.yoast_head) {
+    const dMatch = post.yoast_head.match(/<meta\b(?=[^>]*name=["']description["'])[^>]*content=["']([^"']*)["']/i);
+    if (dMatch) rawDesc = dMatch[1].trim();
+  }
+
+  if (!canonical && post.yoast_head) {
+    const cMatch = post.yoast_head.match(/<link\b(?=[^>]*rel=["']canonical["'])[^>]*href=["']([^"']*)["']/i);
+    if (cMatch) canonical = cMatch[1].trim();
+  }
+
+  const seoTitle = decodeHtmlEntities(rawTitle);
+  const seoDescription = decodeHtmlEntities(rawDesc);
 
   // Heading counts in post body
   const h1InContent = [...content.matchAll(/<h1\b[^>]*>/gi)].length;
@@ -524,7 +545,7 @@ export function findInternalLinkingOpportunities(
 /**
  * Runs the complete comprehensive read-only audit for FirstRead
  */
-export async function runFirstReadAudit(maxPostsToAudit = 50): Promise<FirstReadAuditReport> {
+export async function runFirstReadAudit(maxPostsToAudit = 500): Promise<FirstReadAuditReport> {
   const siteInfo = await fetchSiteInfo();
   const [homepage, posts, technical] = await Promise.all([
     auditHomepage(),
@@ -567,6 +588,10 @@ export async function runFirstReadAudit(maxPostsToAudit = 50): Promise<FirstRead
     technical,
     summary: {
       totalChecked: auditedArticles.length,
+      articlesDiscovered: siteInfo.totalPosts,
+      articlesAudited: auditedArticles.length,
+      articlesSkipped: Math.max(0, siteInfo.totalPosts - auditedArticles.length),
+      errorsCount: technical.protocolIssues.length,
       criticalCount,
       warningCount,
       infoCount,

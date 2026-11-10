@@ -67,13 +67,13 @@ export async function GET(
         data = await fetchSiteInfo();
       } else if (sub === 'audit') {
         const latest = await getLatestAuditReport();
-        data = latest || (await runFirstReadAudit(50));
+        data = latest || (await runFirstReadAudit(500));
       } else if (sub === 'recommend') {
         const latest = await getLatestRecommendationsReport();
         if (latest) {
           data = latest;
         } else {
-          const audit = (await getLatestAuditReport()) || (await runFirstReadAudit(30));
+          const audit = (await getLatestAuditReport()) || (await runFirstReadAudit(500));
           data = await generateFirstReadRecommendations(audit);
         }
       } else if (sub === 'reports' && param) {
@@ -112,13 +112,13 @@ export async function POST(
       const action = p[1];
 
       if (action === 'audit') {
-        const audit = await runFirstReadAudit(50);
+        const audit = await runFirstReadAudit(500);
         const stored = await saveAuditReport(audit);
         return NextResponse.json(stored);
       }
 
       if (action === 'recommend') {
-        const audit = (await getLatestAuditReport()) || (await runFirstReadAudit(30));
+        const audit = (await getLatestAuditReport()) || (await runFirstReadAudit(500));
         const recs = await generateFirstReadRecommendations(audit);
         const stored = await saveRecommendationsReport(recs);
         return NextResponse.json(stored);

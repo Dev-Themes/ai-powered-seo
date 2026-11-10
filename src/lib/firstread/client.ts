@@ -162,7 +162,7 @@ export async function fetchPublishedPosts(page = 1, perPage = 20): Promise<{
 /**
  * Fetches published posts up to a maximum number (for comprehensive audit)
  */
-export async function fetchAllPosts(maxPosts = 100): Promise<WordPressPost[]> {
+export async function fetchAllPosts(maxPosts = 500): Promise<WordPressPost[]> {
   const all: WordPressPost[] = [];
   const perPage = Math.min(maxPosts, 50);
   let page = 1;

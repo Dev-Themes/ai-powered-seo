@@ -168,6 +168,11 @@ export interface FirstReadAuditReport {
   technical: TechnicalSEOSummary;
   summary: {
     totalChecked: number;
+    articlesDiscovered?: number;
+    articlesAudited?: number;
+    articlesSkipped?: number;
+    errorsCount?: number;
+    recommendationsCount?: number;
     criticalCount: number;
     warningCount: number;
     infoCount: number;
@@ -205,6 +210,7 @@ export interface FirstReadAIRecommendation {
   };
   evidence: string;
   limitations: string;
+  source?: 'deterministic_audit' | 'gemini_ai' | 'heuristic_engine';
   requiresApproval: true;
   approved: boolean;
 }
@@ -212,5 +218,6 @@ export interface FirstReadAIRecommendation {
 export interface FirstReadRecommendationsReport {
   generatedAt: string;
   summary: string;
+  recommendationsCount?: number;
   recommendations: FirstReadAIRecommendation[];
 }

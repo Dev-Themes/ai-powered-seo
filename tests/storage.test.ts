@@ -1,5 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import path from 'node:path';
 import {
   saveAuditReport,
   saveRecommendationsReport,
@@ -68,19 +70,25 @@ test('report storage saves, lists, and retrieves FirstRead audit reports', async
   };
 
   const saved = await saveAuditReport(dummyAudit);
-  assert.ok(saved.id.startsWith('firstread-audit-'));
-  assert.equal(saved.status, 'complete');
+  try {
+    assert.ok(saved.id.startsWith('firstread-audit-'));
+    assert.equal(saved.status, 'complete');
 
-  const retrieved = await getReportById(saved.id);
-  assert.ok(retrieved !== null);
-  assert.equal(retrieved?.id, saved.id);
+    const retrieved = await getReportById(saved.id);
+    assert.ok(retrieved !== null);
+    assert.equal(retrieved?.id, saved.id);
 
-  const reports = await listReports();
-  assert.ok(reports.some(r => r.id === saved.id));
+    const reports = await listReports();
+    assert.ok(reports.some(r => r.id === saved.id));
 
-  const latest = await getLatestAuditReport();
-  assert.ok(latest !== null);
-  assert.equal(latest?.origin, 'https://firstread.co.uk');
+    const latest = await getLatestAuditReport();
+    assert.ok(latest !== null);
+    assert.equal(latest?.origin, 'https://firstread.co.uk');
+  } finally {
+    // Clean up test file so unit tests do not pollute runtime reports
+    const filePath = path.join(process.cwd(), 'content', 'reports', `${saved.id}.json`);
+    await fs.unlink(filePath).catch(() => {});
+  }
 });
 
 test('recommendations storage saves and persists approval status internally', async () => {
@@ -108,16 +116,22 @@ test('recommendations storage saves and persists approval status internally', as
   };
 
   const saved = await saveRecommendationsReport(dummyRecs);
-  assert.ok(saved.id.startsWith('firstread-recommend-'));
+  try {
+    assert.ok(saved.id.startsWith('firstread-recommend-'));
 
-  // Toggle approval
-  const approvedIds = await setApproval('rec-unit-test-1', true);
-  assert.ok(approvedIds.includes('rec-unit-test-1'));
+    // Toggle approval
+    const approvedIds = await setApproval('rec-unit-test-1', true);
+    assert.ok(approvedIds.includes('rec-unit-test-1'));
 
-  const check = await getApprovals();
-  assert.ok(check.includes('rec-unit-test-1'));
+    const check = await getApprovals();
+    assert.ok(check.includes('rec-unit-test-1'));
 
-  // Untoggle approval
-  const unapproved = await setApproval('rec-unit-test-1', false);
-  assert.ok(!unapproved.includes('rec-unit-test-1'));
+    // Untoggle approval
+    const unapproved = await setApproval('rec-unit-test-1', false);
+    assert.ok(!unapproved.includes('rec-unit-test-1'));
+  } finally {
+    // Clean up test file
+    const filePath = path.join(process.cwd(), 'content', 'reports', `${saved.id}.json`);
+    await fs.unlink(filePath).catch(() => {});
+  }
 });

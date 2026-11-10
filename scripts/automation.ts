@@ -25,7 +25,7 @@ async function run() {
   if (['audit', 'daily', 'weekly', 'firstread', 'firstread:audit'].includes(mode)) {
     // 1. Fetch published WordPress content and run SEO audit
     console.log('[FirstRead Automation] Running read-only SEO audit for https://firstread.co.uk...');
-    const audit = await retry(() => runFirstReadAudit(50));
+    const audit = await retry(() => runFirstReadAudit(500));
     const savedAudit = await saveAuditReport(audit);
     console.log(`[FirstRead Automation] Audit completed and saved: ${savedAudit.id}`);
     console.log(`  • Posts checked: ${audit.summary.totalChecked}`);
@@ -44,7 +44,7 @@ async function run() {
     }
   } else if (mode === 'recommend') {
     const latestAudit = await getLatestAuditReport();
-    const audit = latestAudit || (await retry(() => runFirstReadAudit(30)));
+    const audit = latestAudit || (await retry(() => runFirstReadAudit(500)));
     const recs = await retry(() => generateFirstReadRecommendations(audit));
     const savedRecs = await saveRecommendationsReport(recs);
     console.log(`[FirstRead Automation] Recommendations saved: ${savedRecs.id}`);

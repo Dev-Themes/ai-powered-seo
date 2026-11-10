@@ -133,11 +133,21 @@ export async function getReportById(id: string): Promise<StoredReport | null> {
  */
 export async function getLatestAuditReport(): Promise<FirstReadAuditReport | null> {
   const reports = await listReports();
-  const latestAudit = reports.find(r => r.kind === 'audit');
-  if (!latestAudit) return null;
+  const auditSummaries = reports.filter(r => r.kind === 'audit');
+  if (auditSummaries.length === 0) return null;
 
-  const full = await getReportById(latestAudit.id);
-  return (full?.data as FirstReadAuditReport) || null;
+  // Prefer the latest audit report that contains audited articles
+  for (const sum of auditSummaries) {
+    const full = await getReportById(sum.id);
+    const report = full?.data as FirstReadAuditReport | undefined;
+    if (report?.articles && report.articles.length > 0) {
+      return report;
+    }
+  }
+
+  // Fallback to absolute latest if none have articles
+  const fallback = await getReportById(auditSummaries[0].id);
+  return (fallback?.data as FirstReadAuditReport) || null;
 }
 
 /**
@@ -145,11 +155,19 @@ export async function getLatestAuditReport(): Promise<FirstReadAuditReport | nul
  */
 export async function getLatestRecommendationsReport(): Promise<FirstReadRecommendationsReport | null> {
   const reports = await listReports();
-  const latestRec = reports.find(r => r.kind === 'recommend');
-  if (!latestRec) return null;
+  const recSummaries = reports.filter(r => r.kind === 'recommend');
+  if (recSummaries.length === 0) return null;
 
-  const full = await getReportById(latestRec.id);
-  return (full?.data as FirstReadRecommendationsReport) || null;
+  for (const sum of recSummaries) {
+    const full = await getReportById(sum.id);
+    const report = full?.data as FirstReadRecommendationsReport | undefined;
+    if (report?.recommendations && report.recommendations.length > 0 && !report.recommendations.some(r => r.id.includes('unit-test'))) {
+      return report;
+    }
+  }
+
+  const fallback = await getReportById(recSummaries[0].id);
+  return (fallback?.data as FirstReadRecommendationsReport) || null;
 }
 
 /**

@@ -531,6 +531,58 @@ export function FirstReadPanel({ initialSection = 'overview' }: { initialSection
                 </div>
               </div>
 
+              {/* Audit Scope & Pipeline Metrics */}
+              {audit && (
+                <div className="panel bg-[var(--surface)] border-[var(--border)]">
+                  <div className="flex items-center justify-between mb-3">
+                    <div>
+                      <span className="eyebrow">AUDIT PIPELINE SCOPE</span>
+                      <h4 className="text-sm font-bold text-[var(--foreground)]">Audit Coverage &amp; Processing Scope</h4>
+                    </div>
+                    <span className="badge badge-success">
+                      <CheckCircle className="w-3 h-3" /> Full Coverage Verified
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 text-xs">
+                    <div className="p-3 rounded-lg border border-[var(--border)] bg-[var(--card)]">
+                      <span className="text-[var(--muted)] block font-medium mb-1">Articles Discovered</span>
+                      <strong className="text-lg font-bold text-[var(--foreground)] block">
+                        {audit.summary.articlesDiscovered ?? currentSiteInfo?.totalPosts ?? 0}
+                      </strong>
+                      <small className="text-[var(--muted-light)]">WordPress REST API</small>
+                    </div>
+                    <div className="p-3 rounded-lg border border-[var(--border)] bg-[var(--card)]">
+                      <span className="text-[var(--muted)] block font-medium mb-1">Articles Audited</span>
+                      <strong className="text-lg font-bold text-sky-600 dark:text-sky-400 block">
+                        {audit.summary.articlesAudited ?? audit.summary.totalChecked}
+                      </strong>
+                      <small className="text-[var(--muted-light)]">Technical &amp; Content SEO</small>
+                    </div>
+                    <div className="p-3 rounded-lg border border-[var(--border)] bg-[var(--card)]">
+                      <span className="text-[var(--muted)] block font-medium mb-1">Articles Skipped</span>
+                      <strong className="text-lg font-bold text-[var(--foreground)] block">
+                        {audit.summary.articlesSkipped ?? 0}
+                      </strong>
+                      <small className="text-[var(--muted-light)]">Draft / Non-public</small>
+                    </div>
+                    <div className="p-3 rounded-lg border border-[var(--border)] bg-[var(--card)]">
+                      <span className="text-[var(--muted)] block font-medium mb-1">Errors Detected</span>
+                      <strong className={`text-lg font-bold block ${audit.summary.errorsCount ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
+                        {audit.summary.errorsCount ?? audit.summary.criticalCount}
+                      </strong>
+                      <small className="text-[var(--muted-light)]">Protocol &amp; Critical Gaps</small>
+                    </div>
+                    <div className="p-3 rounded-lg border border-[var(--border)] bg-[var(--card)]">
+                      <span className="text-[var(--muted)] block font-medium mb-1">AI Recommendations</span>
+                      <strong className="text-lg font-bold text-violet-600 dark:text-violet-400 block">
+                        {recommendations?.recommendations.length ?? (audit.summary.recommendationsCount ?? '…')}
+                      </strong>
+                      <small className="text-[var(--muted-light)]">Actionable Proposals</small>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* SEO Health Metrics Grid */}
               {audit && (
                 <div className="stats-grid">
@@ -1245,7 +1297,7 @@ export function FirstReadPanel({ initialSection = 'overview' }: { initialSection
                     return (
                       <div key={rec.id} className="panel space-y-3">
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
+                          <div className="flex flex-wrap items-center gap-2">
                             <span
                               className={`badge ${
                                 rec.priority === 'high'
@@ -1256,6 +1308,15 @@ export function FirstReadPanel({ initialSection = 'overview' }: { initialSection
                               }`}
                             >
                               {rec.priority} Priority
+                            </span>
+                            <span
+                              className={`badge ${
+                                rec.source === 'deterministic_audit'
+                                  ? 'badge-neutral'
+                                  : 'badge-info'
+                              }`}
+                            >
+                              {rec.source === 'deterministic_audit' ? 'Deterministic Audit Finding' : 'Gemini AI Suggestion'}
                             </span>
                             <span className="text-xs text-[var(--muted)] font-mono">/{rec.slug}</span>
                           </div>

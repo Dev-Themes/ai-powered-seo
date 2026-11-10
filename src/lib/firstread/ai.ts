@@ -12,7 +12,7 @@ import type {
 function generateHeuristicRecommendations(audit: FirstReadAuditReport): FirstReadAIRecommendation[] {
   const recs: FirstReadAIRecommendation[] = [];
 
-  // 1. Technical / Protocol issues (Top Priority)
+  // 1. Technical / Protocol issues (Top Priority - Deterministic)
   for (const issue of audit.technical.protocolIssues) {
     recs.push({
       id: `rec-proto-${recs.length + 1}`,
@@ -33,13 +33,70 @@ function generateHeuristicRecommendations(audit: FirstReadAuditReport): FirstRea
       },
       evidence: issue.details,
       limitations: 'Changes to WordPress site settings must be executed manually by an authorized WordPress administrator.',
+      source: 'deterministic_audit',
       requiresApproval: true,
       approved: false
     });
   }
 
-  // 2. Missing Meta Descriptions (High Impact on SERP Snippet)
-  const missingDescArticles = audit.articles.filter(a => !a.seoDescription).slice(0, 5);
+  // 2. Homepage Issues (Deterministic)
+  for (const hpIssue of audit.homepage.issues) {
+    recs.push({
+      id: `rec-hp-${hpIssue.id}`,
+      priority: hpIssue.severity === 'critical' ? 'high' : 'medium',
+      confidence: 'high',
+      category: hpIssue.category as 'metadata' | 'content_structure' | 'internal_linking' | 'technical',
+      targetUrl: audit.homepage.url,
+      slug: 'home',
+      issue: hpIssue.title,
+      reasoning: hpIssue.description,
+      currentValue: {
+        title: hpIssue.currentValue || audit.homepage.title,
+        description: audit.homepage.metaDescription
+      },
+      recommendedValue: {
+        title: audit.homepage.title && audit.homepage.title.length > 60
+          ? 'Firstread | Contemporary News, Culture & Linguistic Guides'
+          : audit.homepage.title || 'Firstread | Daily News & Insightful Commentary',
+        description: hpIssue.recommendation || 'Explore FirstRead for in-depth analysis on language, entertainment, culture, and lifestyle.'
+      },
+      evidence: `Rendered HTML inspection of homepage: ${hpIssue.description}`,
+      limitations: 'Homepage adjustments must be updated in WordPress Yoast SEO settings.',
+      source: 'deterministic_audit',
+      requiresApproval: true,
+      approved: false
+    });
+  }
+
+  // 3. Duplicate Metadata (Cannibalization Risk - Deterministic)
+  for (const dup of audit.duplicates) {
+    recs.push({
+      id: `rec-dup-${dup.type}-${recs.length + 1}`,
+      priority: 'high',
+      confidence: 'high',
+      category: 'metadata',
+      targetUrl: dup.occurrences[0]?.link || audit.origin,
+      slug: dup.occurrences[0]?.slug || 'duplicates',
+      issue: `Duplicate ${dup.type === 'title' ? 'Title Tag' : 'Meta Description'} Across ${dup.occurrences.length} Articles`,
+      reasoning: `Multiple published articles share the exact same ${dup.type}: "${dup.value}". This creates keyword self-cannibalization in Google search results.`,
+      currentValue: {
+        title: dup.type === 'title' ? dup.value : undefined,
+        description: dup.type === 'description' ? dup.value : undefined
+      },
+      recommendedValue: {
+        title: dup.type === 'title' ? 'Differentiate title tags to reflect unique article angles.' : undefined,
+        description: dup.type === 'description' ? 'Write unique meta descriptions tailored to each individual post.' : undefined
+      },
+      evidence: `Shared across articles: ${dup.occurrences.map(o => '/' + o.slug + '/').join(', ')}`,
+      limitations: 'Each post must be revised individually in WordPress.',
+      source: 'deterministic_audit',
+      requiresApproval: true,
+      approved: false
+    });
+  }
+
+  // 4. Missing Meta Descriptions (High Impact on SERP Snippet)
+  const missingDescArticles = audit.articles.filter(a => !a.seoDescription).slice(0, 10);
   for (const a of missingDescArticles) {
     const topic = a.title.replace(/[:\-–—].*$/, '').trim();
     recs.push({
@@ -59,13 +116,14 @@ function generateHeuristicRecommendations(audit: FirstReadAuditReport): FirstRea
       },
       evidence: `Article "${a.title}" has ${a.wordCount} words and established heading structure, but no explicit meta description in yoast_head_json.`,
       limitations: 'Search engines may occasionally display page text even when a meta description is supplied, but providing a descriptive snippet remains best practice.',
+      source: 'deterministic_audit',
       requiresApproval: true,
       approved: false
     });
   }
 
-  // 3. Overly Long Titles (Truncation Risk)
-  const longTitleArticles = audit.articles.filter(a => a.seoTitle.length > 65).slice(0, 5);
+  // 5. Overly Long Titles (Truncation Risk)
+  const longTitleArticles = audit.articles.filter(a => a.seoTitle.length > 65).slice(0, 10);
   for (const a of longTitleArticles) {
     const truncated = a.seoTitle.slice(0, 58).replace(/\s+\S*$/, '') + ' - Firstread';
     recs.push({
@@ -85,13 +143,14 @@ function generateHeuristicRecommendations(audit: FirstReadAuditReport): FirstRea
       },
       evidence: `Current length: ${a.seoTitle.length} characters. SERP cutoff generally occurs around 55-60 characters.`,
       limitations: 'Length guidelines are advisory constraints for snippet visibility, not algorithmic ranking penalties.',
+      source: 'deterministic_audit',
       requiresApproval: true,
       approved: false
     });
   }
 
-  // 4. Missing Alt Text on Images
-  const missingAltArticles = audit.articles.filter(a => a.missingAltImagesCount > 0).slice(0, 4);
+  // 6. Missing Alt Text on Images
+  const missingAltArticles = audit.articles.filter(a => a.missingAltImagesCount > 0).slice(0, 8);
   for (const a of missingAltArticles) {
     recs.push({
       id: `rec-alt-${a.id}`,
@@ -110,13 +169,14 @@ function generateHeuristicRecommendations(audit: FirstReadAuditReport): FirstRea
       },
       evidence: `Detected ${a.missingAltImagesCount} <img> elements with empty or absent alt attributes in rendered HTML.`,
       limitations: 'Alt text should accurately describe the image, not be stuffed with unnatural keywords.',
+      source: 'deterministic_audit',
       requiresApproval: true,
       approved: false
     });
   }
 
-  // 5. Internal Linking Opportunities
-  for (const opp of audit.internalLinkingOpportunities.slice(0, 3)) {
+  // 7. Internal Linking Opportunities
+  for (const opp of audit.internalLinkingOpportunities.slice(0, 5)) {
     recs.push({
       id: `rec-link-${opp.targetSlug}`,
       priority: 'low',
@@ -134,6 +194,7 @@ function generateHeuristicRecommendations(audit: FirstReadAuditReport): FirstRea
       },
       evidence: `Found shared topical tokens ("${opp.topic}") with related published posts.`,
       limitations: 'Internal links should only be added where natural and genuinely helpful to the human reader.',
+      source: 'deterministic_audit',
       requiresApproval: true,
       approved: false
     });

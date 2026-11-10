@@ -1,0 +1,34 @@
+{
+  "id": "firstread-recommend-1794301446731",
+  "kind": "recommend",
+  "createdAt": "2026-11-10T09:04:06.731Z",
+  "status": "complete",
+  "data": {
+    "generatedAt": "2026-11-10T09:04:06.727Z",
+    "summary": "The audit of FirstRead indicates a baseline WordPress setup using Yoast SEO. The primary concern identified is the lack of a site-wide meta description and a generic homepage title, which may negatively impact Click-Through Rates (CTR) from search results.",
+    "recommendations": [
+      {
+        "id": "meta-001",
+        "priority": "high",
+        "confidence": "high",
+        "category": "metadata",
+        "targetUrl": "https://firstread.co.uk/",
+        "slug": "home",
+        "issue": "Missing meta description and suboptimal homepage title.",
+        "reasoning": "The homepage currently lacks a compelling meta description, leaving search engines to generate snippets automatically. A tailored title and description will improve search visibility and user CTR.",
+        "currentValue": {
+          "title": "Firstread",
+          "description": ""
+        },
+        "recommendedValue": {
+          "title": "FirstRead | Curated News, Insights, and Analysis",
+          "description": "Stay informed with FirstRead. Explore our curated selection of news, deep-dive insights, and expert analysis across trending topics and current events."
+        },
+        "evidence": "Google Search Console performance analysis shows that lack of descriptive meta data often correlates with lower organic click-through rates.",
+        "limitations": "Changing metadata does not guarantee an immediate change in SERP rankings or display snippets, as search engines have the final say on what is displayed.",
+        "requiresApproval": true,
+        "approved": false
+      }
+    ]
+  }
+}
