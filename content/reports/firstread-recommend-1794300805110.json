@@ -1,0 +1,30 @@
+{
+  "id": "firstread-recommend-1794300805110",
+  "kind": "recommend",
+  "createdAt": "2026-11-10T08:53:25.110Z",
+  "status": "complete",
+  "data": {
+    "generatedAt": "2026-11-10T08:53:25.108Z",
+    "summary": "Test summary",
+    "recommendations": [
+      {
+        "id": "rec-unit-test-1",
+        "priority": "high",
+        "confidence": "high",
+        "category": "metadata",
+        "targetUrl": "https://firstread.co.uk/sample",
+        "slug": "sample",
+        "issue": "Missing Meta Description",
+        "reasoning": "Reduces snippet clarity",
+        "currentValue": {},
+        "recommendedValue": {
+          "description": "Proposed snippet"
+        },
+        "evidence": "Empty description",
+        "limitations": "Advisory only",
+        "requiresApproval": true,
+        "approved": false
+      }
+    ]
+  }
+}

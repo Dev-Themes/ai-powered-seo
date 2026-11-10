@@ -19,7 +19,8 @@ import {
   ChevronRight,
   FileText,
   Lock,
-  Database
+  Database,
+  X
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { api } from './api';
@@ -86,6 +87,7 @@ export function FirstReadPanel({ initialSection = 'overview' }: { initialSection
   const [googleState, setGoogleState] = useState<FirstReadGoogleIntegrationsState | null>(null);
   const [reportHistory, setReportHistory] = useState<ReportHistoryItem[]>([]);
   const [selectedHistoricalReport, setSelectedHistoricalReport] = useState<Record<string, unknown> | null>(null);
+  const [loadingReportId, setLoadingReportId] = useState<string | null>(null);
 
   // Loading and action indicators
   const [loading, setLoading] = useState(true);
@@ -274,13 +276,30 @@ export function FirstReadPanel({ initialSection = 'overview' }: { initialSection
     }
   }
 
+  // Close snapshot modal on Escape
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        setSelectedHistoricalReport(null);
+      }
+    }
+    if (selectedHistoricalReport) {
+      window.addEventListener('keydown', handleKeyDown);
+      return () => window.removeEventListener('keydown', handleKeyDown);
+    }
+  }, [selectedHistoricalReport]);
+
   // View historical report snapshot
   async function loadHistoricalReport(id: string) {
+    setLoadingReportId(id);
+    setError('');
     try {
       const rep = await api(`reports/${id}`);
       setSelectedHistoricalReport(rep);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load historical report.');
+    } finally {
+      setLoadingReportId(null);
     }
   }
 
@@ -642,13 +661,13 @@ export function FirstReadPanel({ initialSection = 'overview' }: { initialSection
                 {/* Filters */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                   <div className="relative">
-                    <Search className="w-4 h-4 text-[var(--muted)] absolute left-3 top-3" />
+                    <Search className="w-4 h-4 text-[var(--muted)] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                     <input
                       type="text"
                       placeholder="Search articles by title or slug…"
                       value={postSearchQuery}
                       onChange={e => setPostSearchQuery(e.target.value)}
-                      className="search-input pl-9"
+                      className="search-input search-input-with-icon"
                     />
                   </div>
 
@@ -929,13 +948,13 @@ export function FirstReadPanel({ initialSection = 'overview' }: { initialSection
 
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <div className="relative flex-1 min-w-[220px]">
-                        <Search className="w-4 h-4 text-[var(--muted)] absolute left-3 top-3" />
+                        <Search className="w-4 h-4 text-[var(--muted)] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                         <input
                           type="text"
                           placeholder="Filter articles by title or slug…"
                           value={articleSearchQuery}
                           onChange={e => setArticleSearchQuery(e.target.value)}
-                          className="search-input pl-9"
+                          className="search-input search-input-with-icon"
                         />
                       </div>
                       <div className="flex items-center gap-2">
@@ -1327,12 +1346,20 @@ export function FirstReadPanel({ initialSection = 'overview' }: { initialSection
                           </div>
                         </div>
                         <Button
-                          variant="ghost"
+                          variant="outline"
                           size="sm"
-                          onClick={() => loadHistoricalReport(r.id)}
+                          disabled={loadingReportId === r.id}
+                          onClick={() => void loadHistoricalReport(r.id)}
                           className="text-xs"
                         >
-                          View Snapshot →
+                          {loadingReportId === r.id ? (
+                            <>
+                              <RefreshCw className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                              Loading…
+                            </>
+                          ) : (
+                            <>View Snapshot →</>
+                          )}
                         </Button>
                       </div>
                     ))}
@@ -1340,36 +1367,149 @@ export function FirstReadPanel({ initialSection = 'overview' }: { initialSection
                 )}
               </div>
 
+              {/* Snapshot Modal Viewer */}
               {selectedHistoricalReport && (
-                <div className="panel space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-bold text-[var(--foreground)]">Historical Report Viewer</h4>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          const blob = new Blob([JSON.stringify(selectedHistoricalReport, null, 2)], {
-                            type: 'application/json'
-                          });
-                          const url = URL.createObjectURL(blob);
-                          const a = document.createElement('a');
-                          a.href = url;
-                          a.download = 'firstread-report.json';
-                          a.click();
-                          URL.revokeObjectURL(url);
-                        }}
+                <div
+                  className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150"
+                  role="dialog"
+                  aria-modal="true"
+                  aria-labelledby="snapshot-modal-title"
+                  onClick={e => {
+                    if (e.target === e.currentTarget) setSelectedHistoricalReport(null);
+                  }}
+                >
+                  <div className="panel max-w-3xl w-full max-h-[85vh] flex flex-col p-6 shadow-2xl overflow-hidden border-2 border-[var(--border-strong)] bg-[var(--card)]">
+                    {/* Modal Header */}
+                    <div className="flex items-start justify-between pb-4 border-b border-[var(--border)] gap-4">
+                      <div>
+                        <span className="eyebrow">HISTORICAL SNAPSHOT ARCHIVE</span>
+                        <h3 id="snapshot-modal-title" className="text-base font-bold text-[var(--foreground)] m-0">
+                          {String(selectedHistoricalReport.id || 'Historical Snapshot')}
+                        </h3>
+                        <p className="text-xs text-[var(--muted)] m-0 mt-1">
+                          Created: {selectedHistoricalReport.createdAt ? new Date(String(selectedHistoricalReport.createdAt)).toLocaleString('en-GB') : 'Unknown'} · Kind: <span className="font-semibold uppercase">{String(selectedHistoricalReport.kind)}</span> · Status: {String(selectedHistoricalReport.status)}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedHistoricalReport(null)}
+                        className="text-[var(--muted)] hover:text-[var(--foreground)] p-1.5 rounded-md hover:bg-[var(--surface)] transition-colors"
+                        aria-label="Close snapshot modal"
                       >
-                        <Download className="w-3.5 h-3.5 mr-1" /> Download JSON
-                      </Button>
-                      <Button variant="ghost" size="sm" onClick={() => setSelectedHistoricalReport(null)}>
-                        Close
-                      </Button>
+                        <X className="w-5 h-5" />
+                      </button>
+                    </div>
+
+                    {/* Modal Body (Scrollable) */}
+                    <div className="flex-1 overflow-y-auto py-4 space-y-4">
+                      {/* Summary Metrics */}
+                      {(() => {
+                        const data = selectedHistoricalReport.data as Record<string, unknown> | undefined;
+                        if (!data) return null;
+                        if (selectedHistoricalReport.kind === 'audit') {
+                          const summary = data.summary as Record<string, number> | undefined;
+                          const siteInfo = data.siteInfo as Record<string, unknown> | undefined;
+                          const technical = data.technical as Record<string, unknown> | undefined;
+                          return (
+                            <div className="space-y-3">
+                              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                                <div className="p-3 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
+                                  <span className="text-[var(--muted)] block font-medium mb-1">Total Posts</span>
+                                  <strong className="text-base font-bold text-[var(--foreground)]">
+                                    {Number(siteInfo?.totalPosts || 0).toLocaleString('en-GB')}
+                                  </strong>
+                                </div>
+                                <div className="p-3 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
+                                  <span className="text-[var(--muted)] block font-medium mb-1">Audited Articles</span>
+                                  <strong className="text-base font-bold text-[var(--foreground)]">
+                                    {summary?.totalChecked ?? 0}
+                                  </strong>
+                                </div>
+                                <div className="p-3 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
+                                  <span className="text-[var(--muted)] block font-medium mb-1">Critical Issues</span>
+                                  <strong className={`text-base font-bold ${Number(summary?.criticalCount || 0) > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
+                                    {summary?.criticalCount ?? 0}
+                                  </strong>
+                                </div>
+                                <div className="p-3 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
+                                  <span className="text-[var(--muted)] block font-medium mb-1">SEO Warnings</span>
+                                  <strong className={`text-base font-bold ${Number(summary?.warningCount || 0) > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
+                                    {summary?.warningCount ?? 0}
+                                  </strong>
+                                </div>
+                              </div>
+                              <div className="p-3 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-xs flex flex-wrap gap-4 text-[var(--muted)]">
+                                <span>Target: <strong className="text-[var(--foreground)] font-mono">{String(data.origin || 'https://firstread.co.uk')}</strong></span>
+                                <span>Robots.txt: <strong className="text-emerald-600 dark:text-emerald-400 font-medium">{String(technical?.robotsTxtStatus || 'accessible')}</strong></span>
+                                <span>Sub-Sitemaps: <strong className="text-[var(--foreground)]">{Number(technical?.sitemapCount || 0)} detected</strong></span>
+                              </div>
+                            </div>
+                          );
+                        }
+                        if (selectedHistoricalReport.kind === 'recommend') {
+                          const summary = String(data.summary || '');
+                          const recs = (data.recommendations as Array<Record<string, unknown>>) || [];
+                          return (
+                            <div className="space-y-3">
+                              {summary && (
+                                <div className="p-3.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-xs">
+                                  <strong className="block text-[var(--foreground)] font-semibold mb-1">Executive Summary:</strong>
+                                  <p className="m-0 text-[var(--muted)] leading-relaxed">{summary}</p>
+                                </div>
+                              )}
+                              <div className="text-xs text-[var(--muted)] font-medium">
+                                Total AI Recommendations in Snapshot: <strong className="text-[var(--foreground)]">{recs.length}</strong>
+                              </div>
+                            </div>
+                          );
+                        }
+                        return null;
+                      })()}
+
+                      {/* Full JSON Payload */}
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs font-semibold text-[var(--foreground)]">Full Snapshot JSON Payload</span>
+                          <span className="text-[11px] text-[var(--muted)]">Raw historical record</span>
+                        </div>
+                        <pre className="p-3.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[11px] font-mono text-[var(--foreground)] max-h-72 overflow-auto">
+                          {JSON.stringify(selectedHistoricalReport, null, 2)}
+                        </pre>
+                      </div>
+                    </div>
+
+                    {/* Modal Footer */}
+                    <div className="pt-4 border-t border-[var(--border)] flex flex-wrap items-center justify-between gap-3">
+                      <div className="text-xs text-[var(--muted)]">
+                        Persisted in <code className="text-xs">content/reports/</code>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            const blob = new Blob([JSON.stringify(selectedHistoricalReport, null, 2)], {
+                              type: 'application/json'
+                            });
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = `${String(selectedHistoricalReport.id || 'snapshot')}.json`;
+                            a.click();
+                            URL.revokeObjectURL(url);
+                          }}
+                        >
+                          <Download className="w-3.5 h-3.5 mr-1.5" /> Download JSON
+                        </Button>
+                        <Button
+                          size="sm"
+                          onClick={() => setSelectedHistoricalReport(null)}
+                        >
+                          Close
+                        </Button>
+                      </div>
                     </div>
                   </div>
-                  <pre className="p-3.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[11px] font-mono text-[var(--foreground)] max-h-96 overflow-auto">
-                    {JSON.stringify(selectedHistoricalReport, null, 2)}
-                  </pre>
                 </div>
               )}
             </div>

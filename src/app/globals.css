@@ -470,6 +470,10 @@ code {
   border-color: var(--ring);
 }
 
+.search-input-with-icon {
+  padding-left: 38px !important;
+}
+
 /* Messages & Alerts */
 .error-message {
   color: #991b1b;
