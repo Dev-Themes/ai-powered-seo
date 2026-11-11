@@ -1,10 +1,10 @@
-import { runFirstReadAudit } from '../src/lib/firstread/audit';
-import { generateFirstReadRecommendations } from '../src/lib/firstread/ai';
+import { runFirstReadAudit } from '../src/lib/seo/audit';
+import { generateFirstReadRecommendations } from '../src/lib/content/ai';
 import {
   saveAuditReport,
   saveRecommendationsReport,
   getLatestAuditReport
-} from '../src/lib/firstread/storage';
+} from '../src/lib/shared/storage';
 
 const mode = process.argv[2] || 'audit';
 
@@ -20,41 +20,39 @@ async function retry<T>(fn: () => Promise<T>, retries = 3): Promise<T> {
 }
 
 async function run() {
-  console.log(`[FirstRead Automation] Starting scheduled monitoring (mode: ${mode})...`);
+  console.log(`[FirstRead Autonomous SEO] Starting scheduled execution (mode: ${mode})...`);
 
   if (['audit', 'daily', 'weekly', 'firstread', 'firstread:audit'].includes(mode)) {
-    // 1. Fetch published WordPress content and run SEO audit
-    console.log('[FirstRead Automation] Running read-only SEO audit for https://firstread.co.uk...');
+    console.log('[FirstRead Autonomous SEO] Running read-only SEO audit for https://firstread.co.uk...');
     const audit = await retry(() => runFirstReadAudit(500));
     const savedAudit = await saveAuditReport(audit);
-    console.log(`[FirstRead Automation] Audit completed and saved: ${savedAudit.id}`);
+    console.log(`[FirstRead Autonomous SEO] Audit completed and saved: ${savedAudit.id}`);
     console.log(`  • Posts checked: ${audit.summary.totalChecked}`);
     console.log(`  • Critical issues: ${audit.summary.criticalCount}`);
     console.log(`  • Warnings: ${audit.summary.warningCount}`);
     console.log(`  • Missing alt images: ${audit.summary.missingAltImagesTotal}`);
 
-    // 2. Generate AI recommendations
     try {
-      console.log('[FirstRead Automation] Generating AI recommendations...');
+      console.log('[FirstRead Autonomous SEO] Generating AI recommendations & opportunities...');
       const recs = await retry(() => generateFirstReadRecommendations(audit));
       const savedRecs = await saveRecommendationsReport(recs);
-      console.log(`[FirstRead Automation] AI recommendations saved: ${savedRecs.id} (${recs.recommendations.length} items)`);
+      console.log(`[FirstRead Autonomous SEO] Recommendations saved: ${savedRecs.id} (${recs.recommendations.length} items)`);
     } catch (err) {
-      console.warn('[FirstRead Automation] AI recommendation step skipped or failed:', err);
+      console.warn('[FirstRead Autonomous SEO] Recommendation step skipped or failed:', err);
     }
   } else if (mode === 'recommend') {
     const latestAudit = await getLatestAuditReport();
     const audit = latestAudit || (await retry(() => runFirstReadAudit(500)));
     const recs = await retry(() => generateFirstReadRecommendations(audit));
     const savedRecs = await saveRecommendationsReport(recs);
-    console.log(`[FirstRead Automation] Recommendations saved: ${savedRecs.id}`);
+    console.log(`[FirstRead Autonomous SEO] Recommendations saved: ${savedRecs.id}`);
   } else {
-    console.error(`[FirstRead Automation] Unknown mode: "${mode}". Valid modes: audit, recommend, daily, weekly.`);
+    console.error(`[FirstRead Autonomous SEO] Unknown mode: "${mode}". Valid modes: audit, recommend, daily, weekly.`);
     process.exitCode = 1;
   }
 }
 
 run().catch(err => {
-  console.error('[FirstRead Automation] Fatal error:', err);
+  console.error('[FirstRead Autonomous SEO] Fatal error:', err);
   process.exitCode = 1;
 });

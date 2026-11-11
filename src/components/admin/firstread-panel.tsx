@@ -19,7 +19,6 @@ import {
   ChevronRight,
   FileText,
   Lock,
-  Database,
   X
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -260,21 +259,70 @@ export function FirstReadPanel({ initialSection = 'overview' }: { initialSection
     }
   }
 
-  // Toggle approval on an AI recommendation
-  async function toggleApproval(id: string) {
-    const nextApproved = !approvedIds.has(id);
-    try {
-      await api('firstread/approve', { id, approved: nextApproved });
-      setApprovedIds(prev => {
-        const next = new Set(prev);
-        if (nextApproved) next.add(id);
-        else next.delete(id);
-        return next;
-      });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update approval status.');
-    }
+  // Toggle reviewed status on an AI recommendation (In-memory session state)
+  function toggleApproval(id: string) {
+    setApprovedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
   }
+
+  // On-Demand AI Operations state (Simplified Architecture)
+  const [selectedOperation, setSelectedOperation] = useState<string>('keyword-research');
+  const [opInput, setOpInput] = useState<string>('uk property investment');
+  const [opResult, setOpResult] = useState<unknown | null>(null);
+  const [runningOp, setRunningOp] = useState<boolean>(false);
+
+  const runOperation = async (opName: string) => {
+    setRunningOp(true);
+    setError('');
+    setMessage('');
+    try {
+      let input: Record<string, unknown> = {};
+      if (opName === 'keyword-research') input = { seed: opInput };
+      else if (opName === 'competitor-analysis') input = { domain: 'firstread.co.uk' };
+      else if (opName === 'search-intent') input = { keywords: [opInput, 'best buy to let areas uk', 'canterbury property yields'] };
+      else if (opName === 'content-gap') input = { niche: 'UK Regional Property & Finance' };
+      else if (opName === 'topic-clusters') input = { pillarTopic: opInput };
+      else if (opName === 'seo-strategy') input = { focus: 'FirstRead 90-Day Organic Growth' };
+      else if (opName === 'article-research') input = { topic: opInput };
+      else if (opName === 'article-generation') input = { topic: opInput, primaryKeyword: opInput.toLowerCase() };
+      else if (opName === 'article-qa') input = {
+        title: `${opInput}: Strategic Guide for UK Investors`,
+        metaDescription: `Comprehensive guide covering ${opInput} with actionable insights, regional yields, and regulatory updates across the UK.`,
+        content: `<h2>Introduction to ${opInput}</h2><p>Overview of the current UK landscape regarding ${opInput}.</p><h2>Strategic Considerations</h2><p>Critical regional analysis.</p>`,
+        primaryKeyword: opInput.toLowerCase()
+      };
+      else if (opName === 'technical-audit') input = { limit: 100 };
+      else if (opName === 'recommendations') input = {};
+
+      const res = await api('firstread/operation', {
+        operation: opName,
+        input
+      });
+      setOpResult(res);
+      setMessage(`Operation "${opName}" executed successfully.`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : `Failed to execute operation "${opName}"`);
+    } finally {
+      setRunningOp(false);
+    }
+  };
+
+  const downloadJson = (data: unknown, filename: string) => {
+    if (!data) return;
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
 
   // Close snapshot modal on Escape
   useEffect(() => {
@@ -414,7 +462,7 @@ export function FirstReadPanel({ initialSection = 'overview' }: { initialSection
           { slug: 'technical', label: `Technical SEO (${audit?.technical.protocolIssues.length || 0})`, icon: ShieldCheck },
           { slug: 'recommendations', label: 'AI Recommendations', icon: Sparkles },
           { slug: 'history', label: `Audit History (${reportHistory.length})`, icon: Calendar },
-          { slug: 'google', label: 'Google Integrations', icon: Database },
+          { slug: 'google', label: 'Google Integrations', icon: SlidersHorizontal },
           { slug: 'settings', label: 'Settings', icon: Lock }
         ] as const).map(({ slug, label, icon: IconComp }) => {
           const isActive = activeSection === slug;
@@ -684,6 +732,98 @@ export function FirstReadPanel({ initialSection = 'overview' }: { initialSection
                   </Button>
                 </div>
               )}
+
+              {/* ON-DEMAND AI SEO OPERATIONS STUDIO */}
+              <div className="panel space-y-4">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <span className="eyebrow">SERVER-SIDE AI ENGINE</span>
+                    <h3 className="text-base font-bold text-[var(--foreground)]">On-Demand AI SEO Operations</h3>
+                    <p className="text-xs text-[var(--muted)] m-0">
+                      Direct, server-side AI execution across 11 discrete SEO capabilities. Results are generated on demand and held in working session memory.
+                    </p>
+                  </div>
+                  <span className="badge badge-info">11 Direct Operations</span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div>
+                    <label className="text-xs font-semibold text-[var(--foreground)] block mb-1">Select Operation:</label>
+                    <select
+                      value={selectedOperation}
+                      onChange={e => setSelectedOperation(e.target.value)}
+                      className="w-full text-xs p-2 rounded-md border border-[var(--border)] bg-[var(--surface)] text-[var(--foreground)]"
+                    >
+                      <option value="keyword-research">🔍 1. Keyword Research</option>
+                      <option value="competitor-analysis">⚔️ 2. Competitor Gap Analysis</option>
+                      <option value="search-intent">🎯 3. Search Intent Classification</option>
+                      <option value="content-gap">💡 4. Editorial Content Gap Discovery</option>
+                      <option value="topic-clusters">🌳 5. Topic Cluster &amp; Pillar Architecture</option>
+                      <option value="seo-strategy">📈 6. 90-Day SEO Strategy Roadmap</option>
+                      <option value="article-research">📝 7. Article Research &amp; Heading Outline</option>
+                      <option value="article-generation">✍️ 8. Complete Article Generation</option>
+                      <option value="article-qa">🛡️ 9. Independent Article QA Gatekeeper</option>
+                      <option value="technical-audit">⚙️ 10. Technical SEO Crawl Audit</option>
+                      <option value="recommendations">💡 11. AI Recommendation Synthesis</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-semibold text-[var(--foreground)] block mb-1">Seed Keyword / Topic / Niche:</label>
+                    <input
+                      type="text"
+                      value={opInput}
+                      onChange={e => setOpInput(e.target.value)}
+                      placeholder="e.g. uk property investment, canterbury"
+                      className="w-full text-xs p-2 rounded-md border border-[var(--border)] bg-[var(--surface)] text-[var(--foreground)]"
+                    />
+                  </div>
+
+                  <div className="flex items-end">
+                    <Button
+                      onClick={() => void runOperation(selectedOperation)}
+                      disabled={runningOp}
+                      className="w-full"
+                    >
+                      <Sparkles className={`w-3.5 h-3.5 mr-1.5 ${runningOp ? 'animate-spin' : ''}`} />
+                      {runningOp ? 'Running Operation…' : 'Execute Operation'}
+                    </Button>
+                  </div>
+                </div>
+
+                {opResult !== null && (
+                  <div className="p-3.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                        <strong className="text-xs text-[var(--foreground)]">Result: {selectedOperation}</strong>
+                        <span className="text-[10px] bg-amber-100 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 px-1.5 py-0.5 rounded font-medium">
+                          Session-Scoped (Unsaved)
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => downloadJson(opResult, `firstread-${selectedOperation}-${Date.now()}.json`)}
+                        >
+                          <Download className="w-3.5 h-3.5 mr-1" /> Export JSON
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setOpResult(null)}
+                        >
+                          Clear
+                        </Button>
+                      </div>
+                    </div>
+                    <pre className="text-xs font-mono bg-[var(--card)] p-3 rounded border border-[var(--border)] max-h-72 overflow-y-auto m-0 text-[var(--foreground)]">
+                      {JSON.stringify(opResult, null, 2)}
+                    </pre>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
@@ -1321,7 +1461,7 @@ export function FirstReadPanel({ initialSection = 'overview' }: { initialSection
                     <span className="eyebrow">EDITORIAL ASSISTANCE</span>
                     <h3 className="text-base font-bold text-[var(--foreground)]">AI-Powered SEO Proposals</h3>
                     <p className="text-xs text-[var(--muted)] m-0">
-                      All suggestions are non-destructive proposals. Marking a recommendation as &ldquo;Approved&rdquo; records your approval in the dashboard database only and <strong>never modifies WordPress</strong>.
+                      All suggestions are non-destructive proposals generated on demand. Marking a recommendation as &ldquo;Reviewed&rdquo; records state in current working session memory only and <strong>never modifies WordPress</strong>.
                     </p>
                   </div>
                   <Button
@@ -1432,17 +1572,29 @@ export function FirstReadPanel({ initialSection = 'overview' }: { initialSection
           {activeSection === 'history' && (
             <div className="space-y-6">
               <div className="panel">
-                <div className="flex items-center justify-between mb-3">
+                <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
                   <div>
                     <span className="eyebrow">MONITORING TIMELINE</span>
-                    <h3 className="text-base font-bold text-[var(--foreground)]">Historical SEO Reports</h3>
+                    <h3 className="text-base font-bold text-[var(--foreground)]">Historical SEO Reports (Session &amp; Local)</h3>
                     <p className="text-xs text-[var(--muted)] m-0">
-                      Audit snapshots saved across scheduled runs and manual triggers. Retained for 90 days.
+                      Snapshots generated during the current session and cached temporarily in serverless storage. No database persistence is used.
                     </p>
                   </div>
-                  <Button variant="outline" size="sm" onClick={() => void refreshData()}>
-                    <RefreshCw className="w-3.5 h-3.5 mr-1" /> Refresh
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    {audit && (
+                      <Button variant="outline" size="sm" onClick={() => downloadJson(audit, `firstread-audit-${Date.now()}.json`)}>
+                        <Download className="w-3.5 h-3.5 mr-1" /> Export Audit
+                      </Button>
+                    )}
+                    {recommendations && (
+                      <Button variant="outline" size="sm" onClick={() => downloadJson(recommendations, `firstread-recommendations-${Date.now()}.json`)}>
+                        <Download className="w-3.5 h-3.5 mr-1" /> Export Proposals
+                      </Button>
+                    )}
+                    <Button variant="outline" size="sm" onClick={() => void refreshData()}>
+                      <RefreshCw className="w-3.5 h-3.5 mr-1" /> Refresh
+                    </Button>
+                  </div>
                 </div>
 
                 {reportHistory.length === 0 ? (
@@ -1723,6 +1875,16 @@ export function FirstReadPanel({ initialSection = 'overview' }: { initialSection
                     <span className="text-[var(--muted)] block mb-1 font-semibold">Scheduled Audits</span>
                     <span className="text-[var(--foreground)] font-medium">GitHub Actions &amp; CLI</span>
                     <small className="text-[var(--muted-light)] block mt-1">CLI command: npm run firstread:audit</small>
+                  </div>
+                </div>
+
+                <div className="p-3.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-xs space-y-2">
+                  <strong className="block text-[var(--foreground)] font-semibold">Simplified Application Architecture</strong>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[var(--muted)]">
+                    <div>• <strong>Persistence:</strong> In-Memory / Ephemeral Session (Zero Database Dependency)</div>
+                    <div>• <strong>Orchestration:</strong> Direct Server-Side Operations (No Background Queues)</div>
+                    <div>• <strong>Hosting:</strong> Serverless Next.js App Router</div>
+                    <div>• <strong>AI Engine:</strong> Google Gemini (with deterministic heuristic fallbacks)</div>
                   </div>
                 </div>
 

@@ -1,8 +1,0 @@
-{
-  "id": "recommend-1794146804017",
-  "createdAt": "2026-11-08T14:06:38.765Z",
-  "status": "failed",
-  "data": {
-    "message": "Gemini unavailable. Check model, credentials, quota and response validation."
-  }
-}

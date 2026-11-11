@@ -8,10 +8,16 @@ import {
   listReports,
   getReportById,
   getLatestAuditReport,
-  getApprovals,
-  setApproval
-} from '../src/lib/firstread/storage';
-import type { FirstReadAuditReport, FirstReadRecommendationsReport } from '../src/lib/firstread/types';
+  getLatestRecommendationsReport,
+  normalizeAuditReport
+} from '../src/lib/shared/storage';
+import type {
+  FirstReadAuditReport,
+  HomepageSEOSummary,
+  TechnicalSEOSummary
+} from '../src/lib/seo/types';
+import type { SiteInfo } from '../src/lib/wordpress/types';
+import type { FirstReadRecommendationsReport } from '../src/lib/content/types';
 
 test('report storage saves, lists, and retrieves FirstRead audit reports', async () => {
   const dummyAudit: FirstReadAuditReport = {
@@ -85,16 +91,15 @@ test('report storage saves, lists, and retrieves FirstRead audit reports', async
     assert.ok(latest !== null);
     assert.equal(latest?.origin, 'https://firstread.co.uk');
   } finally {
-    // Clean up test file so unit tests do not pollute runtime reports
     const filePath = path.join(process.cwd(), 'content', 'reports', `${saved.id}.json`);
     await fs.unlink(filePath).catch(() => {});
   }
 });
 
-test('recommendations storage saves and persists approval status internally', async () => {
+test('recommendations storage saves and retrieves recommendation reports', async () => {
   const dummyRecs: FirstReadRecommendationsReport = {
     generatedAt: new Date().toISOString(),
-    summary: 'Test summary',
+    summary: 'Test synthesis summary',
     recommendations: [
       {
         id: 'rec-unit-test-1',
@@ -104,13 +109,11 @@ test('recommendations storage saves and persists approval status internally', as
         targetUrl: 'https://firstread.co.uk/sample',
         slug: 'sample',
         issue: 'Missing Meta Description',
-        reasoning: 'Reduces snippet clarity',
+        reasoning: 'Reduces snippet clarity in SERP',
         currentValue: {},
         recommendedValue: { description: 'Proposed snippet' },
         evidence: 'Empty description',
-        limitations: 'Advisory only',
-        requiresApproval: true,
-        approved: false
+        limitations: 'Advisory only'
       }
     ]
   };
@@ -118,20 +121,65 @@ test('recommendations storage saves and persists approval status internally', as
   const saved = await saveRecommendationsReport(dummyRecs);
   try {
     assert.ok(saved.id.startsWith('firstread-recommend-'));
+    assert.equal(saved.status, 'complete');
 
-    // Toggle approval
-    const approvedIds = await setApproval('rec-unit-test-1', true);
-    assert.ok(approvedIds.includes('rec-unit-test-1'));
+    const retrieved = await getReportById(saved.id);
+    assert.ok(retrieved !== null);
+    assert.equal(retrieved?.id, saved.id);
 
-    const check = await getApprovals();
-    assert.ok(check.includes('rec-unit-test-1'));
-
-    // Untoggle approval
-    const unapproved = await setApproval('rec-unit-test-1', false);
-    assert.ok(!unapproved.includes('rec-unit-test-1'));
+    const latestRec = await getLatestRecommendationsReport();
+    assert.ok(latestRec !== null);
   } finally {
-    // Clean up test file
     const filePath = path.join(process.cwd(), 'content', 'reports', `${saved.id}.json`);
     await fs.unlink(filePath).catch(() => {});
   }
+});
+
+test('normalizeAuditReport preserves backward compatibility for legacy field names', () => {
+  const legacyReport = {
+    auditedAt: new Date().toISOString(),
+    origin: 'https://firstread.co.uk',
+    readOnlyEnforced: true as const,
+    siteInfo: {} as unknown as SiteInfo,
+    homepage: {} as unknown as HomepageSEOSummary,
+    technical: {} as unknown as TechnicalSEOSummary,
+    summary: {
+      totalChecked: 10,
+      errorsCount: 3,
+      missingAltImagesTotal: 5,
+      criticalCount: 3,
+      warningCount: 2,
+      infoCount: 1,
+      duplicateTitlesCount: 0,
+      duplicateDescriptionsCount: 0
+    },
+    articles: [
+      {
+        id: 1,
+        slug: 'test',
+        link: 'https://firstread.co.uk/test',
+        title: 'Test',
+        seoTitle: 'Test',
+        seoDescription: '',
+        canonical: 'https://firstread.co.uk/test',
+        h1Count: 2,
+        h2Count: 1,
+        h3Count: 0,
+        missingAltImagesCount: 4,
+        totalImagesCount: 5,
+        internalLinksCount: 1,
+        wordCount: 500,
+        hasYoastSchema: true,
+        issues: []
+      }
+    ],
+    duplicates: [],
+    internalLinkingOpportunities: []
+  };
+
+  const normalized = normalizeAuditReport(legacyReport as unknown as FirstReadAuditReport);
+  assert.equal(normalized.summary.protocolIssuesCount, 3);
+  assert.equal(normalized.summary.missingAltTotal, 5);
+  assert.equal(normalized.articles[0].bodyH1Count, 2);
+  assert.equal(normalized.articles[0].missingAltCount, 4);
 });

@@ -8,30 +8,33 @@ import { Button } from '@/components/ui/button';
 import { FirstReadPanel } from './firstread-panel';
 
 const titles: Record<string, string> = {
-  overview: 'Website health & SEO audit overview.',
-  posts: 'Browse published articles from FirstRead WordPress.',
-  homepage: 'Homepage title, meta description & heading structure.',
-  articles: 'Article-level SEO audit & content metrics.',
-  technical: 'Robots.txt, XML Sitemaps & Schema validation.',
-  recommendations: 'AI-assisted SEO proposals & editorial review.',
+  overview: 'Autonomous AI SEO engine & site vitals.',
+  strategy: 'Keyword opportunities, cannibalisation checks & internal linking graph.',
+  content: 'Content production, headline refinement & automated QA gates.',
+  posts: 'Browse live published articles from FirstRead WordPress.',
+  technical: 'Robots.txt, XML Sitemaps, protocols & schema validation.',
   history: 'Historical audit runs & monitoring snapshots.',
-  google: 'Google Search Console & GA4 readiness.',
-  settings: 'Dashboard monitoring configuration & security controls.'
+  settings: 'Autonomous platform configuration & security controls.',
+  // Backward compatibility aliases
+  homepage: 'Homepage SEO & semantic heading hierarchy.',
+  articles: 'Article-level SEO audit & content metrics.',
+  recommendations: 'AI-assisted SEO proposals & content opportunities.',
+  google: 'Google Search Console & GA4 readiness status.'
 };
 
 export function AdminPanel({ section }: { section: string }) {
   const [error, setError] = useState('');
   const router = useRouter();
 
-  const title = titles[section] || 'FirstRead SEO monitoring dashboard.';
+  const title = titles[section] || 'FirstRead Autonomous AI SEO platform.';
 
   return (
     <>
       <div className="admin-heading">
         <div>
-          <span className="eyebrow">FIRSTREAD SEO / {section.toUpperCase()}</span>
+          <span className="eyebrow">FIRSTREAD AI SEO / {section.toUpperCase()}</span>
           <h1>{title}</h1>
-          <p>Read-only monitoring of live WordPress target: https://firstread.co.uk</p>
+          <p>Autonomous engine monitoring live WordPress target: https://firstread.co.uk</p>
         </div>
         <div className="editor-actions">
           <Button

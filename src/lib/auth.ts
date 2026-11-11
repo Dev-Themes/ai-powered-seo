@@ -1,5 +1,5 @@
 import 'server-only';import {cookies} from 'next/headers';import {redirect} from 'next/navigation';import {decodeSession} from './auth-core';
-export const cookieName=process.env.NODE_ENV==='production'?'__Host-spot-session':'spot-session';
+export const cookieName=process.env.NODE_ENV==='production'?'__Host-firstread-session':'firstread-session';
 export function authReady(){return !!(process.env.SESSION_SECRET&&process.env.SESSION_SECRET.length>=32&&process.env.ADMIN_PASSWORD_HASH&&process.env.ADMIN_USERNAME);}
 export async function session(){if(!authReady())return null;const token=(await cookies()).get(cookieName)?.value;return token?decodeSession(token,process.env.SESSION_SECRET!,process.env.ADMIN_PASSWORD_HASH!):null;}
 export async function requireAdmin(){const s=await session();if(!s)redirect('/admin/login');return s;}

@@ -1,20 +1,30 @@
 import { NextResponse } from 'next/server';
 import { session, authorize } from '@/lib/auth';
-import { runFirstReadAudit } from '@/lib/firstread/audit';
-import { generateFirstReadRecommendations } from '@/lib/firstread/ai';
-import { getFirstReadGoogleStatus } from '@/lib/firstread/google-interfaces';
-import { fetchSiteInfo, fetchPublishedPosts, fetchCategories } from '@/lib/firstread/client';
+import { runFirstReadAudit } from '@/lib/seo/audit';
+import { generateFirstReadRecommendations } from '@/lib/content/ai';
+import { fetchSiteInfo, fetchPublishedPosts, fetchCategories } from '@/lib/wordpress/client';
 import {
   saveAuditReport,
   saveRecommendationsReport,
   listReports,
   getReportById,
   getLatestAuditReport,
-  getLatestRecommendationsReport,
-  getApprovals,
-  setApproval
-} from '@/lib/firstread/storage';
-import { boundedJson } from '@/lib/request';
+  getLatestRecommendationsReport
+} from '@/lib/shared/storage';
+import { getGoogleIntegrationReadiness } from '@/lib/integrations/google';
+import {
+  executeKeywordResearch,
+  executeCompetitorAnalysis,
+  executeSearchIntentAnalysis,
+  executeContentGapDiscovery,
+  executeTopicClusterGeneration,
+  executeSEOStrategyGeneration,
+  executeArticleResearch,
+  executeArticleGeneration,
+  executeArticleQA,
+  executeTechnicalAudit,
+  executeRecommendationsGeneration
+} from '@/lib/seo/operations';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -81,15 +91,35 @@ export async function GET(
         if (!data) return NextResponse.json({ error: 'Report not found' }, { status: 404 });
       } else if (sub === 'reports') {
         data = await listReports();
-      } else if (sub === 'approvals') {
-        data = { approvedIds: await getApprovals() };
-      } else if (sub === 'google') {
-        data = getFirstReadGoogleStatus();
+      } else if (sub === 'integrations' || sub === 'google') {
+        data = getGoogleIntegrationReadiness();
+      } else if (sub === 'status' || sub === 'readiness' || sub === 'infra') {
+        // Honest system status without database or Inngest dependencies
+        data = {
+          wordpress: {
+            origin: 'https://firstread.co.uk',
+            mode: 'Strict Read-Only (Guaranteed)',
+            status: 'Connected'
+          },
+          aiProvider: {
+            provider: 'Google Gemini',
+            model: process.env.GEMINI_MODEL || 'gemini-2.5-flash',
+            configured: Boolean(process.env.GEMINI_API_KEY)
+          },
+          googleIntegrations: getGoogleIntegrationReadiness(),
+          architecture: {
+            type: 'Simplified Serverless Next.js App Router',
+            state: 'Session-Scoped (In-Memory / Non-Persistent)',
+            database: 'None (Completely Removed)',
+            orchestration: 'Direct On-Demand Server-Side Operations',
+            availableOperations: 11
+          }
+        };
       } else {
         data = await fetchSiteInfo();
       }
     } else {
-      return NextResponse.json({ error: 'Endpoint not found or legacy route removed' }, { status: 404 });
+      return NextResponse.json({ error: 'Endpoint not found' }, { status: 404 });
     }
 
     return NextResponse.json(data, {
@@ -111,12 +141,57 @@ export async function POST(
     if (p[0] === 'firstread') {
       const action = p[1];
 
+      // 1. Direct AI Operations Dispatcher
+      if (action === 'operation') {
+        let body: { operation?: string; input?: Record<string, unknown> } = {};
+        try {
+          body = await request.json();
+        } catch {
+          return NextResponse.json({ error: 'Invalid JSON request body' }, { status: 400 });
+        }
+
+        const op = body.operation;
+        const input = body.input || {};
+
+        switch (op) {
+          case 'keyword-research':
+            return NextResponse.json(await executeKeywordResearch(input.seed as string | undefined));
+          case 'competitor-analysis':
+            return NextResponse.json(await executeCompetitorAnalysis(input.domain as string | undefined));
+          case 'search-intent':
+            return NextResponse.json(await executeSearchIntentAnalysis((input.keywords as string[]) || []));
+          case 'content-gap':
+            return NextResponse.json(await executeContentGapDiscovery(input.niche as string | undefined));
+          case 'topic-clusters':
+            return NextResponse.json(await executeTopicClusterGeneration(input.pillarTopic as string | undefined));
+          case 'seo-strategy':
+            return NextResponse.json(await executeSEOStrategyGeneration(input.focus as string | undefined));
+          case 'article-research':
+            return NextResponse.json(await executeArticleResearch(input.topic as string | undefined));
+          case 'article-generation':
+            return NextResponse.json(await executeArticleGeneration(input));
+          case 'article-qa':
+            return NextResponse.json(await executeArticleQA(input));
+          case 'technical-audit':
+            return NextResponse.json(await executeTechnicalAudit(Number(input.limit) || 100));
+          case 'recommendations':
+            return NextResponse.json(await executeRecommendationsGeneration());
+          default:
+            return NextResponse.json(
+              { error: `Unknown operation: ${op}. Supported: keyword-research, competitor-analysis, search-intent, content-gap, topic-clusters, seo-strategy, article-research, article-generation, article-qa, technical-audit, recommendations.` },
+              { status: 400 }
+            );
+        }
+      }
+
+      // 2. Audit Snapshot Trigger
       if (action === 'audit') {
         const audit = await runFirstReadAudit(500);
         const stored = await saveAuditReport(audit);
         return NextResponse.json(stored);
       }
 
+      // 3. Recommendation Trigger
       if (action === 'recommend') {
         const audit = (await getLatestAuditReport()) || (await runFirstReadAudit(500));
         const recs = await generateFirstReadRecommendations(audit);
@@ -124,28 +199,22 @@ export async function POST(
         return NextResponse.json(stored);
       }
 
+      // 4. Strictly reject obsolete approval actions or any WordPress write operation
       if (action === 'approve') {
-        const body = (await boundedJson(request)) as { id: string; approved: boolean };
-        if (!body.id || typeof body.approved !== 'boolean') {
-          return NextResponse.json({ error: 'Invalid approval payload' }, { status: 400 });
-        }
-        const updated = await setApproval(body.id, body.approved);
-        return NextResponse.json({
-          ok: true,
-          approvedIds: updated,
-          note: 'Approval status saved internally. No changes made to FirstRead.'
-        });
+        return NextResponse.json(
+          { error: 'Human approval queues are obsolete. System operates via automated QA validation.' },
+          { status: 410 }
+        );
       }
 
-      // Any other action targeting firstread is forbidden
       return NextResponse.json(
-        { error: 'Forbidden. Write operations to FirstRead are permanently blocked.' },
+        { error: 'Forbidden. Write operations to FirstRead WordPress are permanently blocked.' },
         { status: 403 }
       );
     }
 
     return NextResponse.json(
-      { error: 'Legacy publishing and write operations have been safely removed.' },
+      { error: 'Endpoint not found' },
       { status: 404 }
     );
   } catch (e) {

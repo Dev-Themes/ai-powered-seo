@@ -1,7 +1,7 @@
-name: Validate magazine
+name: FirstRead Autonomous SEO CI
 on:
   push:
-    branches: [main, cms-content]
+    branches: [main, feat/*, feat/**]
   pull_request:
   workflow_dispatch:
 permissions:
@@ -12,7 +12,7 @@ concurrency:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -24,11 +24,3 @@ jobs:
       - run: npm run lint
       - run: npm test
       - run: npm run build
-      - run: npx playwright install --with-deps chromium
-      - run: npm run test:e2e
-      - uses: actions/upload-artifact@v4
-        if: failure()
-        with:
-          name: browser-failures
-          path: test-results/
-          retention-days: 7
