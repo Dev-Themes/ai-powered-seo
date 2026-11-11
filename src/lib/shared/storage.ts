@@ -42,6 +42,26 @@ export function normalizeAuditReport(report: FirstReadAuditReport): FirstReadAud
   if (report.summary.descriptiveAltTotal === undefined) {
     report.summary.descriptiveAltTotal = 0;
   }
+  if (report.summary.totalDiscovered === undefined) {
+    report.summary.totalDiscovered = report.summary.articlesDiscovered ?? report.siteInfo?.totalPosts ?? report.summary.totalChecked;
+  }
+  if (report.summary.totalAudited === undefined) {
+    report.summary.totalAudited = report.summary.articlesAudited ?? report.summary.totalChecked;
+  }
+  if (report.summary.notAudited === undefined) {
+    report.summary.notAudited = report.summary.articlesSkipped ?? Math.max(0, (report.summary.totalDiscovered || 0) - (report.summary.totalAudited || 0));
+  }
+  if (report.summary.coveragePercentage === undefined) {
+    const total = report.summary.totalDiscovered || 0;
+    const audited = report.summary.totalAudited || 0;
+    report.summary.coveragePercentage = total > 0 ? Number(((audited / total) * 100).toFixed(1)) : 100;
+  }
+  if (report.summary.auditScope === undefined) {
+    report.summary.auditScope = (report.summary.totalAudited || 0) >= (report.summary.totalDiscovered || 0) ? 'complete' : 'sampled';
+  }
+  if (report.summary.isComplete === undefined) {
+    report.summary.isComplete = report.summary.auditScope === 'complete';
+  }
   if (Array.isArray(report.articles)) {
     for (const a of report.articles) {
       if (a.bodyH1Count === undefined) {

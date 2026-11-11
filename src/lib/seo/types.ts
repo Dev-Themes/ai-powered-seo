@@ -81,6 +81,12 @@ export interface FirstReadAuditReport {
   technical: TechnicalSEOSummary;
   summary: {
     totalChecked: number;
+    totalDiscovered?: number;
+    totalAudited?: number;
+    notAudited?: number;
+    coveragePercentage?: number;
+    auditScope?: 'complete' | 'sampled';
+    isComplete?: boolean;
     articlesDiscovered?: number;
     articlesAudited?: number;
     articlesSkipped?: number;

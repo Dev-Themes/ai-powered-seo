@@ -32,6 +32,10 @@ export interface FirstReadAIRecommendation {
 
 export interface FirstReadRecommendationsReport {
   generatedAt: string;
+  source?: 'gemini' | 'heuristic';
+  model?: string;
+  fallbackUsed?: boolean;
+  fallbackReason?: string;
   summary: string;
   recommendationsCount?: number;
   recommendations: FirstReadAIRecommendation[];

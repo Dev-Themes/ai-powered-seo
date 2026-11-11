@@ -596,6 +596,14 @@ export async function runFirstReadAudit(maxPostsToAudit = 500): Promise<FirstRea
     technical,
     summary: {
       totalChecked: auditedArticles.length,
+      totalDiscovered: siteInfo.totalPosts,
+      totalAudited: auditedArticles.length,
+      notAudited: Math.max(0, siteInfo.totalPosts - auditedArticles.length),
+      coveragePercentage: siteInfo.totalPosts > 0
+        ? Number(((auditedArticles.length / siteInfo.totalPosts) * 100).toFixed(1))
+        : 100,
+      auditScope: auditedArticles.length >= siteInfo.totalPosts ? 'complete' : 'sampled',
+      isComplete: auditedArticles.length >= siteInfo.totalPosts,
       articlesDiscovered: siteInfo.totalPosts,
       articlesAudited: auditedArticles.length,
       articlesSkipped: Math.max(0, siteInfo.totalPosts - auditedArticles.length),

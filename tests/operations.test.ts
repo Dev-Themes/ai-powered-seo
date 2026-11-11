@@ -14,7 +14,8 @@ import {
   executeArticleGeneration,
   executeArticleQA,
   executeTechnicalAudit,
-  executeRecommendationsGeneration
+  executeRecommendationsGeneration,
+  sanitizeErrorMessage
 } from '../src/lib/seo/operations';
 
 // ---------------------------------------------------------------------------
@@ -148,6 +149,181 @@ test('AI Operations — Independent Article QA validates heading structure and m
   assert.equal(invalidQa.passed, false);
   assert.equal(invalidQa.headingAudit.hasSingleH1, false);
   assert.ok(invalidQa.remediationSuggestions.length > 0);
+});
+
+test('AI Operations — Article Generation computes exact word count and reading time matching actual HTML', async () => {
+  const result = await executeArticleGeneration({ topic: 'UK Buy to Let', primaryKeyword: 'buy to let' });
+  assert.ok(result.htmlContent);
+
+  const strippedWords = result.htmlContent.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().split(/\s+/).filter(Boolean).length;
+  assert.equal(result.wordCount, strippedWords, 'Reported wordCount must match actual words in htmlContent');
+  assert.equal(result.estimatedReadTimeMinutes, Math.max(1, Math.ceil(strippedWords / 200)));
+  assert.equal(result.fallbackUsed, true);
+  assert.ok(result.fallbackReason);
+});
+
+test('AI Operations — Article Research returns research findings, supporting sources and limitations notice', async () => {
+  const result = await executeArticleResearch('UK Property Market');
+  assert.ok(Array.isArray(result.researchFindings));
+  assert.ok(result.researchFindings.length > 0);
+  assert.ok(Array.isArray(result.supportingSources));
+  assert.ok(result.supportingSources.length > 0);
+  assert.ok(result.dataLimitationsNotice);
+  assert.ok(result.dataLimitationsNotice.includes('Research data comprises AI market synthesis'));
+});
+
+test('AI Operations — Article QA gatekeeper fails keyword-stuffed article with 10% density', async () => {
+  // Generate a ~350 word text where "property" appears ~35 times (10% density)
+  const paragraph = 'The UK property market offers property investment opportunities where property buyers seek property advice to secure property yields and understand property regulations across property sectors. ';
+  const stuffedContent = `<h2>UK Property Market Analysis</h2><p>${paragraph.repeat(6)}</p><h2>Regional Property Forecast</h2><p>${paragraph.repeat(6)}</p>`;
+
+  const result = await executeArticleQA({
+    title: 'UK Property Investment: Strategic Regional Analysis',
+    metaDescription: 'Discover high-yield UK property investment areas with expert analysis of regional rental yields and landlord regulations.',
+    content: stuffedContent,
+    primaryKeyword: 'property'
+  });
+
+  assert.equal(result.mandatoryChecks.noKeywordStuffing, false, 'noKeywordStuffing check must fail for 10% density');
+  assert.equal(result.keywordIntegration.status, 'stuffed');
+  assert.ok(result.keywordIntegration.rawDensity > 3.5, 'Raw density must exceed 3.5% threshold');
+  assert.equal(result.passed, false, 'Article with keyword stuffing MUST fail QA gate');
+  assert.ok(result.failedMandatoryChecks.includes('noKeywordStuffing'));
+  assert.equal(result.originalityVerification, 'unavailable');
+});
+
+test('AI Operations — Article QA gatekeeper passes valid full-length article meeting all mandatory checks', async () => {
+  const sampleArticle = await executeArticleGeneration({ topic: 'UK Commercial Real Estate', primaryKeyword: 'uk commercial real estate' });
+  const result = await executeArticleQA({
+    title: sampleArticle.title,
+    metaDescription: sampleArticle.metaDescription,
+    content: sampleArticle.htmlContent,
+    primaryKeyword: sampleArticle.primaryKeyword
+  });
+
+  assert.equal(result.mandatoryChecks.noBodyH1, true);
+  assert.equal(result.mandatoryChecks.minH2Count, true);
+  assert.equal(result.mandatoryChecks.noEmptyHeadings, true);
+  assert.equal(result.mandatoryChecks.noKeywordStuffing, true);
+  assert.equal(result.mandatoryChecks.minWordCount, true);
+  assert.equal(result.mandatoryChecks.metadataComplete, true);
+  assert.equal(result.failedMandatoryChecks.length, 0);
+  assert.ok(result.overallScore >= 75);
+  assert.equal(result.passed, true);
+});
+
+test('AI Operations — Article QA gatekeeper fails empty headings and body H1 even with high score', async () => {
+  // Article with an empty heading <h2></h2> and an explicit <h1>
+  const flawedContent = `<h1>Explicit Theme Conflict H1</h1><h2>Valid Heading</h2><p>${'Comprehensive valid article content with good length. '.repeat(40)}</p><h2></h2><p>Another section.</p>`;
+  const result = await executeArticleQA({
+    title: 'UK Property Investment: Strategic Regional Analysis',
+    metaDescription: 'Discover high-yield UK property investment areas with expert analysis of regional rental yields and landlord regulations.',
+    content: flawedContent,
+    primaryKeyword: 'property'
+  });
+
+  assert.equal(result.mandatoryChecks.noBodyH1, false, 'Body H1 must fail noBodyH1 check');
+  assert.equal(result.mandatoryChecks.noEmptyHeadings, false, 'Empty <h2></h2> must fail noEmptyHeadings check');
+  assert.equal(result.passed, false, 'Flawed structure MUST fail QA gate');
+  assert.ok(result.failedMandatoryChecks.includes('noBodyH1'));
+  assert.ok(result.failedMandatoryChecks.includes('noEmptyHeadings'));
+});
+
+test('AI Operations — QA Publication Gate independently evaluates pass/fail regardless of informational score', async () => {
+  // Article that satisfies all mandatory checks (300+ words, 2 H2s, no body H1, no empty headings,
+  // valid presence of title and meta description) but has sub-optimal SERP display lengths
+  // (e.g. title is 27 chars, below the 30-65 optimal SERP display window).
+  // The composite informational score drops below 75, but the article MUST PASS because all mandatory gates pass.
+  const fillerParagraph = 'The UK property market presents compelling dynamics and long-term capital allocation opportunities across commercial hubs. ';
+  const content = `<h2>Market Fundamentals</h2><p>Here regional investors can evaluate opportunities. ${fillerParagraph.repeat(15)} Regional investors benefit from steady tenant demand.</p><h2>Regional Trends</h2><p>Experienced regional investors focus on commuter hubs. ${fillerParagraph.repeat(15)} Savvy regional investors build resilient portfolios.</p>`;
+
+  const result = await executeArticleQA({
+    title: 'UK Property Market Analysis', // 27 chars: outside 30-65 recommended SERP window, but technically complete
+    metaDescription: 'Discover high-yield UK property investment areas with expert regional analysis across key commuter hubs.',
+    content,
+    primaryKeyword: 'regional investors'
+  });
+
+  // All mandatory gates must pass
+  assert.equal(result.mandatoryChecks.noBodyH1, true);
+  assert.equal(result.mandatoryChecks.minH2Count, true);
+  assert.equal(result.mandatoryChecks.noEmptyHeadings, true);
+  assert.equal(result.mandatoryChecks.noKeywordStuffing, true);
+  assert.equal(result.mandatoryChecks.minWordCount, true);
+  assert.equal(result.mandatoryChecks.metadataComplete, true);
+  assert.equal(result.failedMandatoryChecks.length, 0);
+
+  // Mandatory checks independently determine pass/fail
+  assert.equal(result.passed, true, 'Article MUST pass QA publication gate when all mandatory checks pass, regardless of informational score');
+
+  // Verify that an article with a high score but a single mandatory check failure (e.g. missing second H2) is rejected
+  const singleH2Content = `<h2>Single Section</h2><p>Here regional investors can evaluate opportunities. ${fillerParagraph.repeat(30)}</p>`;
+  const failedResult = await executeArticleQA({
+    title: 'UK Property Market: Comprehensive Strategic Overview for 2026',
+    metaDescription: 'Discover high-yield UK property investment areas with expert regional analysis across key commuter hubs in England.',
+    content: singleH2Content,
+    primaryKeyword: 'regional investors'
+  });
+
+  assert.equal(failedResult.mandatoryChecks.minH2Count, false);
+  assert.equal(failedResult.passed, false, 'Article with fewer than 2 H2s MUST fail publication gate even if other metrics are good');
+});
+
+test('AI Operations — Research findings provide specific source URLs, publishers, and unverified status', async () => {
+  const result = await executeArticleResearch('UK Rental Market');
+  assert.ok(Array.isArray(result.evidenceFindings), 'evidenceFindings must be an array');
+  assert.ok(result.evidenceFindings.length >= 3, 'Must contain at least 3 source-backed evidence items');
+
+  for (const item of result.evidenceFindings) {
+    assert.ok(item.claim, 'Each item must have a claim');
+    assert.ok(item.sourceTitle, 'Each item must have a source title');
+    assert.ok(item.sourceUrl, 'Each item must have a source URL');
+    // Must NOT be a generic root homepage
+    assert.notEqual(item.sourceUrl, 'https://ons.gov.uk');
+    assert.notEqual(item.sourceUrl, 'https://www.ons.gov.uk');
+    assert.notEqual(item.sourceUrl, 'https://www.bankofengland.co.uk');
+    assert.ok(item.sourceUrl.includes('/'), 'Source URL must point to specific report or bulletin');
+    assert.ok(item.publisher, 'Each item must specify publisher');
+    assert.ok(item.retrievalDate, 'Each item must specify retrieval date');
+    assert.ok(item.supportingEvidence, 'Each item must provide supporting evidence');
+    assert.equal(item.verificationStatus, 'unverified', 'Verification status must be honestly identified as unverified when live external retrieval is unavailable');
+  }
+
+  assert.ok(result.dataLimitationsNotice.includes('unverified'), 'Limitations notice must state findings remain unverified');
+});
+
+test('AI Operations — Error message sanitizer redacts API keys, Bearer tokens, query parameters, and normalizes codes', () => {
+  // Test 1: Redact raw Gemini API key in query param
+  const urlWithKey = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=AIzaSyD-1234567890abcdef1234567890abc';
+  const sanitizedUrl = sanitizeErrorMessage(new Error(`Failed to fetch from ${urlWithKey}`));
+  assert.equal(sanitizedUrl.includes('AIzaSyD'), false, 'API key must be redacted');
+  assert.ok(sanitizedUrl.includes('[REDACTED_API_KEY]') || sanitizedUrl.includes('[REDACTED_PARAMS]') || sanitizedUrl.includes('discontinued'));
+
+  // Test 2: Redact Bearer authorization token
+  const authMsg = sanitizeErrorMessage('Error 401 Unauthorized: Authorization Bearer ya29.a0AfH6SM... failed');
+  assert.equal(authMsg.includes('ya29'), false, 'Bearer token must be redacted');
+  assert.ok(authMsg.includes('[REDACTED_TOKEN]'));
+
+  // Test 3: Normalize model 404
+  const notFoundMsg = sanitizeErrorMessage('404 NOT_FOUND: models/gemini-2.5-flash is not found');
+  assert.ok(notFoundMsg.includes('unavailable or discontinued'));
+
+  // Test 4: Normalize 429 rate limit
+  const rateLimitMsg = sanitizeErrorMessage('429 RESOURCE_EXHAUSTED: quota exceeded');
+  assert.ok(rateLimitMsg.includes('rate limit or quota exceeded'));
+
+  // Test 5: Safe handling of undefined/null
+  assert.ok(sanitizeErrorMessage(null).length > 0);
+});
+
+test('AI Operations — Article Generation contains contextual internal links to published FirstRead articles', async () => {
+  const result = await executeArticleGeneration({ topic: 'UK Rental Market', primaryKeyword: 'uk rental market' });
+  assert.ok(result.htmlContent);
+  assert.ok(
+    result.htmlContent.includes('/how-can-first-time-buyers-navigate/') ||
+    result.htmlContent.includes('/canterburys-competitive-market/'),
+    'Generated article HTML must include authentic contextual internal links to published FirstRead content'
+  );
 });
 
 test('AI Operations — Technical Audit & Recommendations delegates execute correctly', async () => {

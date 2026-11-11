@@ -587,9 +587,15 @@ export function FirstReadPanel({ initialSection = 'overview' }: { initialSection
                       <span className="eyebrow">AUDIT PIPELINE SCOPE</span>
                       <h4 className="text-sm font-bold text-[var(--foreground)]">Audit Coverage &amp; Processing Scope</h4>
                     </div>
-                    <span className="badge badge-success">
-                      <CheckCircle className="w-3 h-3" /> Full Coverage Verified
-                    </span>
+                    {audit.summary.auditScope === 'sampled' || audit.summary.isComplete === false ? (
+                      <span className="badge badge-warning">
+                        <AlertCircle className="w-3 h-3" /> Sampled ({audit.summary.coveragePercentage ?? Math.round(((audit.summary.totalAudited ?? audit.summary.totalChecked) / (audit.summary.totalDiscovered ?? currentSiteInfo?.totalPosts ?? 1)) * 100)}% Coverage)
+                      </span>
+                    ) : (
+                      <span className="badge badge-success">
+                        <CheckCircle className="w-3 h-3" /> Full Coverage Verified
+                      </span>
+                    )}
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 text-xs">
                     <div className="p-3 rounded-lg border border-[var(--border)] bg-[var(--card)]">
@@ -797,8 +803,17 @@ export function FirstReadPanel({ initialSection = 'overview' }: { initialSection
                       <div className="flex items-center gap-2">
                         <CheckCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                         <strong className="text-xs text-[var(--foreground)]">Result: {selectedOperation}</strong>
-                        <span className="text-[10px] bg-amber-100 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 px-1.5 py-0.5 rounded font-medium">
-                          Session-Scoped (Unsaved)
+                        {(opResult as Record<string, unknown>)?.source === 'gemini' ? (
+                          <span className="text-[10px] bg-emerald-100 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 px-1.5 py-0.5 rounded font-medium">
+                            Gemini {((opResult as Record<string, unknown>)?.model as string) || 'AI'}
+                          </span>
+                        ) : (
+                          <span className="text-[10px] bg-amber-100 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 px-1.5 py-0.5 rounded font-medium">
+                            Heuristic Fallback
+                          </span>
+                        )}
+                        <span className="text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-1.5 py-0.5 rounded font-medium">
+                          Session-Scoped
                         </span>
                       </div>
                       <div className="flex items-center gap-2">

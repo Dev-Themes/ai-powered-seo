@@ -180,6 +180,28 @@ test('normalizeAuditReport preserves backward compatibility for legacy field nam
   const normalized = normalizeAuditReport(legacyReport as unknown as FirstReadAuditReport);
   assert.equal(normalized.summary.protocolIssuesCount, 3);
   assert.equal(normalized.summary.missingAltTotal, 5);
+  assert.equal(normalized.summary.totalAudited, 10);
+  assert.equal(normalized.summary.coveragePercentage, 100);
+  assert.equal(normalized.summary.auditScope, 'complete');
+  assert.equal(normalized.summary.isComplete, true);
   assert.equal(normalized.articles[0].bodyH1Count, 2);
   assert.equal(normalized.articles[0].missingAltCount, 4);
+});
+
+test('Audit Coverage — Normalization correctly identifies sampled audits vs complete audits', () => {
+  const sampledReport = {
+    summary: {
+      totalChecked: 100,
+      articlesDiscovered: 343,
+      articlesAudited: 100
+    }
+  };
+
+  const normalized = normalizeAuditReport(sampledReport as unknown as FirstReadAuditReport);
+  assert.equal(normalized.summary.totalDiscovered, 343);
+  assert.equal(normalized.summary.totalAudited, 100);
+  assert.equal(normalized.summary.notAudited, 243);
+  assert.equal(normalized.summary.coveragePercentage, 29.2);
+  assert.equal(normalized.summary.auditScope, 'sampled');
+  assert.equal(normalized.summary.isComplete, false);
 });

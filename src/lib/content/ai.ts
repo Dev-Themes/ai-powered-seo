@@ -5,6 +5,7 @@ import type {
   FirstReadRecommendationsReport
 } from './types';
 import { generateRefinedTitle, validateRefinedTitle } from './title';
+import { sanitizeErrorMessage } from '../seo/operations';
 
 /**
  * Deterministic fallback generator when Gemini API is unavailable or unconfigured.
@@ -294,11 +295,14 @@ export async function generateFirstReadRecommendations(
   audit: FirstReadAuditReport
 ): Promise<FirstReadRecommendationsReport> {
   const apiKey = process.env.GEMINI_API_KEY;
-  const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+  const model = process.env.GEMINI_MODEL || 'gemini-3.5-flash';
 
   if (!apiKey) {
     return {
       generatedAt: new Date().toISOString(),
+      source: 'heuristic',
+      fallbackUsed: true,
+      fallbackReason: 'GEMINI_API_KEY environment variable is not configured',
       summary: 'Heuristic-verified SEO recommendations generated from live FirstRead audit data. (Configure GEMINI_API_KEY for dynamic generative refinement).',
       recommendations: generateHeuristicRecommendations(audit)
     };
@@ -418,6 +422,9 @@ Output strictly JSON matching the requested structure.`,
     if (recs.length === 0) {
       return {
         generatedAt: new Date().toISOString(),
+        source: 'heuristic',
+        fallbackUsed: true,
+        fallbackReason: 'Gemini returned empty or invalid recommendation set; heuristic fallback applied',
         summary: parsed.summary || 'Recommendations synthesized from audit data.',
         recommendations: generateHeuristicRecommendations(audit)
       };
@@ -425,12 +432,19 @@ Output strictly JSON matching the requested structure.`,
 
     return {
       generatedAt: new Date().toISOString(),
+      source: 'gemini',
+      model,
+      fallbackUsed: false,
       summary: parsed.summary || 'AI-analyzed SEO recommendations for FirstRead.',
       recommendations: recs
     };
-  } catch {
+  } catch (err) {
+    const reason = sanitizeErrorMessage(err);
     return {
       generatedAt: new Date().toISOString(),
+      source: 'heuristic',
+      fallbackUsed: true,
+      fallbackReason: `Gemini execution error (${reason}); heuristic recommendations applied`,
       summary: 'Heuristic-verified SEO recommendations generated from live FirstRead audit data (Gemini fallback mode).',
       recommendations: generateHeuristicRecommendations(audit)
     };
