@@ -1,7 +1,10 @@
-import 'server-only';import {cookies} from 'next/headers';import {redirect} from 'next/navigation';import {decodeSession} from './auth-core';
+import 'server-only';import {cookies} from 'next/headers';import {redirect} from 'next/navigation';import {decodeSession, verifyCronSecret} from './auth-core';
+export {verifyCronSecret};
 export const cookieName=process.env.NODE_ENV==='production'?'__Host-firstread-session':'firstread-session';
 export function authReady(){return !!(process.env.SESSION_SECRET&&process.env.SESSION_SECRET.length>=32&&process.env.ADMIN_PASSWORD_HASH&&process.env.ADMIN_USERNAME);}
 export async function session(){if(!authReady())return null;const token=(await cookies()).get(cookieName)?.value;return token?decodeSession(token,process.env.SESSION_SECRET!,process.env.ADMIN_PASSWORD_HASH!):null;}
 export async function requireAdmin(){const s=await session();if(!s)redirect('/admin/login');return s;}
 export function sameOrigin(request:Request){const origin=request.headers.get('origin');if(!origin)return false;try{if(process.env.APP_URL&&origin===new URL(process.env.APP_URL).origin)return true;}catch{}const host=request.headers.get('x-forwarded-host')||request.headers.get('host');if(host){const proto=request.headers.get('x-forwarded-proto')||(host.includes('localhost')||host.includes('127.0.0.1')?'http':'https');if(origin===`${proto}://${host}`)return true;}if(process.env.VERCEL_URL&&(origin===`https://${process.env.VERCEL_URL}`||origin.endsWith('.vercel.app')))return true;return false;}
 export async function authorize(request:Request){const s=await session();if(!s)throw new Error('UNAUTHORIZED');if(!sameOrigin(request)||request.headers.get('x-csrf-token')!==s.csrf)throw new Error('FORBIDDEN');return s;}
+export async function authorizeCronOrSession(request:Request):Promise<{isCron:boolean;session:Awaited<ReturnType<typeof session>>}>{if(verifyCronSecret(request))return{isCron:true,session:null};const s=await session();if(!s)throw new Error('UNAUTHORIZED');return{isCron:false,session:s};}
+

@@ -284,12 +284,24 @@ test('AI recommendation engine requires human approval for all proposals and doe
 });
 
 test('Google integrations interface reports unconfigured status truthfully without fabricating ranks or traffic', () => {
-  const status = getFirstReadGoogleStatus();
-  assert.equal(status.configured, false);
-  assert.equal(status.searchConsole.status, 'unconfigured');
-  assert.equal(status.analytics4.status, 'unconfigured');
-  assert.ok(!('metrics' in status.searchConsole) || status.searchConsole.metrics === undefined);
-  assert.ok(status.notes.some(n => n.includes('aggregated search appearance')));
+  const origJson = process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
+  const origKey = process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
+  const origEmail = process.env.GOOGLE_CLIENT_EMAIL;
+  try {
+    delete process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
+    delete process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
+    delete process.env.GOOGLE_CLIENT_EMAIL;
+    const status = getFirstReadGoogleStatus();
+    assert.equal(status.configured, false);
+    assert.equal(status.searchConsole.status, 'unconfigured');
+    assert.equal(status.analytics4.status, 'unconfigured');
+    assert.ok(!('metrics' in status.searchConsole) || status.searchConsole.metrics === undefined);
+    assert.ok(status.notes.some(n => n.includes('aggregated search appearance')));
+  } finally {
+    if (origJson !== undefined) process.env.GOOGLE_SERVICE_ACCOUNT_JSON = origJson;
+    if (origKey !== undefined) process.env.GOOGLE_SERVICE_ACCOUNT_KEY = origKey;
+    if (origEmail !== undefined) process.env.GOOGLE_CLIENT_EMAIL = origEmail;
+  }
 });
 
 test('Live WordPress client fetches real site information and published posts with pagination', async () => {

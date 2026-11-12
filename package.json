@@ -12,6 +12,7 @@
     "automation": "node scripts/run-tool.mjs automation",
     "firstread:audit": "node scripts/run-tool.mjs automation audit",
     "firstread:recommend": "node scripts/run-tool.mjs automation recommend",
+    "firstread:brand": "node scripts/run-tool.mjs automation brand",
     "admin:hash": "node scripts/hash-password.mjs"
   },
   "dependencies": {

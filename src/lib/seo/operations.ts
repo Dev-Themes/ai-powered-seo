@@ -1,6 +1,7 @@
 import { GoogleGenAI } from '@google/genai';
 import { runFirstReadAudit } from './audit';
 import { generateFirstReadRecommendations } from '../content/ai';
+import { getLatestAuditReport } from '../shared/storage';
 import type { FirstReadAuditReport } from './types';
 import type { FirstReadRecommendationsReport } from '../content/types';
 
@@ -1013,6 +1014,13 @@ export async function executeArticleGeneration({
         contents: `You are an expert editorial writer for FirstRead (https://firstread.co.uk).
 Write a high quality, comprehensive, fact-checked, SEO-optimized editorial article on topic: "${topic}" with primary keyword: "${primaryKeyword}".
 Include an engaging title (30 to 60 chars), meta description (80 to 155 chars), clean HTML content with multiple H2 and H3 tags and detailed paragraphs (target 800+ words), and image prompts with descriptive alt text.
+
+CRITICAL EDITORIAL & TECHNICAL FORMAT RULES:
+1. DO NOT include <h1> tags in htmlContent. Headings inside the article body MUST start at <h2> and <h3> because the WordPress theme template automatically renders the article title as the single page <h1>.
+2. Ensure there are at least two <h2> sections with substantive content and no empty heading tags.
+3. Include 2 to 3 authentic contextual internal links within paragraphs using anchor tags (<a href="/...">) referencing relevant published FirstRead articles (such as /how-can-first-time-buyers-navigate/ or /canterburys-competitive-market/).
+4. Maintain a natural primary keyword density between 0.5% and 2.5% (do not keyword stuff).
+
 Return JSON:
 {
   "title": string,
@@ -1034,7 +1042,15 @@ Return JSON:
       });
       const parsed = JSON.parse(response.text || '{}');
       if (parsed.htmlContent) {
-        const actualWords = countHtmlWords(parsed.htmlContent);
+        // 1. Demote any stray body H1 tags to H2 to prevent duplicate H1 with WordPress theme template
+        let sanitizedHtml = parsed.htmlContent.replace(/<h1\b([^>]*)>([\s\S]*?)<\/h1>/gi, '<h2$1>$2</h2>');
+
+        // 2. Ensure contextual internal links to published FirstRead articles exist
+        if (!sanitizedHtml.includes('/how-can-first-time-buyers-navigate/') && !sanitizedHtml.includes('/canterburys-competitive-market/')) {
+          sanitizedHtml += `\n<p>For additional perspectives on UK property finance and regional market dynamics, explore <a href="/how-can-first-time-buyers-navigate/">how first-time buyers navigate modern mortgages</a> and review our analysis of <a href="/canterburys-competitive-market/">Canterbury’s competitive rental market</a>.</p>`;
+        }
+
+        const actualWords = countHtmlWords(sanitizedHtml);
         const actualReadTime = Math.max(1, Math.ceil(actualWords / 200));
         return {
           generatedAt: new Date().toISOString(),
@@ -1049,7 +1065,7 @@ Return JSON:
           secondaryKeywords: parsed.secondaryKeywords || [],
           estimatedReadTimeMinutes: actualReadTime,
           wordCount: actualWords,
-          htmlContent: parsed.htmlContent,
+          htmlContent: sanitizedHtml,
           imageBriefs: parsed.imageBriefs || []
         };
       } else {
@@ -1361,7 +1377,27 @@ Return JSON:
 // 10. TECHNICAL AUDIT & 11. RECOMMENDATIONS DELEGATES
 // =============================================================================
 
-export async function executeTechnicalAudit(limit = 100): Promise<FirstReadAuditReport> {
+export async function executeTechnicalAudit(
+  limitOrOptions?: number | {
+    limit?: number;
+    scope?: 'sampled' | 'full' | 'continue';
+    continueFromReport?: FirstReadAuditReport | null;
+  }
+): Promise<FirstReadAuditReport> {
+  if (typeof limitOrOptions === 'number') {
+    return await runFirstReadAudit(limitOrOptions);
+  }
+
+  const options = limitOrOptions || {};
+  if (options.scope === 'continue') {
+    const latest = options.continueFromReport || (await getLatestAuditReport());
+    return await runFirstReadAudit(options.limit || 500, { continueFromReport: latest });
+  }
+
+  const limit = options.limit !== undefined
+    ? options.limit
+    : (options.scope === 'full' ? 500 : 100);
+
   return await runFirstReadAudit(limit);
 }
 

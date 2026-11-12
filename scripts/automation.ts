@@ -5,6 +5,7 @@ import {
   saveRecommendationsReport,
   getLatestAuditReport
 } from '../src/lib/shared/storage';
+import { runAutonomousBrandGrowthCycle } from '../src/lib/brand/engine';
 
 const mode = process.argv[2] || 'audit';
 
@@ -46,8 +47,16 @@ async function run() {
     const recs = await retry(() => generateFirstReadRecommendations(audit));
     const savedRecs = await saveRecommendationsReport(recs);
     console.log(`[FirstRead Autonomous SEO] Recommendations saved: ${savedRecs.id}`);
+  } else if (['brand', 'brand:growth', 'brand-growth'].includes(mode)) {
+    console.log('[FirstRead Autonomous SEO] Running Brand Keyword Growth and Indexing cycle...');
+    const result = await retry(() => runAutonomousBrandGrowthCycle());
+    console.log(`[FirstRead Autonomous SEO] Brand cycle completed: status=${result.execution.status}`);
+    console.log(`  • Summary: ${result.execution.summary}`);
+    console.log(`  • Actions executed: ${result.execution.actionsExecuted.length}`);
+    console.log(`  • Brand clicks: ${result.execution.brandClicks} (${result.execution.brandImpressions} impressions)`);
+    console.log(`  • Homepage indexed: ${result.execution.homepageIndexed}`);
   } else {
-    console.error(`[FirstRead Autonomous SEO] Unknown mode: "${mode}". Valid modes: audit, recommend, daily, weekly.`);
+    console.error(`[FirstRead Autonomous SEO] Unknown mode: "${mode}". Valid modes: audit, recommend, brand, daily, weekly.`);
     process.exitCode = 1;
   }
 }

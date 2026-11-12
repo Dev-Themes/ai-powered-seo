@@ -11,6 +11,29 @@ export interface SEOIssue {
   recommendation?: string;
 }
 
+export interface ProtocolIssue {
+  type: 'mixed_content' | 'insecure_sitemap' | 'site_url_mismatch' | 'insecure_link';
+  details: string;
+  originalUrl?: string;
+  finalUrl?: string;
+  httpStatus?: number;
+  redirectChain?: string[];
+  httpsAccessible?: boolean;
+  canonicalConsistent?: boolean;
+  severity?: 'critical' | 'warning' | 'info';
+  rootCause?: string;
+  recommendation?: string;
+}
+
+export interface ImageAuditItem {
+  src: string;
+  alt?: string;
+  classification: 'missing_alt' | 'empty_alt' | 'generic_alt' | 'descriptive_alt';
+  isDecorative?: boolean;
+  issue?: string;
+  recommendation?: string;
+}
+
 export interface ArticleSEOSummary {
   id: number;
   slug: string;
@@ -25,6 +48,7 @@ export interface ArticleSEOSummary {
   h3Count: number;
   missingAltCount?: number;
   emptyAltCount?: number;
+  genericAltCount?: number;
   descriptiveAltCount?: number;
   missingAltImagesCount: number;
   totalImagesCount: number;
@@ -33,6 +57,7 @@ export interface ArticleSEOSummary {
   hasYoastSchema: boolean;
   categories?: number[];
   issues: SEOIssue[];
+  imageAudits?: ImageAuditItem[];
 }
 
 export interface HomepageSEOSummary {
@@ -43,10 +68,18 @@ export interface HomepageSEOSummary {
   robotsTag: string;
   ogTitle?: string;
   ogDescription?: string;
+  ogImage?: string;
+  ogImageInsecure?: boolean;
   h1Count: number;
   headings: string[];
   issues: SEOIssue[];
   fetchError?: string;
+  schemaSummary?: {
+    detectedTypes: string[];
+    isValidJsonLd: boolean;
+    hasDuplicateSchema: boolean;
+    richResultsNotice: string;
+  };
 }
 
 export interface TechnicalSEOSummary {
@@ -55,14 +88,22 @@ export interface TechnicalSEOSummary {
   sitemapIndexUrl: string;
   sitemapAccessible: boolean;
   sitemapCount: number;
-  protocolIssues: {
-    type: 'mixed_content' | 'insecure_sitemap' | 'site_url_mismatch';
-    details: string;
-  }[];
+  protocolIssues: ProtocolIssue[];
+  rootCauseGroups?: Array<{
+    rootCause: string;
+    severity: 'critical' | 'warning' | 'info';
+    description: string;
+    affectedCount: number;
+    issues: ProtocolIssue[];
+    recommendation: string;
+  }>;
   schemaValidation: {
     hasSchema: boolean;
     typesFound: string[];
     valid: boolean;
+    syntaxValid?: boolean;
+    details?: string;
+    richResultsNotice?: string;
   };
 }
 
@@ -90,6 +131,7 @@ export interface FirstReadAuditReport {
     articlesDiscovered?: number;
     articlesAudited?: number;
     articlesSkipped?: number;
+    skippedReasons?: Record<string, number>;
     protocolIssuesCount?: number;
     errorsCount?: number;
     failedRequestsCount?: number;
@@ -99,6 +141,7 @@ export interface FirstReadAuditReport {
     infoCount: number;
     missingAltTotal?: number;
     emptyAltTotal?: number;
+    genericAltTotal?: number;
     descriptiveAltTotal?: number;
     missingAltImagesTotal: number;
     featuredImagesNotice?: string;

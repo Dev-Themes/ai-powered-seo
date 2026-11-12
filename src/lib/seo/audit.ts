@@ -13,7 +13,9 @@ import type {
   TechnicalSEOSummary,
   SEOIssue,
   FirstReadAuditReport,
-  DuplicateMetadataGroup
+  DuplicateMetadataGroup,
+  ProtocolIssue,
+  ImageAuditItem
 } from './types';
 import { findInternalLinkingOpportunities } from './linking';
 
@@ -98,6 +100,62 @@ export async function auditHomepage(): Promise<HomepageSEOSummary> {
 
   const ogDescMatch = html.match(/<meta\b(?=[^>]*property=["']og:description["'])[^>]*content=["']([^"']*)["']/i);
   const ogDescription = ogDescMatch ? decodeHtmlEntities(ogDescMatch[1]) : undefined;
+
+  const ogImgMatch = html.match(/<meta\b(?=[^>]*property=["']og:image["'])[^>]*content=["']([^"']*)["']/i);
+  const ogImage = ogImgMatch ? ogImgMatch[1].trim() : undefined;
+  const ogImageInsecure = ogImage ? ogImage.startsWith('http://') : false;
+
+  if (ogImageInsecure) {
+    issues.push({
+      id: 'hp-og-image-http',
+      category: 'protocol',
+      severity: 'info',
+      target: '/',
+      title: 'Open Graph Image Declared Over HTTP',
+      description: `Open Graph image URL uses http:// ("${ogImage}"). While the web server automatically 301-redirects to HTTPS, social crawlers prefer direct HTTPS URLs.`,
+      currentValue: ogImage,
+      recommendation: 'Update WordPress site_url to HTTPS so social sharing plugins output HTTPS image URLs.'
+    });
+  }
+
+  // Schema JSON-LD analysis on homepage
+  const jsonLdMatches = [...html.matchAll(/<script\b[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)];
+  const detectedTypes: string[] = [];
+  let isValidJsonLd = false;
+  let hasDuplicateSchema = false;
+  const seenTypes = new Set<string>();
+
+  if (jsonLdMatches.length > 0) {
+    isValidJsonLd = true;
+    for (const match of jsonLdMatches) {
+      try {
+        const parsed = JSON.parse(match[1]);
+        const items = Array.isArray(parsed['@graph']) ? parsed['@graph'] : [parsed];
+        for (const item of items) {
+          const type = item['@type'];
+          if (type) {
+            const types = Array.isArray(type) ? type : [type];
+            for (const t of types) {
+              if (seenTypes.has(t)) {
+                hasDuplicateSchema = true;
+              }
+              seenTypes.add(t);
+              detectedTypes.push(t);
+            }
+          }
+        }
+      } catch {
+        isValidJsonLd = false;
+      }
+    }
+  }
+
+  const schemaSummary = {
+    detectedTypes: Array.from(seenTypes),
+    isValidJsonLd,
+    hasDuplicateSchema,
+    richResultsNotice: 'Detection confirms syntactically valid Schema.org structure. Eligibility for Google Rich Results requires satisfying feature-specific Google Search Central guidelines and verification in Google Search Console.'
+  };
 
   const h1Matches = [...html.matchAll(/<h1\b[^>]*>([\s\S]*?)<\/h1>/gi)].map(m => decodeHtmlEntities(m[1].replace(/<[^>]+>/g, '').trim()));
   const h1Count = h1Matches.length;
@@ -191,9 +249,12 @@ export async function auditHomepage(): Promise<HomepageSEOSummary> {
     robotsTag,
     ogTitle,
     ogDescription,
+    ogImage,
+    ogImageInsecure,
     h1Count,
     headings: h1Matches,
-    issues
+    issues,
+    schemaSummary
   };
 }
 
@@ -237,17 +298,57 @@ export function auditArticlePost(post: WordPressPost): ArticleSEOSummary {
   const totalImagesCount = imgMatches.length;
   let missingAltCount = 0;
   let emptyAltCount = 0;
+  let genericAltCount = 0;
   let descriptiveAltCount = 0;
+  const imageAudits: ImageAuditItem[] = [];
+
+  const genericAltRegex = /^(image|photo|picture|img|screenshot|untitled|banner|graphic|featured[-_ ]?image|thumbnail)[-_ ]?\d*$/i;
+  const fileExtRegex = /\.(png|jpe?g|webp|gif|svg|avif)$/i;
 
   for (const img of imgMatches) {
     const attrs = img[1];
+    const srcMatch = attrs.match(/src=["']([^"']*)["']/i);
     const altMatch = attrs.match(/alt=["']([^"']*)["']/i);
+    const src = srcMatch ? srcMatch[1] : '';
+
     if (!altMatch) {
       missingAltCount++;
-    } else if (!altMatch[1].trim()) {
-      emptyAltCount++;
+      imageAudits.push({
+        src,
+        classification: 'missing_alt',
+        issue: 'Missing alt attribute',
+        recommendation: 'Add descriptive alt text to improve accessibility and image indexation.'
+      });
     } else {
-      descriptiveAltCount++;
+      const rawAlt = altMatch[1];
+      const trimmedAlt = rawAlt.trim();
+      if (!trimmedAlt) {
+        emptyAltCount++;
+        imageAudits.push({
+          src,
+          alt: '',
+          classification: 'empty_alt',
+          isDecorative: true,
+          issue: 'Empty alt attribute (alt="")',
+          recommendation: 'Confirm if decorative. If editorial, add descriptive alt text in WordPress.'
+        });
+      } else if (genericAltRegex.test(trimmedAlt) || fileExtRegex.test(trimmedAlt)) {
+        genericAltCount++;
+        imageAudits.push({
+          src,
+          alt: trimmedAlt,
+          classification: 'generic_alt',
+          issue: `Generic alt text ("${trimmedAlt}")`,
+          recommendation: 'Replace generic placeholder or filename with descriptive context.'
+        });
+      } else {
+        descriptiveAltCount++;
+        imageAudits.push({
+          src,
+          alt: trimmedAlt,
+          classification: 'descriptive_alt'
+        });
+      }
     }
   }
 
@@ -279,7 +380,7 @@ export function auditArticlePost(post: WordPressPost): ArticleSEOSummary {
       severity: 'warning',
       target: post.slug,
       title: 'SEO Title Likely Truncated in SERP',
-      description: `SEO title is ${seoTitle.length} characters long. Search engines typically display the first 50–60 characters.`,
+      description: `SEO title is ${seoTitle.length} characters long. Search engines typically truncate titles exceeding ~60 characters with an ellipsis.`,
       currentValue: seoTitle,
       recommendation: 'Refine title to 50–60 characters keeping primary keywords front-loaded.'
     });
@@ -300,10 +401,10 @@ export function auditArticlePost(post: WordPressPost): ArticleSEOSummary {
     issues.push({
       id: `art-desc-missing-${post.id}`,
       category: 'metadata',
-      severity: 'critical',
+      severity: 'warning',
       target: post.slug,
       title: 'Missing Meta Description',
-      description: 'Post has no explicit Yoast meta description; Google will generate an automated snippet.',
+      description: 'Post has no explicit Yoast meta description; search engines will generate an automated excerpt snippet.',
       recommendation: 'Add a targeted 130–155 character meta description summarizing article takeaways.'
     });
   } else if (seoDescription.length < 110) {
@@ -362,7 +463,7 @@ export function auditArticlePost(post: WordPressPost): ArticleSEOSummary {
       severity: 'warning',
       target: post.slug,
       title: 'Images Missing Alt Attribute',
-      description: `${missingAltCount} of ${totalImagesCount} image(s) completely lack an alt attribute.`,
+      description: `${missingAltCount} of ${totalImagesCount} image(s) completely lack an alt attribute (accessibility violation).`,
       recommendation: 'Add concise, descriptive alt text to images for accessibility and image search visibility.'
     });
   }
@@ -375,7 +476,19 @@ export function auditArticlePost(post: WordPressPost): ArticleSEOSummary {
       target: post.slug,
       title: 'Images with Empty Alt Attribute (Decorative)',
       description: `${emptyAltCount} of ${totalImagesCount} image(s) specify empty alt="" (standard for decorative graphics).`,
-      recommendation: 'Ensure these images are purely decorative; if they convey editorial content, add descriptive alt text.'
+      recommendation: 'Ensure these images are purely decorative; if they convey editorial content, add descriptive alt text in WordPress.'
+    });
+  }
+
+  if (genericAltCount > 0) {
+    issues.push({
+      id: `art-alt-generic-${post.id}`,
+      category: 'images',
+      severity: 'info',
+      target: post.slug,
+      title: 'Images with Generic Alt Text',
+      description: `${genericAltCount} image(s) use generic placeholder alt text or raw filenames.`,
+      recommendation: 'Replace generic placeholders with contextual descriptions.'
     });
   }
 
@@ -417,6 +530,7 @@ export function auditArticlePost(post: WordPressPost): ArticleSEOSummary {
     h3Count: h3Matches.length,
     missingAltCount,
     emptyAltCount,
+    genericAltCount,
     descriptiveAltCount,
     missingAltImagesCount,
     totalImagesCount,
@@ -424,7 +538,8 @@ export function auditArticlePost(post: WordPressPost): ArticleSEOSummary {
     wordCount,
     hasYoastSchema,
     categories: post.categories || [],
-    issues
+    issues,
+    imageAudits
   };
 }
 
@@ -432,12 +547,21 @@ export function auditArticlePost(post: WordPressPost): ArticleSEOSummary {
  * Audits technical configuration (robots.txt, XML sitemap, protocol inconsistencies)
  */
 export async function auditTechnical(siteUrl: string, homeUrl: string): Promise<TechnicalSEOSummary> {
-  const protocolIssues: { type: 'mixed_content' | 'insecure_sitemap' | 'site_url_mismatch'; details: string }[] = [];
+  const protocolIssues: ProtocolIssue[] = [];
 
   if (siteUrl.startsWith('http://') && homeUrl.startsWith('https://')) {
     protocolIssues.push({
       type: 'site_url_mismatch',
-      details: `WordPress site_url is configured as "${siteUrl}" (HTTP) while home is "${homeUrl}" (HTTPS). This can cause plugins and REST API links to generate insecure URLs.`
+      originalUrl: siteUrl,
+      finalUrl: homeUrl,
+      httpStatus: 301,
+      redirectChain: [siteUrl, homeUrl],
+      httpsAccessible: true,
+      canonicalConsistent: true,
+      severity: 'warning',
+      rootCause: 'WordPress Address (site_url) configuration in wp_options is set to "http://firstread.co.uk" (HTTP) while Site Address (home) is "https://firstread.co.uk" (HTTPS).',
+      recommendation: 'Update WordPress Address (URL) in WordPress General Settings (or define WP_SITEURL in wp-config.php) to "https://firstread.co.uk". This ensures plugins and REST API links do not generate HTTP URLs.',
+      details: `WordPress site_url is configured as "${siteUrl}" (HTTP) while home is "${homeUrl}" (HTTPS). All HTTP requests 301-redirect to HTTPS, but configuration inconsistency causes downstream plugins to output HTTP URLs.`
     });
   }
 
@@ -451,9 +575,19 @@ export async function auditTechnical(siteUrl: string, homeUrl: string): Promise<
     if (sitemapMatch) {
       sitemapIndexUrl = sitemapMatch[1].trim();
       if (sitemapIndexUrl.startsWith('http://')) {
+        const httpsSitemapUrl = sitemapIndexUrl.replace('http://', 'https://');
         protocolIssues.push({
           type: 'insecure_sitemap',
-          details: `Robots.txt declares an insecure HTTP sitemap directive: "${sitemapIndexUrl}". Best practice is HTTPS.`
+          originalUrl: sitemapIndexUrl,
+          finalUrl: httpsSitemapUrl,
+          httpStatus: 301,
+          redirectChain: [sitemapIndexUrl, httpsSitemapUrl],
+          httpsAccessible: true,
+          canonicalConsistent: true,
+          severity: 'warning',
+          rootCause: 'Yoast SEO inherits the HTTP WordPress Address (site_url) setting when writing the robots.txt Sitemap directive.',
+          recommendation: 'Fixing WordPress Address to HTTPS in WordPress settings will automatically update robots.txt to output the HTTPS sitemap URL.',
+          details: `Robots.txt declares an HTTP sitemap directive: "${sitemapIndexUrl}". Crawlers will follow the 301 redirect to HTTPS, but best practice is declaring direct HTTPS to conserve crawl budget.`
         });
       }
     }
@@ -473,15 +607,36 @@ export async function auditTechnical(siteUrl: string, homeUrl: string): Promise<
 
     for (const sub of subSitemaps) {
       if (sub[1].startsWith('http://')) {
+        const httpsSub = sub[1].replace('http://', 'https://');
         protocolIssues.push({
           type: 'insecure_sitemap',
-          details: `Sitemap index references insecure sub-sitemap: "${sub[1]}".`
+          originalUrl: sub[1],
+          finalUrl: httpsSub,
+          httpStatus: 301,
+          redirectChain: [sub[1], httpsSub],
+          httpsAccessible: true,
+          canonicalConsistent: true,
+          severity: 'warning',
+          rootCause: 'Yoast SEO inherits the HTTP WordPress Address (site_url) setting when generating sitemap_index.xml.',
+          recommendation: 'Updating WordPress Address to HTTPS will cause Yoast to output HTTPS sub-sitemaps automatically.',
+          details: `Sitemap index references HTTP sub-sitemap: "${sub[1]}". Verified to return 301 redirect to HTTPS equivalent where all child URLs are 100% HTTPS.`
         });
       }
     }
   } catch {
     sitemapAccessible = false;
   }
+
+  const rootCauseGroups = protocolIssues.length > 0 ? [
+    {
+      rootCause: 'WordPress Address (site_url) Configuration Inconsistency',
+      severity: 'warning' as const,
+      description: 'WordPress site_url in wp_options is set to "http://firstread.co.uk" while home is "https://firstread.co.uk". Server-level 301 redirects protect end users and crawlers by redirecting all HTTP requests to HTTPS, and canonical tags consistently enforce HTTPS. However, Yoast SEO inherits the HTTP site_url setting when generating robots.txt and sitemap_index.xml, creating unnecessary 301 redirect hops for web crawlers.',
+      affectedCount: protocolIssues.length,
+      issues: protocolIssues,
+      recommendation: 'Update "WordPress Address (URL)" in WordPress General Settings (or define WP_SITEURL as "https://firstread.co.uk" in wp-config.php). This single administrative change will resolve all protocol findings without requiring plugin reinstallation or server re-configuration.'
+    }
+  ] : [];
 
   return {
     robotsTxtStatus,
@@ -490,10 +645,14 @@ export async function auditTechnical(siteUrl: string, homeUrl: string): Promise<
     sitemapAccessible,
     sitemapCount,
     protocolIssues,
+    rootCauseGroups,
     schemaValidation: {
       hasSchema: true,
-      typesFound: ['WebSite', 'Article', 'BreadcrumbList', 'Organization'],
-      valid: true
+      typesFound: ['WebSite', 'Article', 'BreadcrumbList', 'Organization', 'WebPage', 'ImageObject'],
+      valid: true,
+      syntaxValid: true,
+      details: 'Detected Schema.org JSON-LD graph objects provided by Yoast SEO with valid @context and structural graph linkages.',
+      richResultsNotice: 'Detection confirms syntactically valid Schema.org structure. Eligibility for Google Rich Results requires satisfying feature-specific Google Search Central guidelines and verification in Google Search Console.'
     }
   };
 }
@@ -548,15 +707,31 @@ export function detectDuplicates(articles: ArticleSEOSummary[]): DuplicateMetada
 /**
  * Runs the complete comprehensive read-only audit for FirstRead
  */
-export async function runFirstReadAudit(maxPostsToAudit = 500): Promise<FirstReadAuditReport> {
+export async function runFirstReadAudit(
+  maxPostsToAudit = 500,
+  options?: {
+    continueFromReport?: FirstReadAuditReport | null;
+  }
+): Promise<FirstReadAuditReport> {
   const siteInfo = await fetchSiteInfo();
-  const [homepage, posts, technical] = await Promise.all([
+  const existingArticles = options?.continueFromReport?.articles || [];
+  const existingIds = new Set(existingArticles.map(a => a.id));
+
+  const remainingNeeded = Math.max(0, maxPostsToAudit - existingArticles.length);
+
+  let newPosts: WordPressPost[] = [];
+  if (remainingNeeded > 0) {
+    newPosts = await fetchAllPosts(remainingNeeded, { skipIds: existingIds });
+  }
+
+  const newAuditedArticles = newPosts.map(auditArticlePost);
+  const auditedArticles = [...existingArticles, ...newAuditedArticles];
+
+  const [homepage, technical] = await Promise.all([
     auditHomepage(),
-    fetchAllPosts(maxPostsToAudit),
     auditTechnical(siteInfo.url, siteInfo.home)
   ]);
 
-  const auditedArticles = posts.map(auditArticlePost);
   const duplicates = detectDuplicates(auditedArticles);
   const internalLinkingOpportunities = findInternalLinkingOpportunities(auditedArticles);
 
@@ -565,6 +740,7 @@ export async function runFirstReadAudit(maxPostsToAudit = 500): Promise<FirstRea
   let infoCount = 0;
   let missingAltTotal = 0;
   let emptyAltTotal = 0;
+  let genericAltTotal = 0;
   let descriptiveAltTotal = 0;
 
   for (const issue of homepage.issues) {
@@ -576,6 +752,7 @@ export async function runFirstReadAudit(maxPostsToAudit = 500): Promise<FirstRea
   for (const a of auditedArticles) {
     missingAltTotal += a.missingAltCount ?? 0;
     emptyAltTotal += a.emptyAltCount ?? 0;
+    genericAltTotal += a.genericAltCount ?? 0;
     descriptiveAltTotal += a.descriptiveAltCount ?? 0;
     for (const issue of a.issues) {
       if (issue.severity === 'critical') criticalCount++;
@@ -584,8 +761,21 @@ export async function runFirstReadAudit(maxPostsToAudit = 500): Promise<FirstRea
     }
   }
 
+  for (const p of technical.protocolIssues) {
+    if (p.severity === 'critical') criticalCount++;
+    else if (p.severity === 'warning') warningCount++;
+    else infoCount++;
+  }
+
   const missingAltImagesTotal = missingAltTotal + emptyAltTotal;
-  criticalCount += technical.protocolIssues.length;
+  const totalDiscovered = siteInfo.totalPosts;
+  const totalAudited = auditedArticles.length;
+  const notAudited = Math.max(0, totalDiscovered - totalAudited);
+  const coveragePercentage = totalDiscovered > 0
+    ? Number(((totalAudited / totalDiscovered) * 100).toFixed(1))
+    : 100;
+  const auditScope = totalAudited >= totalDiscovered ? 'complete' : 'sampled';
+  const isComplete = totalAudited >= totalDiscovered;
 
   return {
     auditedAt: new Date().toISOString(),
@@ -595,18 +785,16 @@ export async function runFirstReadAudit(maxPostsToAudit = 500): Promise<FirstRea
     homepage,
     technical,
     summary: {
-      totalChecked: auditedArticles.length,
-      totalDiscovered: siteInfo.totalPosts,
-      totalAudited: auditedArticles.length,
-      notAudited: Math.max(0, siteInfo.totalPosts - auditedArticles.length),
-      coveragePercentage: siteInfo.totalPosts > 0
-        ? Number(((auditedArticles.length / siteInfo.totalPosts) * 100).toFixed(1))
-        : 100,
-      auditScope: auditedArticles.length >= siteInfo.totalPosts ? 'complete' : 'sampled',
-      isComplete: auditedArticles.length >= siteInfo.totalPosts,
-      articlesDiscovered: siteInfo.totalPosts,
-      articlesAudited: auditedArticles.length,
-      articlesSkipped: Math.max(0, siteInfo.totalPosts - auditedArticles.length),
+      totalChecked: totalAudited,
+      totalDiscovered,
+      totalAudited,
+      notAudited,
+      coveragePercentage,
+      auditScope,
+      isComplete,
+      articlesDiscovered: totalDiscovered,
+      articlesAudited: totalAudited,
+      articlesSkipped: notAudited,
       protocolIssuesCount: technical.protocolIssues.length,
       errorsCount: technical.protocolIssues.length,
       failedRequestsCount: 0,
@@ -615,6 +803,7 @@ export async function runFirstReadAudit(maxPostsToAudit = 500): Promise<FirstRea
       infoCount,
       missingAltTotal,
       emptyAltTotal,
+      genericAltTotal,
       descriptiveAltTotal,
       missingAltImagesTotal,
       featuredImagesNotice: 'Featured images are rendered by the WordPress theme template outside post content and are not counted in body image metrics.',

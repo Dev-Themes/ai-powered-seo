@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
-import { session, authorize } from '@/lib/auth';
+import { session, authorize, verifyCronSecret } from '@/lib/auth';
 import { runFirstReadAudit } from '@/lib/seo/audit';
+import type { FirstReadAuditReport } from '@/lib/seo/types';
 import { generateFirstReadRecommendations } from '@/lib/content/ai';
 import { fetchSiteInfo, fetchPublishedPosts, fetchCategories } from '@/lib/wordpress/client';
 import {
@@ -17,7 +18,8 @@ import {
   getGoogleConfig,
   fetchGSCReport,
   fetchGA4Report,
-  testGoogleConnections
+  testGoogleConnections,
+  diagnoseGA4Connection
 } from '@/lib/integrations/google';
 import {
   executeKeywordResearch,
@@ -32,6 +34,14 @@ import {
   executeTechnicalAudit,
   executeRecommendationsGeneration
 } from '@/lib/seo/operations';
+import {
+  loadBrandGrowthState,
+  runAutonomousBrandGrowthCycle,
+  setAutonomousExecutionPaused,
+  emergencyStopAutonomousExecution
+} from '@/lib/brand/engine';
+import { handleBrandCronRequest } from '@/lib/brand/cron';
+import { inspectUrlWithGsc, submitSitemapToGsc } from '@/lib/brand/indexing';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -54,13 +64,25 @@ export async function GET(
   { params }: { params: Promise<{ path: string[] }> }
 ) {
   try {
+    const p = (await params).path;
+    const isBrandCron = p[0] === 'firstread' && p[1] === 'brand' && p[2] === 'cron';
+
+    // 1. Scheduled Cron Endpoint: ONLY an authorized Bearer CRON_SECRET request may trigger the scheduled cycle
+    if (isBrandCron) {
+      const { status, data } = await handleBrandCronRequest(request);
+      return NextResponse.json(data, {
+        status,
+        headers: { 'Cache-Control': 'private, no-store' }
+      });
+    }
+
+    // 2. All other GET endpoints require an active administrator session
     const s = await session();
     if (!s) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
 
-    const p = (await params).path;
     let data: unknown;
 
-    if (p[0] === 'session') {
+    if (p[0] === 'session' && s) {
       data = { csrf: s.csrf };
     } else if (p[0] === 'firstread' || p[0] === 'reports') {
       const sub = p[0] === 'reports' ? 'reports' : p[1];
@@ -113,6 +135,8 @@ export async function GET(
           });
         } else if (param === 'test') {
           data = await testGoogleConnections();
+        } else if (param === 'diagnostic') {
+          data = await diagnoseGA4Connection();
         } else {
           const status = getFirstReadGoogleStatus();
           const readiness = getGoogleIntegrationReadiness();
@@ -126,6 +150,8 @@ export async function GET(
             hasCredentials: config.hasCredentials
           };
         }
+      } else if (sub === 'brand') {
+        data = await loadBrandGrowthState();
       } else if (sub === 'integrations') {
         data = getGoogleIntegrationReadiness();
       } else if (sub === 'status' || sub === 'readiness' || sub === 'infra') {
@@ -170,8 +196,15 @@ export async function POST(
   { params }: { params: Promise<{ path: string[] }> }
 ) {
   try {
-    await authorize(request);
     const p = (await params).path;
+    const isBrandRunOrCron = p[0] === 'firstread' && p[1] === 'brand' && (p[2] === 'run' || p[2] === 'cron');
+    const isCron = verifyCronSecret(request);
+
+    if (isBrandRunOrCron && isCron) {
+      // Authorized via CRON_SECRET Bearer header
+    } else {
+      await authorize(request);
+    }
 
     if (p[0] === 'firstread') {
       const action = p[1];
@@ -208,7 +241,10 @@ export async function POST(
           case 'article-qa':
             return NextResponse.json(await executeArticleQA(input));
           case 'technical-audit':
-            return NextResponse.json(await executeTechnicalAudit(Number(input.limit) || 100));
+            return NextResponse.json(await executeTechnicalAudit({
+              limit: input.limit !== undefined ? Number(input.limit) : undefined,
+              scope: (input.scope as 'sampled' | 'full' | 'continue') || undefined
+            }));
           case 'recommendations':
             return NextResponse.json(await executeRecommendationsGeneration());
           default:
@@ -221,7 +257,22 @@ export async function POST(
 
       // 2. Audit Snapshot Trigger
       if (action === 'audit') {
-        const audit = await runFirstReadAudit(500);
+        let body: { scope?: 'sampled' | 'full' | 'continue'; limit?: number } = {};
+        try {
+          body = await request.json();
+        } catch {}
+
+        let audit: FirstReadAuditReport;
+        if (body.scope === 'continue') {
+          const latest = await getLatestAuditReport();
+          audit = await runFirstReadAudit(body.limit || 500, { continueFromReport: latest });
+        } else if (body.scope === 'sampled') {
+          audit = await runFirstReadAudit(body.limit || 100);
+        } else {
+          const limit = body.limit || 500;
+          audit = await runFirstReadAudit(limit);
+        }
+
         const stored = await saveAuditReport(audit);
         return NextResponse.json(stored);
       }
@@ -234,10 +285,48 @@ export async function POST(
         return NextResponse.json(stored);
       }
 
-      // 4. Google Connections Test Trigger
+      // 4. Google Connections Test & Diagnostic Trigger
       if (action === 'google-test' || action === 'google') {
         const testResult = await testGoogleConnections();
         return NextResponse.json(testResult);
+      }
+      if (action === 'google-diagnostic') {
+        const diagResult = await diagnoseGA4Connection();
+        return NextResponse.json(diagResult);
+      }
+
+      // 5. Autonomous Brand Growth Engine Triggers
+      if (action === 'brand') {
+        const subAction = p[2] || 'run';
+        if (subAction === 'run' || subAction === 'cron') {
+          const res = await runAutonomousBrandGrowthCycle({ force: !isCron });
+          return NextResponse.json(res);
+        }
+        if (subAction === 'pause') {
+          const res = await setAutonomousExecutionPaused(true);
+          return NextResponse.json(res);
+        }
+        if (subAction === 'resume') {
+          const res = await setAutonomousExecutionPaused(false);
+          return NextResponse.json(res);
+        }
+        if (subAction === 'stop') {
+          const res = await emergencyStopAutonomousExecution();
+          return NextResponse.json(res);
+        }
+        if (subAction === 'inspect') {
+          let body: { url?: string } = {};
+          try {
+            body = await request.json();
+          } catch {}
+          const inspectUrl = body.url || 'https://firstread.co.uk/';
+          const res = await inspectUrlWithGsc(inspectUrl);
+          return NextResponse.json(res);
+        }
+        if (subAction === 'sitemap-submit') {
+          const res = await submitSitemapToGsc();
+          return NextResponse.json(res);
+        }
       }
 
       // 5. Strictly reject obsolete approval actions or any WordPress write operation

@@ -185,16 +185,44 @@ export async function fetchPublishedPosts(page = 1, perPage = 20): Promise<{
 /**
  * Fetches published posts up to a maximum number (for comprehensive audit)
  */
-export async function fetchAllPosts(maxPosts = 500): Promise<WordPressPost[]> {
+export async function fetchAllPosts(
+  maxPosts = 500,
+  options?: {
+    perPage?: number;
+    skipIds?: Set<number>;
+    onBatch?: (posts: WordPressPost[]) => void;
+  }
+): Promise<WordPressPost[]> {
   const all: WordPressPost[] = [];
-  const perPage = Math.min(maxPosts, 50);
+  const seenIds = new Set<number>();
+  const perPage = Math.min(100, Math.max(1, options?.perPage || (maxPosts > 50 ? 100 : maxPosts)));
   let page = 1;
 
   while (all.length < maxPosts) {
-    const { posts, totalPages } = await fetchPublishedPosts(page, perPage);
-    all.push(...posts);
-    if (page >= totalPages || posts.length === 0) break;
-    page++;
+    try {
+      const { posts, totalPages } = await fetchPublishedPosts(page, perPage);
+      if (posts.length === 0) break;
+
+      const newPosts: WordPressPost[] = [];
+      for (const p of posts) {
+        if (!seenIds.has(p.id) && (!options?.skipIds || !options.skipIds.has(p.id))) {
+          seenIds.add(p.id);
+          newPosts.push(p);
+        }
+      }
+
+      all.push(...newPosts);
+      if (options?.onBatch && newPosts.length > 0) {
+        options.onBatch(newPosts);
+      }
+
+      if (page >= totalPages || all.length >= maxPosts) break;
+      page++;
+    } catch (err) {
+      // Log warning and exit loop gracefully with partially fetched posts
+      console.warn(`[WordPress Client] fetchAllPosts stopped at page ${page}:`, err instanceof Error ? err.message : err);
+      break;
+    }
   }
 
   return all.slice(0, maxPosts);

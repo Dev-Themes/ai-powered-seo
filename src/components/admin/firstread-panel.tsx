@@ -26,7 +26,8 @@ import {
   Check,
   MousePointer,
   Eye,
-  Percent
+  Percent,
+  Activity
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { api } from './api';
@@ -43,9 +44,12 @@ import type {
   GA4ReportResponse,
   GoogleConnectionsTestResult
 } from '@/lib/integrations/google';
+import { BrandGrowthView } from './brand-growth-view';
+import type { BrandGrowthEngineState } from '@/lib/brand/types';
 
 export type DashboardSection =
   | 'overview'
+  | 'brand'
   | 'posts'
   | 'homepage'
   | 'articles'
@@ -323,6 +327,85 @@ export function FirstReadPanel({ initialSection = 'overview' }: { initialSection
   // Internal approval tracking for AI recommendations
   const [approvedIds, setApprovedIds] = useState<Set<string>>(new Set());
 
+  // FirstRead Brand Growth & Autonomous Indexing Engine state
+  const [brandState, setBrandState] = useState<BrandGrowthEngineState | null>(null);
+  const [brandLoading, setBrandLoading] = useState(false);
+
+  const fetchBrandState = useCallback(async () => {
+    setBrandLoading(true);
+    try {
+      const res = await api('firstread/brand/state');
+      if (res) setBrandState(res);
+    } catch (err) {
+      console.warn('Failed to fetch brand state:', err);
+    } finally {
+      setBrandLoading(false);
+    }
+  }, []);
+
+  const handleRunBrandCycle = useCallback(async () => {
+    setBrandLoading(true);
+    setMessage('');
+    setError('');
+    try {
+      const res = await api('firstread/brand/run', {});
+      if (res?.state) setBrandState(res.state);
+      setMessage(res?.execution?.summary || 'Autonomous cycle completed successfully.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Autonomous cycle failed.');
+    } finally {
+      setBrandLoading(false);
+    }
+  }, []);
+
+  const handleToggleBrandPause = useCallback(async (pause: boolean) => {
+    setBrandLoading(true);
+    setMessage('');
+    try {
+      const endpoint = pause ? 'firstread/brand/pause' : 'firstread/brand/resume';
+      const res = await api(endpoint, {});
+      if (res) setBrandState(res);
+      setMessage(pause ? 'Brand engine paused.' : 'Brand engine resumed.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update pause state.');
+    } finally {
+      setBrandLoading(false);
+    }
+  }, []);
+
+  const handleEmergencyStop = useCallback(async () => {
+    setBrandLoading(true);
+    setMessage('');
+    try {
+      const res = await api('firstread/brand/stop', {});
+      if (res) setBrandState(res);
+      setMessage('Emergency stop executed: all autonomous actions halted.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Emergency stop failed.');
+    } finally {
+      setBrandLoading(false);
+    }
+  }, []);
+
+  const handleInspectUrl = useCallback(async (url: string) => {
+    setBrandLoading(true);
+    setMessage('');
+    try {
+      const res = await api('firstread/brand/inspect', { url });
+      if (res) {
+        setBrandState(prev => (prev ? {
+          ...prev,
+          recentInspections: [res, ...(prev.recentInspections || [])].slice(0, 10)
+        } : null));
+        setMessage(`Inspection complete for ${url}: ${res.verdict} (${res.coverageState})`);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'URL inspection failed.');
+    } finally {
+      setBrandLoading(false);
+    }
+  }, []);
+
   // Fetch paginated WordPress posts
   const fetchPosts = useCallback(async (page: number, perPage: number) => {
     setPostsLoading(true);
@@ -357,14 +440,15 @@ export function FirstReadPanel({ initialSection = 'overview' }: { initialSection
     let mounted = true;
     async function load() {
       try {
-        const [infoRes, auditRes, googleRes, approvalsRes, historyRes, gscRes, ga4Res] = await Promise.all([
+        const [infoRes, auditRes, googleRes, approvalsRes, historyRes, gscRes, ga4Res, brandRes] = await Promise.all([
           api('firstread/info').catch(() => null),
           api('firstread/audit').catch(() => null),
           api('firstread/google').catch(() => null),
           api('firstread/approvals').catch(() => null),
           api('firstread/reports').catch(() => []),
           api(`firstread/google/search-console?startDate=${DEFAULT_GOOGLE_DATES.start}&endDate=${DEFAULT_GOOGLE_DATES.end}`).catch(() => null),
-          api(`firstread/google/analytics?startDate=${DEFAULT_GOOGLE_DATES.start}&endDate=${DEFAULT_GOOGLE_DATES.end}`).catch(() => null)
+          api(`firstread/google/analytics?startDate=${DEFAULT_GOOGLE_DATES.start}&endDate=${DEFAULT_GOOGLE_DATES.end}`).catch(() => null),
+          api('firstread/brand/state').catch(() => null)
         ]);
 
         if (!mounted) return;
@@ -373,6 +457,7 @@ export function FirstReadPanel({ initialSection = 'overview' }: { initialSection
         if (googleRes) setGoogleState(googleRes);
         if (gscRes) setGscReport(gscRes);
         if (ga4Res) setGa4Report(ga4Res);
+        if (brandRes) setBrandState(brandRes);
         if (approvalsRes?.approvedIds) setApprovedIds(new Set(approvalsRes.approvedIds));
         if (Array.isArray(historyRes)) setReportHistory(historyRes);
         setLastSyncTime(new Date().toLocaleString('en-GB'));
@@ -429,16 +514,18 @@ export function FirstReadPanel({ initialSection = 'overview' }: { initialSection
   }
 
   // Trigger manual read-only audit
-  async function triggerAudit() {
+  async function triggerAudit(scopeOrEvent?: 'sampled' | 'full' | 'continue' | React.MouseEvent) {
+    const scope: 'sampled' | 'full' | 'continue' = typeof scopeOrEvent === 'string' ? scopeOrEvent : 'full';
     setAuditing(true);
     setError('');
     setMessage('');
     try {
-      const res = await api('firstread/audit', {});
+      const res = await api('firstread/audit', { scope, limit: scope === 'sampled' ? 100 : 500 });
       const report = res.data || res;
       setAudit(report);
       if (report.siteInfo) setSiteInfo(report.siteInfo);
-      setMessage('Read-only audit completed and saved to history. Zero changes made to FirstRead WordPress.');
+      const scopeLabel = scope === 'continue' ? 'Audit continuation' : scope === 'sampled' ? 'Sampled audit (100 URLs)' : 'Full audit';
+      setMessage(`${scopeLabel} completed and saved to history. Zero changes made to FirstRead WordPress.`);
       const hist = await api('firstread/reports').catch(() => []);
       if (Array.isArray(hist)) setReportHistory(hist);
     } catch (err) {
@@ -716,16 +803,47 @@ export function FirstReadPanel({ initialSection = 'overview' }: { initialSection
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Button
             variant="outline"
             size="sm"
-            onClick={triggerAudit}
+            onClick={() => triggerAudit('sampled')}
             disabled={auditing || loading}
           >
             <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${auditing ? 'animate-spin' : ''}`} />
-            {auditing ? 'Auditing Target…' : 'Run Read-Only Audit'}
+            Run Sampled Audit (100)
           </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => triggerAudit('full')}
+            disabled={auditing || loading}
+          >
+            <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${auditing ? 'animate-spin' : ''}`} />
+            Run Full Audit
+          </Button>
+          {audit && !audit.summary.isComplete && (audit.summary.notAudited ?? 0) > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => triggerAudit('continue')}
+              disabled={auditing || loading}
+              className="border-sky-500 text-sky-600 dark:text-sky-400"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${auditing ? 'animate-spin' : ''}`} />
+              Continue Incomplete Audit ({audit.summary.notAudited} left)
+            </Button>
+          )}
+          {audit && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => downloadJson(audit, `firstread-audit-${Date.now()}.json`)}
+            >
+              <Download className="w-3.5 h-3.5 mr-1.5" />
+              Export JSON Report
+            </Button>
+          )}
           <Button
             size="sm"
             onClick={triggerRecommendations}
@@ -741,6 +859,7 @@ export function FirstReadPanel({ initialSection = 'overview' }: { initialSection
       <div className="flex flex-wrap gap-1 border-b border-[var(--border)] pb-2">
         {([
           { slug: 'overview', label: 'Overview', icon: Globe },
+          { slug: 'brand', label: 'FirstRead Brand Growth', icon: TrendingUp },
           { slug: 'posts', label: `WordPress Articles (${currentSiteInfo?.totalPosts ?? totalPostsCount ?? '…'})`, icon: BookOpen },
           { slug: 'homepage', label: 'Homepage SEO', icon: Globe },
           { slug: 'articles', label: `Articles SEO (${audit?.summary.totalChecked || 0})`, icon: FileText },
@@ -892,39 +1011,64 @@ export function FirstReadPanel({ initialSection = 'overview' }: { initialSection
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 text-xs">
                     <div className="p-3 rounded-lg border border-[var(--border)] bg-[var(--card)]">
-                      <span className="text-[var(--muted)] block font-medium mb-1">Articles Discovered</span>
+                      <span className="text-[var(--muted)] block font-medium mb-1">Discovered URLs</span>
                       <strong className="text-lg font-bold text-[var(--foreground)] block">
-                        {audit.summary.articlesDiscovered ?? currentSiteInfo?.totalPosts ?? 0}
+                        {audit.summary.totalDiscovered ?? audit.summary.articlesDiscovered ?? currentSiteInfo?.totalPosts ?? 0}
                       </strong>
                       <small className="text-[var(--muted-light)]">WordPress REST API</small>
                     </div>
                     <div className="p-3 rounded-lg border border-[var(--border)] bg-[var(--card)]">
-                      <span className="text-[var(--muted)] block font-medium mb-1">Articles Audited</span>
+                      <span className="text-[var(--muted)] block font-medium mb-1">Audited URLs</span>
                       <strong className="text-lg font-bold text-sky-600 dark:text-sky-400 block">
-                        {audit.summary.articlesAudited ?? audit.summary.totalChecked}
+                        {audit.summary.totalAudited ?? audit.summary.articlesAudited ?? audit.summary.totalChecked}
                       </strong>
-                      <small className="text-[var(--muted-light)]">Technical &amp; Content SEO</small>
+                      <small className="text-[var(--muted-light)]">Deep SEO Scanned</small>
                     </div>
                     <div className="p-3 rounded-lg border border-[var(--border)] bg-[var(--card)]">
-                      <span className="text-[var(--muted)] block font-medium mb-1">Articles Skipped</span>
+                      <span className="text-[var(--muted)] block font-medium mb-1">Remaining URLs</span>
+                      <strong className="text-lg font-bold text-amber-600 dark:text-amber-400 block">
+                        {audit.summary.notAudited ?? audit.summary.articlesSkipped ?? 0}
+                      </strong>
+                      <small className="text-[var(--muted-light)]">{audit.summary.isComplete ? 'All URLs Audited' : 'Pending Sample Scope'}</small>
+                    </div>
+                    <div className="p-3 rounded-lg border border-[var(--border)] bg-[var(--card)]">
+                      <span className="text-[var(--muted)] block font-medium mb-1">Failed URLs</span>
                       <strong className="text-lg font-bold text-[var(--foreground)] block">
-                        {audit.summary.articlesSkipped ?? 0}
+                        {audit.summary.failedRequestsCount ?? 0}
                       </strong>
-                      <small className="text-[var(--muted-light)]">Draft / Non-public</small>
+                      <small className="text-[var(--muted-light)]">Network/Timeout Errors</small>
                     </div>
                     <div className="p-3 rounded-lg border border-[var(--border)] bg-[var(--card)]">
-                      <span className="text-[var(--muted)] block font-medium mb-1">Protocol Issues</span>
-                      <strong className={`text-lg font-bold block ${(audit.summary.protocolIssuesCount ?? audit.summary.errorsCount ?? 0) > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
-                        {audit.summary.protocolIssuesCount ?? audit.summary.errorsCount ?? 0}
+                      <span className="text-[var(--muted)] block font-medium mb-1">Coverage Rate</span>
+                      <strong className="text-lg font-bold text-emerald-600 dark:text-emerald-400 block">
+                        {audit.summary.coveragePercentage ?? Math.round(((audit.summary.totalAudited ?? audit.summary.totalChecked) / (audit.summary.totalDiscovered ?? currentSiteInfo?.totalPosts ?? 1)) * 100)}%
                       </strong>
-                      <small className="text-[var(--muted-light)]">Config &amp; Sitemap Gaps</small>
+                      <small className="text-[var(--muted-light)]">{audit.summary.isComplete ? 'Complete Coverage' : 'Sampled Scope'}</small>
                     </div>
-                    <div className="p-3 rounded-lg border border-[var(--border)] bg-[var(--card)]">
-                      <span className="text-[var(--muted)] block font-medium mb-1">AI Recommendations</span>
-                      <strong className="text-lg font-bold text-violet-600 dark:text-violet-400 block">
-                        {recommendations?.recommendations.length ?? (audit.summary.recommendationsCount ?? '…')}
+                  </div>
+
+                  {/* Issue Severity Breakdown */}
+                  <div className="grid grid-cols-3 gap-3 text-xs mt-3 pt-3 border-t border-[var(--border)]">
+                    <div className="p-2.5 rounded-lg border border-rose-200 dark:border-rose-900/50 bg-rose-50/50 dark:bg-rose-950/20">
+                      <span className="text-rose-700 dark:text-rose-300 block font-semibold">Critical Issues</span>
+                      <strong className="text-lg font-bold text-rose-700 dark:text-rose-300 block">
+                        {audit.summary.criticalCount}
                       </strong>
-                      <small className="text-[var(--muted-light)]">Actionable Proposals</small>
+                      <small className="text-rose-600/80 dark:text-rose-400/80">Requires immediate attention</small>
+                    </div>
+                    <div className="p-2.5 rounded-lg border border-amber-200 dark:border-amber-900/50 bg-amber-50/50 dark:bg-amber-950/20">
+                      <span className="text-amber-700 dark:text-amber-300 block font-semibold">SEO Warnings</span>
+                      <strong className="text-lg font-bold text-amber-700 dark:text-amber-300 block">
+                        {audit.summary.warningCount}
+                      </strong>
+                      <small className="text-amber-600/80 dark:text-amber-400/80">Title length, body H1s, protocol</small>
+                    </div>
+                    <div className="p-2.5 rounded-lg border border-sky-200 dark:border-sky-900/50 bg-sky-50/50 dark:bg-sky-950/20">
+                      <span className="text-sky-700 dark:text-sky-300 block font-semibold">Informational Findings</span>
+                      <strong className="text-lg font-bold text-sky-700 dark:text-sky-300 block">
+                        {audit.summary.infoCount}
+                      </strong>
+                      <small className="text-sky-600/80 dark:text-sky-400/80">Decorative alt, brief meta, internal links</small>
                     </div>
                   </div>
                 </div>
@@ -1133,6 +1277,21 @@ export function FirstReadPanel({ initialSection = 'overview' }: { initialSection
                 )}
               </div>
             </div>
+          )}
+
+          {/* ========================================================= */}
+          {/* SECTION: FIRSTREAD BRAND KEYWORD GROWTH & INDEXING */}
+          {/* ========================================================= */}
+          {activeSection === 'brand' && (
+            <BrandGrowthView
+              brandState={brandState}
+              loading={brandLoading}
+              onRefresh={fetchBrandState}
+              onRunCycle={handleRunBrandCycle}
+              onTogglePause={handleToggleBrandPause}
+              onEmergencyStop={handleEmergencyStop}
+              onInspectUrl={handleInspectUrl}
+            />
           )}
 
           {/* ========================================================= */}
@@ -1649,10 +1808,20 @@ export function FirstReadPanel({ initialSection = 'overview' }: { initialSection
                                 className={`p-3 rounded-lg text-xs border ${
                                   iss.severity === 'critical'
                                     ? 'bg-rose-50 dark:bg-rose-950/20 border-rose-300 dark:border-rose-900 text-rose-900 dark:text-rose-200'
-                                    : 'bg-amber-50 dark:bg-amber-950/20 border-amber-300 dark:border-amber-900 text-amber-900 dark:text-amber-200'
+                                    : iss.severity === 'warning'
+                                    ? 'bg-amber-50 dark:bg-amber-950/20 border-amber-300 dark:border-amber-900 text-amber-900 dark:text-amber-200'
+                                    : 'bg-sky-50 dark:bg-sky-950/20 border-sky-300 dark:border-sky-900 text-sky-900 dark:text-sky-200'
                                 }`}
                               >
-                                <span className="font-bold block mb-1">{iss.title}</span>
+                                <div className="flex items-center justify-between gap-2 mb-1">
+                                  <span className="font-bold">{iss.title}</span>
+                                  <span className={`badge ${
+                                    iss.severity === 'critical' ? 'badge-danger' :
+                                    iss.severity === 'warning' ? 'badge-warning' : 'badge-neutral'
+                                  }`}>
+                                    {iss.severity.toUpperCase()}
+                                  </span>
+                                </div>
                                 <p className="m-0 text-inherit opacity-90">{iss.description}</p>
                                 {iss.recommendation && (
                                   <p className="mt-1.5 m-0 text-inherit font-medium">
@@ -1666,6 +1835,35 @@ export function FirstReadPanel({ initialSection = 'overview' }: { initialSection
                           <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium m-0">
                             No issues flagged for this article.
                           </p>
+                        )}
+
+                        {a.imageAudits && a.imageAudits.length > 0 && (
+                          <div className="space-y-2 pt-2">
+                            <h4 className="text-xs font-bold text-[var(--foreground)] uppercase tracking-wide">
+                              Image Alt Audit Details ({a.imageAudits.length} images evaluated)
+                            </h4>
+                            <div className="space-y-1.5 max-h-48 overflow-auto">
+                              {a.imageAudits.map((img, i) => (
+                                <div key={i} className="p-2 rounded border border-[var(--border)] bg-[var(--surface)] text-[11px] flex items-center justify-between gap-2">
+                                  <div className="truncate flex-1 font-mono text-[var(--muted)]">
+                                    {img.src.split('/').pop() || img.src}
+                                    {img.alt && <span className="text-[var(--foreground)] font-sans ml-2">&ldquo;{img.alt}&rdquo;</span>}
+                                  </div>
+                                  <span className={`badge shrink-0 ${
+                                    img.classification === 'missing_alt' ? 'badge-danger' :
+                                    img.classification === 'generic_alt' ? 'badge-warning' :
+                                    img.classification === 'empty_alt' ? 'badge-neutral' :
+                                    'badge-success'
+                                  }`}>
+                                    {img.classification === 'missing_alt' ? 'Missing Alt' :
+                                     img.classification === 'empty_alt' ? 'Decorative (empty alt)' :
+                                     img.classification === 'generic_alt' ? 'Generic Alt' :
+                                     'Descriptive'}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
                         )}
                       </div>
                     );
@@ -1729,11 +1927,61 @@ export function FirstReadPanel({ initialSection = 'overview' }: { initialSection
                       </div>
                     </div>
 
+                    {/* Root Cause Grouping */}
+                    {audit.technical.rootCauseGroups && audit.technical.rootCauseGroups.length > 0 && (
+                      <div className="mb-4 p-4 rounded-lg border border-amber-300 dark:border-amber-900 bg-amber-50/70 dark:bg-amber-950/30 text-xs">
+                        <div className="flex items-center gap-2 mb-1.5">
+                          <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+                          <strong className="text-sm font-bold text-amber-900 dark:text-amber-200">
+                            Root Cause Grouping: {audit.technical.rootCauseGroups[0].rootCause}
+                          </strong>
+                        </div>
+                        <p className="text-amber-800 dark:text-amber-300 mb-2 leading-relaxed">
+                          {audit.technical.rootCauseGroups[0].description}
+                        </p>
+                        <div className="p-2.5 rounded bg-amber-100/70 dark:bg-amber-900/40 text-amber-900 dark:text-amber-100 font-medium">
+                          <strong>Recommended Solution:</strong> {audit.technical.rootCauseGroups[0].recommendation}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Protocol Findings Detail List */}
                     {audit.technical.protocolIssues.length > 0 && (
-                      <div className="p-3.5 rounded-lg border border-rose-300 dark:border-rose-900 bg-rose-50 dark:bg-rose-950/20 text-xs text-rose-900 dark:text-rose-200 space-y-1">
-                        <strong className="block font-semibold">Protocol Inconsistencies Found:</strong>
+                      <div className="space-y-2">
+                        <strong className="text-xs font-semibold text-[var(--foreground)] block mb-1">
+                          Protocol Findings ({audit.technical.protocolIssues.length} items evaluated):
+                        </strong>
                         {audit.technical.protocolIssues.map((p, idx) => (
-                          <p key={idx} className="m-0">• {p.details}</p>
+                          <div key={idx} className="p-3 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-xs space-y-1.5">
+                            <div className="flex items-center justify-between flex-wrap gap-2">
+                              <span className="font-mono text-sky-600 dark:text-sky-400 font-semibold">
+                                {p.originalUrl || p.type}
+                              </span>
+                              <div className="flex items-center gap-1.5">
+                                <span className={`badge ${p.severity === 'critical' ? 'badge-danger' : 'badge-warning'}`}>
+                                  {p.severity === 'critical' ? 'Critical' : 'Warning'}
+                                </span>
+                                {p.httpStatus && (
+                                  <span className="badge badge-neutral font-mono">
+                                    HTTP {p.httpStatus} &rarr; 200
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            <p className="text-[var(--foreground)] m-0">{p.details}</p>
+                            {p.redirectChain && p.redirectChain.length > 1 && (
+                              <div className="text-[var(--muted)] font-mono text-[11px]">
+                                Redirect Chain: {p.redirectChain.join(' \u2192 ')}
+                              </div>
+                            )}
+                            <div className="flex flex-wrap gap-3 text-[11px] text-[var(--muted)] pt-1">
+                              <span>HTTPS Accessible: <strong className="text-emerald-600 dark:text-emerald-400 font-medium">Yes (200 OK)</strong></span>
+                              <span>Canonical Consistent: <strong className="text-emerald-600 dark:text-emerald-400 font-medium">Yes (HTTPS)</strong></span>
+                              {p.recommendation && (
+                                <span className="text-[var(--foreground)]">Action: {p.recommendation}</span>
+                              )}
+                            </div>
+                          </div>
                         ))}
                       </div>
                     )}
@@ -1745,13 +1993,18 @@ export function FirstReadPanel({ initialSection = 'overview' }: { initialSection
                     <p className="text-xs text-[var(--muted)] mb-3">
                       Detected Schema.org JSON-LD graph objects provided by Yoast SEO:
                     </p>
-                    <div className="flex flex-wrap gap-2 text-xs">
+                    <div className="flex flex-wrap gap-2 text-xs mb-3">
                       {audit.technical.schemaValidation.typesFound.map(t => (
                         <span key={t} className="badge badge-neutral font-mono">
                           {t}
                         </span>
                       ))}
                     </div>
+                    {audit.technical.schemaValidation.richResultsNotice && (
+                      <p className="text-xs text-[var(--muted)] m-0 border-t border-[var(--border)] pt-2 italic">
+                        {audit.technical.schemaValidation.richResultsNotice}
+                      </p>
+                    )}
                   </div>
                 </>
               )}
@@ -2188,25 +2441,31 @@ export function FirstReadPanel({ initialSection = 'overview' }: { initialSection
                       <strong className="text-[var(--foreground)] font-semibold flex items-center gap-2">
                         <Globe className="w-4 h-4 text-sky-500" /> Google Search Console
                       </strong>
-                      <span
-                        className={`badge ${
-                          gscReport?.status === 'connected'
-                            ? 'badge-success'
-                            : gscReport?.status === 'pending_authorization'
-                            ? 'badge-warning'
-                            : gscReport?.status === 'error'
-                            ? 'badge-danger'
-                            : 'badge-secondary'
-                        }`}
-                      >
-                        {gscReport?.status === 'connected'
-                          ? 'Connected'
-                          : gscReport?.status === 'pending_authorization'
-                          ? 'Awaiting Authorization'
-                          : gscReport?.status === 'error'
-                          ? 'Permission Error'
-                          : 'Unconfigured'}
-                      </span>
+                      {(() => {
+                        const s = gscReport?.status || testResult?.searchConsole?.status || googleState?.searchConsole?.status;
+                        switch (s) {
+                          case 'connected':
+                            return <span className="badge badge-success">Connected</span>;
+                          case 'pending_authorization':
+                            return <span className="badge badge-warning">Awaiting Authorization</span>;
+                          case 'permission_denied':
+                            return <span className="badge badge-danger">Permission Denied</span>;
+                          case 'api_not_enabled':
+                            return <span className="badge badge-danger">API Not Enabled</span>;
+                          case 'property_not_found':
+                            return <span className="badge badge-danger">Property Not Found</span>;
+                          case 'invalid_credentials':
+                            return <span className="badge badge-danger">Invalid Credentials</span>;
+                          case 'configuration_error':
+                            return <span className="badge badge-warning">Configuration Error</span>;
+                          case 'temporary_api_error':
+                            return <span className="badge badge-warning">Temporary API Error</span>;
+                          case 'unconfigured':
+                            return <span className="badge badge-secondary">Unconfigured</span>;
+                          default:
+                            return <span className="badge badge-secondary">{s || 'Unconfigured'}</span>;
+                        }
+                      })()}
                     </div>
 
                     <div className="text-[var(--muted)] space-y-1">
@@ -2225,25 +2484,31 @@ export function FirstReadPanel({ initialSection = 'overview' }: { initialSection
                       <strong className="text-[var(--foreground)] font-semibold flex items-center gap-2">
                         <BarChart3 className="w-4 h-4 text-emerald-500" /> Google Analytics 4
                       </strong>
-                      <span
-                        className={`badge ${
-                          ga4Report?.status === 'connected'
-                            ? 'badge-success'
-                            : ga4Report?.status === 'pending_authorization'
-                            ? 'badge-warning'
-                            : ga4Report?.status === 'error'
-                            ? 'badge-danger'
-                            : 'badge-secondary'
-                        }`}
-                      >
-                        {ga4Report?.status === 'connected'
-                          ? 'Connected'
-                          : ga4Report?.status === 'pending_authorization'
-                          ? 'Awaiting Authorization'
-                          : ga4Report?.status === 'error'
-                          ? 'Permission Error'
-                          : 'Unconfigured'}
-                      </span>
+                      {(() => {
+                        const s = ga4Report?.status || testResult?.analytics4?.status || googleState?.analytics4?.status;
+                        switch (s) {
+                          case 'connected':
+                            return <span className="badge badge-success">Connected</span>;
+                          case 'pending_authorization':
+                            return <span className="badge badge-warning">Awaiting Authorization</span>;
+                          case 'permission_denied':
+                            return <span className="badge badge-danger">Permission Denied</span>;
+                          case 'api_not_enabled':
+                            return <span className="badge badge-danger">API Not Enabled</span>;
+                          case 'property_not_found':
+                            return <span className="badge badge-danger">Property Not Found</span>;
+                          case 'invalid_credentials':
+                            return <span className="badge badge-danger">Invalid Credentials</span>;
+                          case 'configuration_error':
+                            return <span className="badge badge-warning">Configuration Error</span>;
+                          case 'temporary_api_error':
+                            return <span className="badge badge-warning">Temporary API Error</span>;
+                          case 'unconfigured':
+                            return <span className="badge badge-secondary">Unconfigured</span>;
+                          default:
+                            return <span className="badge badge-danger">{s || 'Connection Error'}</span>;
+                        }
+                      })()}
                     </div>
 
                     <div className="text-[var(--muted)] space-y-1">
@@ -2291,8 +2556,110 @@ export function FirstReadPanel({ initialSection = 'overview' }: { initialSection
                   </div>
                 )}
 
-                {/* Client Authorization Step-by-Step Box (when pending authorization) */}
-                {(gscReport?.status === 'pending_authorization' || ga4Report?.status === 'pending_authorization' || !googleState?.configured) && (
+                {/* GA4 Diagnostic Details Card */}
+                {testResult?.analytics4?.diagnostic && (
+                  <div className="mt-4 p-4 rounded-lg border border-sky-300 dark:border-sky-800 bg-sky-50/70 dark:bg-sky-950/30 text-xs text-sky-950 dark:text-sky-200 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 font-semibold">
+                        <Activity className="w-4 h-4 text-sky-600 dark:text-sky-400" />
+                        <span>GA4 Connection Diagnostic Results</span>
+                      </div>
+                      <span className="font-mono text-[11px] px-2 py-0.5 rounded bg-sky-100 dark:bg-sky-900 border border-sky-300 dark:border-sky-700">
+                        {testResult.analytics4.diagnostic.category}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 text-[11px]">
+                      <div className="p-2.5 rounded bg-white dark:bg-black/30 border border-sky-200 dark:border-sky-800 space-y-1">
+                        <span className="font-medium text-[var(--muted)] block">1. Authentication</span>
+                        <div className="flex items-center gap-1.5 font-semibold">
+                          {testResult.analytics4.diagnostic.steps.authentication.success ? (
+                            <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                              <Check className="w-3.5 h-3.5" /> Authenticated
+                            </span>
+                          ) : (
+                            <span className="text-rose-600 dark:text-rose-400 flex items-center gap-1">
+                              <AlertTriangle className="w-3.5 h-3.5" /> Failed
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="p-2.5 rounded bg-white dark:bg-black/30 border border-sky-200 dark:border-sky-800 space-y-1">
+                        <span className="font-medium text-[var(--muted)] block">2. Property ID Format</span>
+                        <div className="flex items-center gap-1.5 font-semibold">
+                          {testResult.analytics4.diagnostic.steps.propertyValidation.validFormat ? (
+                            <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                              <Check className="w-3.5 h-3.5" /> Numeric ID
+                            </span>
+                          ) : (
+                            <span className="text-rose-600 dark:text-rose-400 flex items-center gap-1">
+                              <AlertTriangle className="w-3.5 h-3.5" /> Invalid Format
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="p-2.5 rounded bg-white dark:bg-black/30 border border-sky-200 dark:border-sky-800 space-y-1">
+                        <span className="font-medium text-[var(--muted)] block">3. Admin API</span>
+                        <div className="flex items-center gap-1.5 font-semibold">
+                          {testResult.analytics4.diagnostic.steps.adminApi.enabled ? (
+                            <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                              <Check className="w-3.5 h-3.5" /> Enabled
+                            </span>
+                          ) : (
+                            <span className="text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                              <AlertTriangle className="w-3.5 h-3.5" /> Disabled in Project
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="p-2.5 rounded bg-white dark:bg-black/30 border border-sky-200 dark:border-sky-800 space-y-1">
+                        <span className="font-medium text-[var(--muted)] block">4. Data API runReport</span>
+                        <div className="flex items-center gap-1.5 font-semibold">
+                          {testResult.analytics4.diagnostic.steps.dataApi.runReportSuccess ? (
+                            <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                              <Check className="w-3.5 h-3.5" /> 200 OK
+                            </span>
+                          ) : (
+                            <span className="text-rose-600 dark:text-rose-400 flex items-center gap-1">
+                              <AlertTriangle className="w-3.5 h-3.5" /> {testResult.analytics4.diagnostic.status}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {testResult.analytics4.diagnostic.steps.alternatePropertyCheck?.accessible && (
+                      <div className="p-3 rounded border border-emerald-300 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-950 dark:text-emerald-200 text-[11px] space-y-1.5">
+                        <div className="flex items-center gap-1.5 font-semibold text-emerald-700 dark:text-emerald-300">
+                          <Check className="w-4 h-4 shrink-0" />
+                          <span>Active FirstRead GA4 Property Verified: <code>{testResult.analytics4.diagnostic.steps.alternatePropertyCheck.checkedId}</code></span>
+                        </div>
+                        <p className="m-0 leading-relaxed">
+                          The service account is already authorized on Property ID <code className="font-bold">{testResult.analytics4.diagnostic.steps.alternatePropertyCheck.checkedId}</code> with active production traffic for <strong>{testResult.analytics4.diagnostic.steps.alternatePropertyCheck.hostName}</strong> ({testResult.analytics4.diagnostic.steps.alternatePropertyCheck.recentSessions} recent sessions).
+                        </p>
+                      </div>
+                    )}
+
+                    {testResult.analytics4.diagnostic.recommendedAction && (
+                      <div className="p-3 rounded bg-white/80 dark:bg-black/40 border border-sky-200 dark:border-sky-800 text-[11px] space-y-1">
+                        <strong className="block text-[var(--foreground)] font-semibold">Actionable Resolution:</strong>
+                        <p className="m-0 leading-relaxed text-[var(--muted)]">{testResult.analytics4.diagnostic.recommendedAction}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Client Authorization Step-by-Step Box (when pending authorization, permission denied, or unconfigured) */}
+                {(gscReport?.status === 'pending_authorization' ||
+                  ga4Report?.status === 'pending_authorization' ||
+                  ga4Report?.status === 'permission_denied' ||
+                  ga4Report?.status === 'api_not_enabled' ||
+                  testResult?.analytics4?.status === 'permission_denied' ||
+                  testResult?.analytics4?.status === 'api_not_enabled' ||
+                  !googleState?.configured) && (
                   <div className="mt-4 p-4 rounded-lg border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/20 text-xs text-amber-950 dark:text-amber-200 space-y-3">
                     <div className="flex items-center gap-2">
                       <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
@@ -2622,7 +2989,7 @@ export function FirstReadPanel({ initialSection = 'overview' }: { initialSection
                   {ga4Report?.status === 'connected' && ga4Report.data ? (
                     <div className="space-y-4">
                       {/* KPI Cards */}
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 text-xs">
                         <div className="p-3.5 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
                           <span className="text-[var(--muted)] flex items-center gap-1.5 mb-1 font-medium">
                             <Globe className="w-3.5 h-3.5 text-emerald-500" /> Total Sessions
@@ -2635,7 +3002,17 @@ export function FirstReadPanel({ initialSection = 'overview' }: { initialSection
 
                         <div className="p-3.5 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
                           <span className="text-[var(--muted)] flex items-center gap-1.5 mb-1 font-medium">
-                            <CheckCircle className="w-3.5 h-3.5 text-sky-500" /> Engaged Sessions
+                            <Eye className="w-3.5 h-3.5 text-sky-500" /> Pageviews
+                          </span>
+                          <strong className="text-xl font-bold text-[var(--foreground)] block">
+                            {Number(ga4Report.data.summary?.screenPageViews ?? 0).toLocaleString('en-GB')}
+                          </strong>
+                          <small className="text-[var(--muted-light)]">Total page views</small>
+                        </div>
+
+                        <div className="p-3.5 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
+                          <span className="text-[var(--muted)] flex items-center gap-1.5 mb-1 font-medium">
+                            <CheckCircle className="w-3.5 h-3.5 text-blue-500" /> Engaged Sessions
                           </span>
                           <strong className="text-xl font-bold text-[var(--foreground)] block">
                             {Number(ga4Report.data.summary?.engagedSessions ?? 0).toLocaleString('en-GB')}
@@ -2696,6 +3073,7 @@ export function FirstReadPanel({ initialSection = 'overview' }: { initialSection
                                 <th className="py-2.5 px-3 w-10">#</th>
                                 <th className="py-2.5 px-3">Landing Page</th>
                                 <th className="py-2.5 px-3 text-right">Sessions</th>
+                                <th className="py-2.5 px-3 text-right">Pageviews</th>
                                 <th className="py-2.5 px-3 text-right">Engaged Sessions</th>
                                 <th className="py-2.5 px-3 text-right">Engagement Rate</th>
                                 <th className="py-2.5 px-3 text-right">Conversions</th>
@@ -2708,6 +3086,9 @@ export function FirstReadPanel({ initialSection = 'overview' }: { initialSection
                                   <td className="py-2 px-3 font-mono text-[var(--foreground)]">{row.landingPage}</td>
                                   <td className="py-2 px-3 text-right font-bold text-emerald-600 dark:text-emerald-400">
                                     {Number(row.sessions || 0).toLocaleString('en-GB')}
+                                  </td>
+                                  <td className="py-2 px-3 text-right font-medium text-[var(--foreground)]">
+                                    {Number(row.screenPageViews || 0).toLocaleString('en-GB')}
                                   </td>
                                   <td className="py-2 px-3 text-right text-[var(--muted)]">
                                     {Number(row.engagedSessions || 0).toLocaleString('en-GB')}
@@ -2722,7 +3103,7 @@ export function FirstReadPanel({ initialSection = 'overview' }: { initialSection
                               ))}
                               {(ga4Report.data.landingPages || []).length === 0 && (
                                 <tr>
-                                  <td colSpan={6} className="py-6 text-center text-[var(--muted)]">
+                                  <td colSpan={7} className="py-6 text-center text-[var(--muted)]">
                                     No landing page records recorded for selected period.
                                   </td>
                                 </tr>

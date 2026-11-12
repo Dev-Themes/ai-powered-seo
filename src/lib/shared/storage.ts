@@ -39,6 +39,9 @@ export function normalizeAuditReport(report: FirstReadAuditReport): FirstReadAud
   if (report.summary.emptyAltTotal === undefined) {
     report.summary.emptyAltTotal = 0;
   }
+  if (report.summary.genericAltTotal === undefined) {
+    report.summary.genericAltTotal = 0;
+  }
   if (report.summary.descriptiveAltTotal === undefined) {
     report.summary.descriptiveAltTotal = 0;
   }
