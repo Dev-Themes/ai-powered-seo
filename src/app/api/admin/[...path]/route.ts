@@ -11,7 +11,14 @@ import {
   getLatestAuditReport,
   getLatestRecommendationsReport
 } from '@/lib/shared/storage';
-import { getGoogleIntegrationReadiness } from '@/lib/integrations/google';
+import {
+  getGoogleIntegrationReadiness,
+  getFirstReadGoogleStatus,
+  getGoogleConfig,
+  fetchGSCReport,
+  fetchGA4Report,
+  testGoogleConnections
+} from '@/lib/integrations/google';
 import {
   executeKeywordResearch,
   executeCompetitorAnalysis,
@@ -91,7 +98,35 @@ export async function GET(
         if (!data) return NextResponse.json({ error: 'Report not found' }, { status: 404 });
       } else if (sub === 'reports') {
         data = await listReports();
-      } else if (sub === 'integrations' || sub === 'google') {
+      } else if (sub === 'google') {
+        if (param === 'search-console') {
+          const { searchParams } = new URL(request.url);
+          data = await fetchGSCReport({
+            startDate: searchParams.get('startDate') || undefined,
+            endDate: searchParams.get('endDate') || undefined
+          });
+        } else if (param === 'analytics') {
+          const { searchParams } = new URL(request.url);
+          data = await fetchGA4Report({
+            startDate: searchParams.get('startDate') || undefined,
+            endDate: searchParams.get('endDate') || undefined
+          });
+        } else if (param === 'test') {
+          data = await testGoogleConnections();
+        } else {
+          const status = getFirstReadGoogleStatus();
+          const readiness = getGoogleIntegrationReadiness();
+          const config = getGoogleConfig();
+          data = {
+            ...status,
+            readiness,
+            gscSiteUrl: config.gscSiteUrl,
+            ga4PropertyId: config.ga4PropertyId,
+            serviceAccountEmail: config.clientEmail,
+            hasCredentials: config.hasCredentials
+          };
+        }
+      } else if (sub === 'integrations') {
         data = getGoogleIntegrationReadiness();
       } else if (sub === 'status' || sub === 'readiness' || sub === 'infra') {
         // Honest system status without database or Inngest dependencies
@@ -199,7 +234,13 @@ export async function POST(
         return NextResponse.json(stored);
       }
 
-      // 4. Strictly reject obsolete approval actions or any WordPress write operation
+      // 4. Google Connections Test Trigger
+      if (action === 'google-test' || action === 'google') {
+        const testResult = await testGoogleConnections();
+        return NextResponse.json(testResult);
+      }
+
+      // 5. Strictly reject obsolete approval actions or any WordPress write operation
       if (action === 'approve') {
         return NextResponse.json(
           { error: 'Human approval queues are obsolete. System operates via automated QA validation.' },

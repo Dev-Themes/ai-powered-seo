@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, Component, type ReactNode, type ErrorInfo } from 'react';
 import {
   Globe,
   ShieldCheck,
@@ -19,7 +19,14 @@ import {
   ChevronRight,
   FileText,
   Lock,
-  X
+  X,
+  TrendingUp,
+  BarChart3,
+  Copy,
+  Check,
+  MousePointer,
+  Eye,
+  Percent
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { api } from './api';
@@ -30,7 +37,12 @@ import type {
   WordPressPost,
   SiteInfo
 } from '@/lib/firstread/types';
-import type { FirstReadGoogleIntegrationsState } from '@/lib/firstread/google-interfaces';
+import type {
+  FirstReadGoogleIntegrationsState,
+  GSCReportResponse,
+  GA4ReportResponse,
+  GoogleConnectionsTestResult
+} from '@/lib/integrations/google';
 
 export type DashboardSection =
   | 'overview'
@@ -78,12 +90,204 @@ function cleanText(raw: string): string {
     .replace(/\[&hellip;\]/g, '…');
 }
 
+interface TrendChartPoint {
+  date: string;
+  val1: number;
+  val2?: number;
+}
+
+interface SectionErrorBoundaryProps {
+  children: ReactNode;
+  fallbackTitle?: string;
+  onRetry?: () => void;
+}
+
+interface SectionErrorBoundaryState {
+  hasError: boolean;
+  errorMessage: string;
+}
+
+class SectionErrorBoundary extends Component<SectionErrorBoundaryProps, SectionErrorBoundaryState> {
+  constructor(props: SectionErrorBoundaryProps) {
+    super(props);
+    this.state = { hasError: false, errorMessage: '' };
+  }
+
+  static getDerivedStateFromError(error: unknown): SectionErrorBoundaryState {
+    const msg = error instanceof Error ? error.message : String(error);
+    return { hasError: true, errorMessage: msg };
+  }
+
+  componentDidCatch(error: unknown, errorInfo: ErrorInfo) {
+    console.error('Section rendering error caught:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="panel space-y-3 p-6 border-amber-300 dark:border-amber-900 bg-amber-50/50 dark:bg-amber-950/20 text-xs">
+          <div className="flex items-center gap-2 text-amber-800 dark:text-amber-300 font-semibold text-sm">
+            <AlertCircle className="w-5 h-5 shrink-0" />
+            <span>{this.props.fallbackTitle || 'Section Unavailable'}</span>
+          </div>
+          <p className="text-[var(--muted)] m-0 leading-relaxed">
+            {this.state.errorMessage || 'A temporary rendering interruption occurred in this view. Other dashboard sections remain fully operational.'}
+          </p>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              this.setState({ hasError: false, errorMessage: '' });
+              this.props.onRetry?.();
+            }}
+          >
+            <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
+            Reload Section
+          </Button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+function GoogleTrendChart({
+  points,
+  label1,
+  label2,
+  color1 = '#0284c7',
+  color2 = '#8b5cf6'
+}: {
+  points: TrendChartPoint[];
+  label1: string;
+  label2?: string;
+  color1?: string;
+  color2?: string;
+}) {
+  const safePoints = Array.isArray(points)
+    ? points.filter(p => p && typeof p.date === 'string')
+    : [];
+
+  if (safePoints.length === 0) {
+    return (
+      <div className="h-32 flex items-center justify-center text-xs text-[var(--muted)]">
+        No daily trend records available for selected period.
+      </div>
+    );
+  }
+
+  const width = 640;
+  const height = 150;
+  const padL = 40;
+  const padR = 20;
+  const padT = 20;
+  const padB = 25;
+  const innerW = width - padL - padR;
+  const innerH = height - padT - padB;
+
+  const maxVal1 = Math.max(1, ...safePoints.map(p => (Number.isFinite(p.val1) ? Number(p.val1) : 0)));
+  const maxVal2 = label2 ? Math.max(1, ...safePoints.map(p => (Number.isFinite(p.val2) ? Number(p.val2) : 0))) : 1;
+
+  const getX = (idx: number) => padL + (safePoints.length <= 1 ? innerW / 2 : (idx / (safePoints.length - 1)) * innerW);
+  const getY1 = (val: number) => padT + innerH - ((Number.isFinite(val) ? Number(val) : 0) / maxVal1) * innerH;
+  const getY2 = (val: number) => padT + innerH - ((Number.isFinite(val) ? Number(val) : 0) / maxVal2) * innerH;
+
+  const poly1 = safePoints.map((p, i) => `${getX(i).toFixed(1)},${getY1(p.val1).toFixed(1)}`).join(' ');
+  const poly2 = label2 ? safePoints.map((p, i) => `${getX(i).toFixed(1)},${getY2(p.val2 || 0).toFixed(1)}`).join(' ') : '';
+
+  const area1 = safePoints.length > 1
+    ? `${getX(0)},${padT + innerH} ${poly1} ${getX(safePoints.length - 1)},${padT + innerH}`
+    : '';
+
+  return (
+    <div className="w-full">
+      <div className="flex items-center justify-between text-[11px] mb-2 px-1">
+        <div className="flex items-center gap-4">
+          <span className="flex items-center gap-1.5 font-medium text-[var(--foreground)]">
+            <span className="w-2.5 h-2.5 rounded-full inline-block" style={{ backgroundColor: color1 }} />
+            {label1} (Max: {maxVal1.toLocaleString('en-GB')})
+          </span>
+          {label2 && (
+            <span className="flex items-center gap-1.5 font-medium text-[var(--foreground)]">
+              <span className="w-2.5 h-2.5 rounded-full inline-block" style={{ backgroundColor: color2 }} />
+              {label2} (Max: {maxVal2.toLocaleString('en-GB')})
+            </span>
+          )}
+        </div>
+        <span className="text-[var(--muted-light)]">Daily Aggregate</span>
+      </div>
+
+      <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-36 font-mono text-[10px]" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id={`grad-${label1.replace(/\s+/g, '')}`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={color1} stopOpacity="0.25" />
+            <stop offset="100%" stopColor={color1} stopOpacity="0.0" />
+          </linearGradient>
+        </defs>
+
+        <line x1={padL} y1={padT} x2={width - padR} y2={padT} stroke="currentColor" className="text-[var(--border)] opacity-60" strokeDasharray="3 3" />
+        <line x1={padL} y1={padT + innerH / 2} x2={width - padR} y2={padT + innerH / 2} stroke="currentColor" className="text-[var(--border)] opacity-60" strokeDasharray="3 3" />
+        <line x1={padL} y1={padT + innerH} x2={width - padR} y2={padT + innerH} stroke="currentColor" className="text-[var(--border)]" />
+
+        {area1 && <polygon points={area1} fill={`url(#grad-${label1.replace(/\s+/g, '')})`} />}
+        {poly2 && <polyline points={poly2} fill="none" stroke={color2} strokeWidth="2" strokeDasharray="4 2" />}
+        <polyline points={poly1} fill="none" stroke={color1} strokeWidth="2.5" />
+
+        {safePoints.length > 0 && (
+          <>
+            <text x={padL} y={height - 6} fill="currentColor" className="text-[var(--muted)]">
+              {safePoints[0].date}
+            </text>
+            {safePoints.length > 2 && (
+              <text x={padL + innerW / 2} y={height - 6} textAnchor="middle" fill="currentColor" className="text-[var(--muted)]">
+                {safePoints[Math.floor(safePoints.length / 2)].date}
+              </text>
+            )}
+            {safePoints.length > 1 && (
+              <text x={width - padR} y={height - 6} textAnchor="end" fill="currentColor" className="text-[var(--muted)]">
+                {safePoints[safePoints.length - 1].date}
+              </text>
+            )}
+          </>
+        )}
+      </svg>
+    </div>
+  );
+}
+
+function computeGoogleDateRange(days: number) {
+  const end = new Date(Date.now() - 3 * 86400000);
+  const start = new Date(end.getTime() - (days - 1) * 86400000);
+  return {
+    start: start.toISOString().split('T')[0],
+    end: end.toISOString().split('T')[0]
+  };
+}
+
+const DEFAULT_GOOGLE_DATES = computeGoogleDateRange(28);
+
 export function FirstReadPanel({ initialSection = 'overview' }: { initialSection?: string }) {
   // Core audit data & site info
   const [siteInfo, setSiteInfo] = useState<SiteInfo | null>(null);
   const [audit, setAudit] = useState<FirstReadAuditReport | null>(null);
   const [recommendations, setRecommendations] = useState<FirstReadRecommendationsReport | null>(null);
-  const [googleState, setGoogleState] = useState<FirstReadGoogleIntegrationsState | null>(null);
+  const [googleState, setGoogleState] = useState<(FirstReadGoogleIntegrationsState & {
+    serviceAccountEmail?: string | null;
+    gscSiteUrl?: string;
+    ga4PropertyId?: string | null;
+    hasCredentials?: boolean;
+  }) | null>(null);
+  const [gscReport, setGscReport] = useState<GSCReportResponse | null>(null);
+  const [ga4Report, setGa4Report] = useState<GA4ReportResponse | null>(null);
+  const [loadingGoogleReports, setLoadingGoogleReports] = useState(false);
+  const [testingGoogle, setTestingGoogle] = useState(false);
+  const [testResult, setTestResult] = useState<GoogleConnectionsTestResult | null>(null);
+  const [dateRangePreset, setDateRangePreset] = useState<'7d' | '28d' | '90d' | 'custom'>('28d');
+  const [googleStartDate, setGoogleStartDate] = useState<string>(DEFAULT_GOOGLE_DATES.start);
+  const [googleEndDate, setGoogleEndDate] = useState<string>(DEFAULT_GOOGLE_DATES.end);
+  const [copiedEmail, setCopiedEmail] = useState(false);
+  const [gscActiveTab, setGscActiveTab] = useState<'queries' | 'pages'>('queries');
+  const [googleSearchFilter, setGoogleSearchFilter] = useState('');
   const [reportHistory, setReportHistory] = useState<ReportHistoryItem[]>([]);
   const [selectedHistoricalReport, setSelectedHistoricalReport] = useState<Record<string, unknown> | null>(null);
   const [loadingReportId, setLoadingReportId] = useState<string | null>(null);
@@ -153,18 +357,22 @@ export function FirstReadPanel({ initialSection = 'overview' }: { initialSection
     let mounted = true;
     async function load() {
       try {
-        const [infoRes, auditRes, googleRes, approvalsRes, historyRes] = await Promise.all([
+        const [infoRes, auditRes, googleRes, approvalsRes, historyRes, gscRes, ga4Res] = await Promise.all([
           api('firstread/info').catch(() => null),
           api('firstread/audit').catch(() => null),
           api('firstread/google').catch(() => null),
           api('firstread/approvals').catch(() => null),
-          api('firstread/reports').catch(() => [])
+          api('firstread/reports').catch(() => []),
+          api(`firstread/google/search-console?startDate=${DEFAULT_GOOGLE_DATES.start}&endDate=${DEFAULT_GOOGLE_DATES.end}`).catch(() => null),
+          api(`firstread/google/analytics?startDate=${DEFAULT_GOOGLE_DATES.start}&endDate=${DEFAULT_GOOGLE_DATES.end}`).catch(() => null)
         ]);
 
         if (!mounted) return;
         if (infoRes) setSiteInfo(infoRes);
         if (auditRes) setAudit(auditRes);
         if (googleRes) setGoogleState(googleRes);
+        if (gscRes) setGscReport(gscRes);
+        if (ga4Res) setGa4Report(ga4Res);
         if (approvalsRes?.approvedIds) setApprovedIds(new Set(approvalsRes.approvedIds));
         if (Array.isArray(historyRes)) setReportHistory(historyRes);
         setLastSyncTime(new Date().toLocaleString('en-GB'));
@@ -322,6 +530,83 @@ export function FirstReadPanel({ initialSection = 'overview' }: { initialSection
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+  };
+
+  // Google API Data Fetching & Testing
+  const fetchGoogleReports = useCallback(async (start?: string, end?: string) => {
+    const s = start || googleStartDate;
+    const e = end || googleEndDate;
+    setLoadingGoogleReports(true);
+    try {
+      const [gscRes, ga4Res] = await Promise.all([
+        api(`firstread/google/search-console?startDate=${encodeURIComponent(s)}&endDate=${encodeURIComponent(e)}`).catch(err => ({
+          service: 'Google Search Console' as const,
+          status: 'error' as const,
+          authorized: false,
+          message: err.message,
+          property: '',
+          period: { startDate: s, endDate: e },
+          data: null
+        })),
+        api(`firstread/google/analytics?startDate=${encodeURIComponent(s)}&endDate=${encodeURIComponent(e)}`).catch(err => ({
+          service: 'Google Analytics 4' as const,
+          status: 'error' as const,
+          authorized: false,
+          message: err.message,
+          propertyId: null,
+          period: { startDate: s, endDate: e },
+          data: null
+        }))
+      ]);
+      setGscReport(gscRes);
+      setGa4Report(ga4Res);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to retrieve Google reports.');
+    } finally {
+      setLoadingGoogleReports(false);
+    }
+  }, [googleStartDate, googleEndDate]);
+
+  const handleDatePresetChange = (preset: '7d' | '28d' | '90d') => {
+    setDateRangePreset(preset);
+    const days = preset === '7d' ? 7 : preset === '28d' ? 28 : 90;
+    const range = computeGoogleDateRange(days);
+    setGoogleStartDate(range.start);
+    setGoogleEndDate(range.end);
+    void fetchGoogleReports(range.start, range.end);
+  };
+
+  const handleCustomDateSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setDateRangePreset('custom');
+    void fetchGoogleReports(googleStartDate, googleEndDate);
+  };
+
+  const handleTestGoogleConnection = async () => {
+    setTestingGoogle(true);
+    setError('');
+    setMessage('');
+    try {
+      const res = await api('firstread/google/test', {});
+      setTestResult(res);
+      const latestGoogle = await api('firstread/google').catch(() => null);
+      if (latestGoogle) setGoogleState(latestGoogle);
+      await fetchGoogleReports();
+      setMessage('Google connection test completed.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Google connection test failed.');
+    } finally {
+      setTestingGoogle(false);
+    }
+  };
+
+  const handleCopyEmail = (email: string) => {
+    if (!email) return;
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(email);
+    }
+    setCopiedEmail(true);
+    setTimeout(() => setCopiedEmail(false), 2000);
   };
 
   // Close snapshot modal on Escape
@@ -569,11 +854,19 @@ export function FirstReadPanel({ initialSection = 'overview' }: { initialSection
                     <small className="text-[var(--muted-light)]">Taxonomy entries count</small>
                   </div>
 
-                  <div className="p-3.5 rounded-lg border border-[var(--border)] bg-[var(--card)]">
+                  <div
+                    className="p-3.5 rounded-lg border border-[var(--border)] bg-[var(--card)] cursor-pointer hover:border-sky-500 transition-colors"
+                    onClick={() => setUserTab('google')}
+                    role="button"
+                    tabIndex={0}
+                    title="Click to view Google Search Console & GA4 integrations"
+                  >
                     <span className="text-[var(--muted)] block font-medium mb-1">Google Integration</span>
-                    <span className="badge badge-warning mt-1">
-                      Awaiting Authorization
-                    </span>
+                    {googleState?.configured ? (
+                      <span className="badge badge-success mt-1">Connected</span>
+                    ) : (
+                      <span className="badge badge-warning mt-1">Awaiting Authorization</span>
+                    )}
                     <small className="text-[var(--muted-light)] block mt-1">GSC &amp; GA4 interfaces ready</small>
                   </div>
                 </div>
@@ -1804,53 +2097,667 @@ export function FirstReadPanel({ initialSection = 'overview' }: { initialSection
           {/* SECTION 8: GOOGLE INTEGRATIONS */}
           {/* ========================================================= */}
           {activeSection === 'google' && (
+            <SectionErrorBoundary
+              fallbackTitle="Google Integrations Interrupted"
+              onRetry={() => void fetchGoogleReports()}
+            >
             <div className="space-y-6">
+              {/* Header Panel */}
               <div className="panel">
-                <span className="eyebrow">FIRST-PARTY TRAFFIC VERIFICATION</span>
-                <h3 className="text-base font-bold text-[var(--foreground)] mb-2">Google Search Console &amp; GA4</h3>
-                <p className="text-xs text-[var(--muted)] mb-4">
-                  Interfaces are configured for FirstRead. Metrics will stream once read-only property permissions are granted in Google Cloud.
-                </p>
+                <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+                  <div>
+                    <span className="eyebrow">FIRST-PARTY TRAFFIC &amp; SEARCH INTELLIGENCE</span>
+                    <h3 className="text-base font-bold text-[var(--foreground)] m-0">
+                      Google Search Console &amp; Google Analytics 4
+                    </h3>
+                    <p className="text-xs text-[var(--muted)] m-0 mt-1">
+                      Read-only server-side telemetry for impressions, clicks, CTR, keyword queries, user sessions, and landing page performance.
+                    </p>
+                  </div>
 
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleTestGoogleConnection}
+                      disabled={testingGoogle}
+                    >
+                      <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${testingGoogle ? 'animate-spin' : ''}`} />
+                      {testingGoogle ? 'Testing Access…' : 'Test Connections'}
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={() => void fetchGoogleReports()}
+                      disabled={loadingGoogleReports}
+                    >
+                      <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${loadingGoogleReports ? 'animate-spin' : ''}`} />
+                      Refresh Data
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Date-Range Selector Bar */}
+                <div className="p-3 rounded-lg border border-[var(--border)] bg-[var(--surface)] flex flex-wrap items-center justify-between gap-3 text-xs mb-4">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-[var(--muted)]" />
+                    <span className="font-semibold text-[var(--foreground)]">Reporting Period:</span>
+                    <div className="flex items-center gap-1">
+                      {(['7d', '28d', '90d'] as const).map(p => (
+                        <button
+                          key={p}
+                          type="button"
+                          className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
+                            dateRangePreset === p
+                              ? 'bg-[var(--primary)] text-[var(--primary-foreground)]'
+                              : 'bg-[var(--card)] border border-[var(--border)] text-[var(--muted)] hover:text-[var(--foreground)]'
+                          }`}
+                          onClick={() => handleDatePresetChange(p)}
+                        >
+                          {p === '7d' ? 'Last 7 Days' : p === '28d' ? 'Last 28 Days' : 'Last 90 Days'}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <form onSubmit={handleCustomDateSubmit} className="flex items-center gap-2">
+                    <label className="text-[11px] text-[var(--muted)]">Custom:</label>
+                    <input
+                      type="date"
+                      value={googleStartDate}
+                      onChange={e => setGoogleStartDate(e.target.value)}
+                      className="px-2 py-0.5 rounded border border-[var(--border)] bg-[var(--card)] text-xs text-[var(--foreground)] font-mono"
+                    />
+                    <span className="text-[var(--muted)]">to</span>
+                    <input
+                      type="date"
+                      value={googleEndDate}
+                      onChange={e => setGoogleEndDate(e.target.value)}
+                      className="px-2 py-0.5 rounded border border-[var(--border)] bg-[var(--card)] text-xs text-[var(--foreground)] font-mono"
+                    />
+                    <Button type="submit" size="sm" variant="outline" className="h-7 text-xs">
+                      Apply
+                    </Button>
+                  </form>
+                </div>
+
+                {/* Connection Status Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                  {/* Search Console Card */}
                   <div className="p-4 rounded-lg border border-[var(--border)] bg-[var(--surface)] space-y-2">
                     <div className="flex items-center justify-between">
-                      <strong className="text-[var(--foreground)] font-semibold">Google Search Console</strong>
-                      <span className="badge badge-warning">
-                        Awaiting Google Authorization
+                      <strong className="text-[var(--foreground)] font-semibold flex items-center gap-2">
+                        <Globe className="w-4 h-4 text-sky-500" /> Google Search Console
+                      </strong>
+                      <span
+                        className={`badge ${
+                          gscReport?.status === 'connected'
+                            ? 'badge-success'
+                            : gscReport?.status === 'pending_authorization'
+                            ? 'badge-warning'
+                            : gscReport?.status === 'error'
+                            ? 'badge-danger'
+                            : 'badge-secondary'
+                        }`}
+                      >
+                        {gscReport?.status === 'connected'
+                          ? 'Connected'
+                          : gscReport?.status === 'pending_authorization'
+                          ? 'Awaiting Authorization'
+                          : gscReport?.status === 'error'
+                          ? 'Permission Error'
+                          : 'Unconfigured'}
                       </span>
                     </div>
-                    <p className="text-[var(--muted)] m-0">
-                      Target Property: <code className="text-xs font-mono">sc-domain:firstread.co.uk</code>
-                    </p>
-                    <p className="text-[var(--muted-light)] text-[11px] m-0">
-                      {googleState?.searchConsole.message || 'Service account delegation pending in Search Console.'}
-                    </p>
+
+                    <div className="text-[var(--muted)] space-y-1">
+                      <p className="m-0">
+                        Property: <code className="text-xs font-mono">{googleState?.gscSiteUrl || 'sc-domain:firstread.co.uk'}</code>
+                      </p>
+                      <p className="text-[11px] text-[var(--muted-light)] m-0">
+                        {testResult?.searchConsole?.message || gscReport?.message || googleState?.searchConsole?.message || 'Pending authorization check.'}
+                      </p>
+                    </div>
                   </div>
 
+                  {/* GA4 Card */}
                   <div className="p-4 rounded-lg border border-[var(--border)] bg-[var(--surface)] space-y-2">
                     <div className="flex items-center justify-between">
-                      <strong className="text-[var(--foreground)] font-semibold">Google Analytics 4</strong>
-                      <span className="badge badge-warning">
-                        Awaiting Google Authorization
+                      <strong className="text-[var(--foreground)] font-semibold flex items-center gap-2">
+                        <BarChart3 className="w-4 h-4 text-emerald-500" /> Google Analytics 4
+                      </strong>
+                      <span
+                        className={`badge ${
+                          ga4Report?.status === 'connected'
+                            ? 'badge-success'
+                            : ga4Report?.status === 'pending_authorization'
+                            ? 'badge-warning'
+                            : ga4Report?.status === 'error'
+                            ? 'badge-danger'
+                            : 'badge-secondary'
+                        }`}
+                      >
+                        {ga4Report?.status === 'connected'
+                          ? 'Connected'
+                          : ga4Report?.status === 'pending_authorization'
+                          ? 'Awaiting Authorization'
+                          : ga4Report?.status === 'error'
+                          ? 'Permission Error'
+                          : 'Unconfigured'}
                       </span>
                     </div>
-                    <p className="text-[var(--muted)] m-0">
-                      Target Property ID: <code className="text-xs font-mono">FIRSTREAD_GA4_PROPERTY_ID</code>
-                    </p>
-                    <p className="text-[var(--muted-light)] text-[11px] m-0">
-                      {googleState?.analytics4.message || 'Viewer permissions pending in GA4 property.'}
-                    </p>
+
+                    <div className="text-[var(--muted)] space-y-1">
+                      <p className="m-0">
+                        Property ID: <code className="text-xs font-mono">{googleState?.ga4PropertyId || 'Pending configuration'}</code>
+                      </p>
+                      <p className="text-[11px] text-[var(--muted-light)] m-0">
+                        {testResult?.analytics4?.message || ga4Report?.message || googleState?.analytics4?.message || 'Pending authorization check.'}
+                      </p>
+                    </div>
                   </div>
                 </div>
 
-                <div className="mt-4 p-3.5 rounded-lg border border-[var(--border)] bg-[var(--card)] text-xs text-[var(--muted)] space-y-1">
-                  <strong className="text-[var(--foreground)] block">Truthful Reporting Notice:</strong>
-                  <p className="m-0">• Zero metrics, ranks, clicks, or impressions are fabricated.</p>
-                  <p className="m-0">• Data streams only after explicit Google authorization is verified.</p>
+                {/* Connection Test Banner (if recently tested) */}
+                {testResult && (testResult.searchConsole || testResult.analytics4) && (
+                  <div className="mt-4 p-3.5 rounded-lg border border-sky-300 dark:border-sky-800 bg-sky-50 dark:bg-sky-950/20 text-xs text-sky-900 dark:text-sky-200">
+                    <div className="flex items-center justify-between font-semibold mb-1">
+                      <span>
+                        Connection Test Result (
+                        {testResult.timestamp
+                          ? (() => {
+                              try {
+                                const d = new Date(testResult.timestamp);
+                                return isNaN(d.getTime()) ? 'Just now' : d.toLocaleTimeString('en-GB');
+                              } catch {
+                                return 'Just now';
+                              }
+                            })()
+                          : 'Just now'}
+                        )
+                      </span>
+                    </div>
+                    <ul className="list-disc list-inside space-y-0.5 m-0 text-[11px]">
+                      {testResult.searchConsole?.message && (
+                        <li>
+                          <strong>Search Console:</strong> {testResult.searchConsole.message}
+                        </li>
+                      )}
+                      {testResult.analytics4?.message && (
+                        <li>
+                          <strong>Analytics 4:</strong> {testResult.analytics4.message}
+                        </li>
+                      )}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Client Authorization Step-by-Step Box (when pending authorization) */}
+                {(gscReport?.status === 'pending_authorization' || ga4Report?.status === 'pending_authorization' || !googleState?.configured) && (
+                  <div className="mt-4 p-4 rounded-lg border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/20 text-xs text-amber-950 dark:text-amber-200 space-y-3">
+                    <div className="flex items-center gap-2">
+                      <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+                      <strong className="text-sm font-semibold">Awaiting Client Authorization</strong>
+                    </div>
+
+                    <p className="m-0 leading-relaxed">
+                      The server-side service account is authenticated, but viewer permissions have not yet been granted to FirstRead&apos;s properties in Google Search Console and GA4.
+                    </p>
+
+                    {googleState?.serviceAccountEmail && (
+                      <div className="flex flex-wrap items-center gap-2 p-2 rounded bg-amber-100/70 dark:bg-amber-900/40 border border-amber-300 dark:border-amber-700">
+                        <span className="font-medium text-[11px]">Service Account to Authorize:</span>
+                        <code className="px-2 py-0.5 rounded bg-white dark:bg-black font-mono text-[11px] font-bold select-all">
+                          {googleState.serviceAccountEmail}
+                        </code>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-6 text-[10px] px-2 ml-auto"
+                          onClick={() => handleCopyEmail(googleState.serviceAccountEmail || '')}
+                        >
+                          {copiedEmail ? <Check className="w-3 h-3 mr-1 text-emerald-600" /> : <Copy className="w-3 h-3 mr-1" />}
+                          {copiedEmail ? 'Copied!' : 'Copy Email'}
+                        </Button>
+                      </div>
+                    )}
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-[11px]">
+                      <div className="p-3 rounded border border-amber-200 dark:border-amber-800/60 bg-white/50 dark:bg-black/20 space-y-1">
+                        <strong className="block text-[var(--foreground)] font-semibold">1. Search Console Setup:</strong>
+                        <p className="m-0">1. Go to Google Search Console for <code className="font-mono">{googleState?.gscSiteUrl || 'sc-domain:firstread.co.uk'}</code>.</p>
+                        <p className="m-0">2. Navigate to <strong>Settings</strong> &rarr; <strong>Users and permissions</strong>.</p>
+                        <p className="m-0">3. Click <strong>Add User</strong>, paste the service account email, and set Permission to <strong>Restricted</strong> or <strong>Full</strong>.</p>
+                      </div>
+
+                      <div className="p-3 rounded border border-amber-200 dark:border-amber-800/60 bg-white/50 dark:bg-black/20 space-y-1">
+                        <strong className="block text-[var(--foreground)] font-semibold">2. GA4 Setup:</strong>
+                        <p className="m-0">1. Go to Google Analytics &rarr; <strong>Admin</strong>.</p>
+                        <p className="m-0">2. Select Property ID <code className="font-mono">{googleState?.ga4PropertyId || 'FIRSTREAD_GA4_PROPERTY_ID'}</code> &rarr; <strong>Property Access Management</strong>.</p>
+                        <p className="m-0">3. Click <strong>+</strong> &rarr; <strong>Add users</strong>, paste service account email, and select role <strong>Viewer</strong>.</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between text-[11px] pt-1">
+                      <span className="text-amber-800 dark:text-amber-300 font-medium">
+                        Once added, click &ldquo;Test Connections&rdquo; above to immediately start streaming live data.
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Data Section Loading Indicator */}
+              {loadingGoogleReports && (
+                <div className="panel space-y-4">
+                  <div className="skeleton h-8 w-48" />
+                  <div className="skeleton h-32 w-full" />
                 </div>
+              )}
+
+              {/* SECTION: Google Search Console Reports */}
+              {!loadingGoogleReports && (
+                <div className="panel space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="eyebrow">ORGANIC SEARCH METRICS</span>
+                      <h4 className="text-sm font-bold text-[var(--foreground)] m-0">Google Search Console Performance</h4>
+                    </div>
+                    {gscReport?.data && (
+                      <span className="badge badge-success">
+                        <CheckCircle className="w-3 h-3 mr-1" /> Real Google Telemetry
+                      </span>
+                    )}
+                  </div>
+
+                  {gscReport?.status === 'connected' && gscReport.data ? (
+                    <div className="space-y-4">
+                      {/* KPI Cards */}
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                        <div className="p-3.5 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
+                          <span className="text-[var(--muted)] flex items-center gap-1.5 mb-1 font-medium">
+                            <MousePointer className="w-3.5 h-3.5 text-sky-500" /> Total Clicks
+                          </span>
+                          <strong className="text-xl font-bold text-[var(--foreground)] block">
+                            {Number(gscReport.data.summary?.clicks ?? 0).toLocaleString('en-GB')}
+                          </strong>
+                          <small className="text-[var(--muted-light)]">Organic Google search clicks</small>
+                        </div>
+
+                        <div className="p-3.5 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
+                          <span className="text-[var(--muted)] flex items-center gap-1.5 mb-1 font-medium">
+                            <Eye className="w-3.5 h-3.5 text-indigo-500" /> Impressions
+                          </span>
+                          <strong className="text-xl font-bold text-[var(--foreground)] block">
+                            {Number(gscReport.data.summary?.impressions ?? 0).toLocaleString('en-GB')}
+                          </strong>
+                          <small className="text-[var(--muted-light)]">Total search appearances</small>
+                        </div>
+
+                        <div className="p-3.5 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
+                          <span className="text-[var(--muted)] flex items-center gap-1.5 mb-1 font-medium">
+                            <Percent className="w-3.5 h-3.5 text-emerald-500" /> Average CTR
+                          </span>
+                          <strong className="text-xl font-bold text-[var(--foreground)] block">
+                            {((gscReport.data.summary?.ctr ?? 0) * 100).toFixed(2)}%
+                          </strong>
+                          <small className="text-[var(--muted-light)]">Click-through rate</small>
+                        </div>
+
+                        <div className="p-3.5 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
+                          <span className="text-[var(--muted)] flex items-center gap-1.5 mb-1 font-medium">
+                            <TrendingUp className="w-3.5 h-3.5 text-amber-500" /> Avg Position
+                          </span>
+                          <strong className="text-xl font-bold text-[var(--foreground)] block">
+                            {Number(gscReport.data.summary?.position ?? 0).toFixed(1)}
+                          </strong>
+                          <small className="text-[var(--muted-light)]">Average ranking across queries</small>
+                        </div>
+                      </div>
+
+                      {/* Daily Trend Chart */}
+                      {Array.isArray(gscReport.data.dailyTrend) && gscReport.data.dailyTrend.length > 0 && (
+                        <div className="p-4 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
+                          <GoogleTrendChart
+                            points={gscReport.data.dailyTrend.map(d => ({
+                              date: d.date || '',
+                              val1: Number(d.clicks) || 0,
+                              val2: Number(d.impressions) || 0
+                            }))}
+                            label1="Clicks"
+                            label2="Impressions"
+                            color1="#0284c7"
+                            color2="#8b5cf6"
+                          />
+                        </div>
+                      )}
+
+                      {/* Tables Sub-Navigation */}
+                      <div className="space-y-3">
+                        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border)] pb-2">
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
+                                gscActiveTab === 'queries'
+                                  ? 'bg-[var(--primary)] text-[var(--primary-foreground)]'
+                                  : 'text-[var(--muted)] hover:text-[var(--foreground)]'
+                              }`}
+                              onClick={() => setGscActiveTab('queries')}
+                            >
+                              Top Search Queries ({(gscReport.data.topQueries || []).length})
+                            </button>
+                            <button
+                              type="button"
+                              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
+                                gscActiveTab === 'pages'
+                                  ? 'bg-[var(--primary)] text-[var(--primary-foreground)]'
+                                  : 'text-[var(--muted)] hover:text-[var(--foreground)]'
+                              }`}
+                              onClick={() => setGscActiveTab('pages')}
+                            >
+                              Top Pages ({(gscReport.data.topPages || []).length})
+                            </button>
+                          </div>
+
+                          <div className="relative">
+                            <Search className="w-3.5 h-3.5 text-[var(--muted)] absolute left-2.5 top-1/2 -translate-y-1/2" />
+                            <input
+                              type="text"
+                              value={googleSearchFilter}
+                              onChange={e => setGoogleSearchFilter(e.target.value)}
+                              placeholder="Filter rows…"
+                              className="pl-8 pr-3 py-1 text-xs rounded-md border border-[var(--border)] bg-[var(--card)] text-[var(--foreground)] w-48"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Top Queries Table */}
+                        {gscActiveTab === 'queries' && (
+                          <div className="overflow-x-auto rounded-lg border border-[var(--border)]">
+                            <table className="w-full text-xs text-left">
+                              <thead className="bg-[var(--surface)] border-b border-[var(--border)] text-[var(--muted)] font-semibold">
+                                <tr>
+                                  <th className="py-2.5 px-3 w-10">#</th>
+                                  <th className="py-2.5 px-3">Search Query</th>
+                                  <th className="py-2.5 px-3 text-right">Clicks</th>
+                                  <th className="py-2.5 px-3 text-right">Impressions</th>
+                                  <th className="py-2.5 px-3 text-right">CTR</th>
+                                  <th className="py-2.5 px-3 text-right">Avg Position</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-[var(--border)]">
+                                {(gscReport.data.topQueries || [])
+                                  .filter(q => !googleSearchFilter || (q.query || '').toLowerCase().includes(googleSearchFilter.toLowerCase()))
+                                  .map((row, idx) => (
+                                    <tr key={idx} className="hover:bg-[var(--surface)] transition-colors">
+                                      <td className="py-2 px-3 text-[var(--muted)]">{idx + 1}</td>
+                                      <td className="py-2 px-3 font-medium text-[var(--foreground)]">{row.query}</td>
+                                      <td className="py-2 px-3 text-right font-bold text-sky-600 dark:text-sky-400">
+                                        {Number(row.clicks || 0).toLocaleString('en-GB')}
+                                      </td>
+                                      <td className="py-2 px-3 text-right text-[var(--muted)]">
+                                        {Number(row.impressions || 0).toLocaleString('en-GB')}
+                                      </td>
+                                      <td className="py-2 px-3 text-right font-mono">
+                                        {(Number(row.ctr || 0) * 100).toFixed(2)}%
+                                      </td>
+                                      <td className="py-2 px-3 text-right">
+                                        <span
+                                          className={`badge ${
+                                            Number(row.position || 0) <= 3
+                                              ? 'badge-success'
+                                              : Number(row.position || 0) <= 10
+                                              ? 'badge-secondary'
+                                              : 'badge-warning'
+                                          }`}
+                                        >
+                                          {Number(row.position || 0).toFixed(1)}
+                                        </span>
+                                      </td>
+                                    </tr>
+                                  ))}
+                                {(gscReport.data.topQueries || []).length === 0 && (
+                                  <tr>
+                                    <td colSpan={6} className="py-6 text-center text-[var(--muted)]">
+                                      No query records available for selected period.
+                                    </td>
+                                  </tr>
+                                )}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+
+                        {/* Top Pages Table */}
+                        {gscActiveTab === 'pages' && (
+                          <div className="overflow-x-auto rounded-lg border border-[var(--border)]">
+                            <table className="w-full text-xs text-left">
+                              <thead className="bg-[var(--surface)] border-b border-[var(--border)] text-[var(--muted)] font-semibold">
+                                <tr>
+                                  <th className="py-2.5 px-3 w-10">#</th>
+                                  <th className="py-2.5 px-3">Indexed Page URL</th>
+                                  <th className="py-2.5 px-3 text-right">Clicks</th>
+                                  <th className="py-2.5 px-3 text-right">Impressions</th>
+                                  <th className="py-2.5 px-3 text-right">CTR</th>
+                                  <th className="py-2.5 px-3 text-right">Avg Position</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-[var(--border)]">
+                                {(gscReport.data.topPages || [])
+                                  .filter(p => !googleSearchFilter || (p.page || '').toLowerCase().includes(googleSearchFilter.toLowerCase()))
+                                  .map((row, idx) => (
+                                    <tr key={idx} className="hover:bg-[var(--surface)] transition-colors">
+                                      <td className="py-2 px-3 text-[var(--muted)]">{idx + 1}</td>
+                                      <td className="py-2 px-3 font-mono text-sky-600 dark:text-sky-400 break-all">
+                                        <a href={row.page} target="_blank" rel="noopener noreferrer" className="hover:underline flex items-center gap-1">
+                                          {row.page} <ExternalLink className="w-3 h-3 shrink-0" />
+                                        </a>
+                                      </td>
+                                      <td className="py-2 px-3 text-right font-bold text-sky-600 dark:text-sky-400">
+                                        {Number(row.clicks || 0).toLocaleString('en-GB')}
+                                      </td>
+                                      <td className="py-2 px-3 text-right text-[var(--muted)]">
+                                        {Number(row.impressions || 0).toLocaleString('en-GB')}
+                                      </td>
+                                      <td className="py-2 px-3 text-right font-mono">
+                                        {(Number(row.ctr || 0) * 100).toFixed(2)}%
+                                      </td>
+                                      <td className="py-2 px-3 text-right">
+                                        <span
+                                          className={`badge ${
+                                            Number(row.position || 0) <= 3
+                                              ? 'badge-success'
+                                              : Number(row.position || 0) <= 10
+                                              ? 'badge-secondary'
+                                              : 'badge-warning'
+                                          }`}
+                                        >
+                                          {Number(row.position || 0).toFixed(1)}
+                                        </span>
+                                      </td>
+                                    </tr>
+                                  ))}
+                                {(gscReport.data.topPages || []).length === 0 && (
+                                  <tr>
+                                    <td colSpan={6} className="py-6 text-center text-[var(--muted)]">
+                                      No page records available for selected period.
+                                    </td>
+                                  </tr>
+                                )}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="p-6 rounded-lg border border-dashed border-[var(--border)] bg-[var(--surface)] text-center space-y-2">
+                      <Globe className="w-8 h-8 text-[var(--muted)] mx-auto" />
+                      <h5 className="text-sm font-semibold text-[var(--foreground)] m-0">
+                        Search Console Data Unavailable
+                      </h5>
+                      <p className="text-xs text-[var(--muted)] max-w-md mx-auto m-0">
+                        {gscReport?.message || 'Awaiting client authorization. Zero metrics are fabricated until viewer access is granted in Google Search Console.'}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* SECTION: Google Analytics 4 Reports */}
+              {!loadingGoogleReports && (
+                <div className="panel space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="eyebrow">AUDIENCE ENGAGEMENT TELEMETRY</span>
+                      <h4 className="text-sm font-bold text-[var(--foreground)] m-0">Google Analytics 4 Performance</h4>
+                    </div>
+                    {ga4Report?.data && (
+                      <span className="badge badge-success">
+                        <CheckCircle className="w-3 h-3 mr-1" /> Real GA4 Telemetry
+                      </span>
+                    )}
+                  </div>
+
+                  {ga4Report?.status === 'connected' && ga4Report.data ? (
+                    <div className="space-y-4">
+                      {/* KPI Cards */}
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                        <div className="p-3.5 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
+                          <span className="text-[var(--muted)] flex items-center gap-1.5 mb-1 font-medium">
+                            <Globe className="w-3.5 h-3.5 text-emerald-500" /> Total Sessions
+                          </span>
+                          <strong className="text-xl font-bold text-[var(--foreground)] block">
+                            {Number(ga4Report.data.summary?.sessions ?? 0).toLocaleString('en-GB')}
+                          </strong>
+                          <small className="text-[var(--muted-light)]">Total user sessions</small>
+                        </div>
+
+                        <div className="p-3.5 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
+                          <span className="text-[var(--muted)] flex items-center gap-1.5 mb-1 font-medium">
+                            <CheckCircle className="w-3.5 h-3.5 text-sky-500" /> Engaged Sessions
+                          </span>
+                          <strong className="text-xl font-bold text-[var(--foreground)] block">
+                            {Number(ga4Report.data.summary?.engagedSessions ?? 0).toLocaleString('en-GB')}
+                          </strong>
+                          <small className="text-[var(--muted-light)]">&gt;10s duration or 2+ views</small>
+                        </div>
+
+                        <div className="p-3.5 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
+                          <span className="text-[var(--muted)] flex items-center gap-1.5 mb-1 font-medium">
+                            <Percent className="w-3.5 h-3.5 text-indigo-500" /> Engagement Rate
+                          </span>
+                          <strong className="text-xl font-bold text-[var(--foreground)] block">
+                            {((ga4Report.data.summary?.engagementRate ?? 0) * 100).toFixed(1)}%
+                          </strong>
+                          <small className="text-[var(--muted-light)]">Engaged session ratio</small>
+                        </div>
+
+                        <div className="p-3.5 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
+                          <span className="text-[var(--muted)] flex items-center gap-1.5 mb-1 font-medium">
+                            <Sparkles className="w-3.5 h-3.5 text-amber-500" /> Conversions
+                          </span>
+                          <strong className="text-xl font-bold text-[var(--foreground)] block">
+                            {Number(ga4Report.data.summary?.conversions ?? 0).toLocaleString('en-GB')}
+                          </strong>
+                          <small className="text-[var(--muted-light)]">Key events / conversions</small>
+                        </div>
+                      </div>
+
+                      {/* Daily Sessions Chart */}
+                      {Array.isArray(ga4Report.data.dailyTrend) && ga4Report.data.dailyTrend.length > 0 && (
+                        <div className="p-4 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
+                          <GoogleTrendChart
+                            points={ga4Report.data.dailyTrend.map(d => ({
+                              date: d.date || '',
+                              val1: Number(d.sessions) || 0,
+                              val2: Number(d.engagedSessions) || 0
+                            }))}
+                            label1="Sessions"
+                            label2="Engaged Sessions"
+                            color1="#10b981"
+                            color2="#3b82f6"
+                          />
+                        </div>
+                      )}
+
+                      {/* Top Landing Pages Table */}
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <h5 className="text-xs font-bold text-[var(--foreground)] m-0">
+                            Top Landing Pages ({(ga4Report.data.landingPages || []).length})
+                          </h5>
+                        </div>
+
+                        <div className="overflow-x-auto rounded-lg border border-[var(--border)]">
+                          <table className="w-full text-xs text-left">
+                            <thead className="bg-[var(--surface)] border-b border-[var(--border)] text-[var(--muted)] font-semibold">
+                              <tr>
+                                <th className="py-2.5 px-3 w-10">#</th>
+                                <th className="py-2.5 px-3">Landing Page</th>
+                                <th className="py-2.5 px-3 text-right">Sessions</th>
+                                <th className="py-2.5 px-3 text-right">Engaged Sessions</th>
+                                <th className="py-2.5 px-3 text-right">Engagement Rate</th>
+                                <th className="py-2.5 px-3 text-right">Conversions</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-[var(--border)]">
+                              {(ga4Report.data.landingPages || []).map((row, idx) => (
+                                <tr key={idx} className="hover:bg-[var(--surface)] transition-colors">
+                                  <td className="py-2 px-3 text-[var(--muted)]">{idx + 1}</td>
+                                  <td className="py-2 px-3 font-mono text-[var(--foreground)]">{row.landingPage}</td>
+                                  <td className="py-2 px-3 text-right font-bold text-emerald-600 dark:text-emerald-400">
+                                    {Number(row.sessions || 0).toLocaleString('en-GB')}
+                                  </td>
+                                  <td className="py-2 px-3 text-right text-[var(--muted)]">
+                                    {Number(row.engagedSessions || 0).toLocaleString('en-GB')}
+                                  </td>
+                                  <td className="py-2 px-3 text-right font-mono">
+                                    {(Number(row.engagementRate || 0) * 100).toFixed(1)}%
+                                  </td>
+                                  <td className="py-2 px-3 text-right font-mono">
+                                    {Number(row.conversions || 0).toLocaleString('en-GB')}
+                                  </td>
+                                </tr>
+                              ))}
+                              {(ga4Report.data.landingPages || []).length === 0 && (
+                                <tr>
+                                  <td colSpan={6} className="py-6 text-center text-[var(--muted)]">
+                                    No landing page records recorded for selected period.
+                                  </td>
+                                </tr>
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="p-6 rounded-lg border border-dashed border-[var(--border)] bg-[var(--surface)] text-center space-y-2">
+                      <BarChart3 className="w-8 h-8 text-[var(--muted)] mx-auto" />
+                      <h5 className="text-sm font-semibold text-[var(--foreground)] m-0">
+                        GA4 Analytics Data Unavailable
+                      </h5>
+                      <p className="text-xs text-[var(--muted)] max-w-md mx-auto m-0">
+                        {ga4Report?.message || 'Awaiting client authorization. Zero metrics are fabricated until viewer access is granted in Google Analytics 4.'}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Truthful Reporting Integrity Card */}
+              <div className="p-4 rounded-lg border border-[var(--border)] bg-[var(--card)] text-xs text-[var(--muted)] space-y-1">
+                <div className="flex items-center gap-2 font-semibold text-[var(--foreground)]">
+                  <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                  Truthful First-Party Telemetry Guarantee
+                </div>
+                <p className="m-0">• Zero metrics, ranks, clicks, or impressions are fabricated or simulated.</p>
+                <p className="m-0">• FirstRead connects exclusively via official Google Search Console and GA4 Data APIs.</p>
+                <p className="m-0">• Credentials are stored strictly server-side and never exposed in client bundles or network logs.</p>
               </div>
             </div>
+            </SectionErrorBoundary>
           )}
 
           {/* ========================================================= */}
