@@ -3,30 +3,22 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  LayoutDashboard,
-  Target,
-  FileEdit,
-  BookOpen,
-  ShieldCheck,
+  Zap,
   History,
-  Settings
+  SlidersHorizontal
 } from 'lucide-react';
 
 const links = [
-  ['', 'Overview & Agents', LayoutDashboard],
-  ['strategy', 'SEO Strategy', Target],
-  ['content', 'Content & QA', FileEdit],
-  ['posts', 'WordPress Articles', BookOpen],
-  ['technical', 'Technical Health', ShieldCheck],
-  ['history', 'Audit History', History],
-  ['settings', 'Settings & Security', Settings]
+  ['', 'Autonomous Engine', Zap],
+  ['history', 'Cron Job History', History],
+  ['google', 'Google Integrations', SlidersHorizontal]
 ] as const;
 
 export function AdminNav() {
   const path = usePathname();
   return (
     <aside className="admin-nav">
-      <span className="eyebrow">FIRSTREAD AI SEO</span>
+      <span className="eyebrow">AUTONOMOUS SEO</span>
       {links.map(([slug, label, Icon]) => {
         const href = '/admin' + (slug ? '/' + slug : '');
         const isActive = path === href;

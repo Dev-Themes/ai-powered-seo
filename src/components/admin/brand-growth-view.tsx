@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Fragment } from 'react';
 import {
   TrendingUp,
   Play,
@@ -17,10 +17,24 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   Activity,
-  Layers
+  Layers,
+  Download,
+  GitBranch
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { BrandGrowthEngineState } from '@/lib/brand/types';
+
+function downloadJson(data: unknown, filename: string) {
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
 
 interface BrandGrowthViewProps {
   brandState: BrandGrowthEngineState | null;
@@ -184,10 +198,10 @@ export function BrandGrowthView({
         </div>
 
         {/* Schedule & Metadata Bar */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-3 border-t border-[var(--border)] text-xs text-[var(--muted)]">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 pt-3 border-t border-[var(--border)] text-xs text-[var(--muted)]">
           <div className="flex items-center gap-1.5">
             <Clock className="w-3.5 h-3.5 text-sky-500" />
-            <span>Last Autonomous Run:</span>
+            <span>Last Run:</span>
             <strong className="text-[var(--foreground)] font-medium">
               {brandState?.lastRunAt ? new Date(brandState.lastRunAt).toLocaleString('en-GB') : 'Pending first run'}
             </strong>
@@ -195,20 +209,34 @@ export function BrandGrowthView({
 
           <div className="flex items-center gap-1.5">
             <Calendar className="w-3.5 h-3.5 text-emerald-500" />
-            <span>Next Scheduled Run:</span>
+            <span>Next Cron:</span>
             <strong className="text-[var(--foreground)] font-medium">
               {isPaused
                 ? 'Suspended (Paused)'
                 : brandState?.nextScheduledRunAt
                 ? new Date(brandState.nextScheduledRunAt).toLocaleString('en-GB')
-                : 'In ~24 hours'}
+                : 'Daily 06:00 UTC'}
             </strong>
           </div>
 
           <div className="flex items-center gap-1.5">
             <ShieldCheck className="w-3.5 h-3.5 text-indigo-500" />
-            <span>Execution Model:</span>
-            <span className="badge badge-success text-[10px] py-0">Permitted Actions Only</span>
+            <span>Guardrail:</span>
+            <span className="badge badge-success text-[10px] py-0">Zero Content Edits</span>
+          </div>
+
+          <div className="flex items-center gap-1.5 truncate">
+            <GitBranch className="w-3.5 h-3.5 text-purple-500 shrink-0" />
+            <span>Branch:</span>
+            {brandState?.storageStatus?.durable ? (
+              <span className="text-[11px] font-mono text-purple-600 dark:text-purple-400 font-semibold truncate" title={`Committed to ${brandState.storageStatus.branch || 'monitoring-history'} @ ${brandState.storageStatus.sha}`}>
+                {brandState.storageStatus.branch || 'monitoring-history'} ({brandState.storageStatus.sha?.slice(0, 7)})
+              </span>
+            ) : (
+              <span className="text-[11px] font-mono text-amber-600 dark:text-amber-400 truncate" title={brandState?.storageStatus?.error || 'Local cache (/tmp)'}>
+                {brandState?.storageStatus?.provider === 'local_tmp' ? 'Local (/tmp)' : 'Syncing...'}
+              </span>
+            )}
           </div>
         </div>
       </div>
@@ -745,41 +773,90 @@ export function BrandGrowthView({
                 {history.map(exec => {
                   const isExpanded = expandedExecId === exec.id;
                   return (
-                    <tr key={exec.id} className="hover:bg-[var(--surface)] transition-colors">
-                      <td className="py-2 px-3 font-mono text-[var(--muted)]">
-                        {new Date(exec.startedAt).toLocaleString('en-GB')}
-                      </td>
-                      <td className="py-2 px-3 font-mono">{exec.durationMs}ms</td>
-                      <td className="py-2 px-3">
-                        <span
-                          className={`badge text-[10px] ${
-                            exec.status === 'success'
-                              ? 'badge-success'
-                              : exec.status === 'warning'
-                              ? 'badge-warning'
-                              : 'badge-error'
-                          }`}
-                        >
-                          {exec.status}
-                        </span>
-                      </td>
-                      <td className="py-2 px-3 text-right font-bold text-emerald-600 dark:text-emerald-400">
-                        {exec.brandClicks}
-                      </td>
-                      <td className="py-2 px-3 text-right font-mono">{exec.brandImpressions}</td>
-                      <td className="py-2 px-3">
-                        <button
-                          type="button"
-                          onClick={() => setExpandedExecId(isExpanded ? null : exec.id)}
-                          className="text-sky-600 dark:text-sky-400 hover:underline font-semibold flex items-center gap-1"
-                        >
-                          {exec.actionsExecuted.length} action(s)
-                        </button>
-                      </td>
-                      <td className="py-2 px-3 text-[var(--muted)] truncate max-w-[260px]" title={exec.summary}>
-                        {exec.summary}
-                      </td>
-                    </tr>
+                    <Fragment key={exec.id}>
+                      <tr className="hover:bg-[var(--surface)] transition-colors">
+                        <td className="py-2 px-3 font-mono text-[var(--muted)]">
+                          {new Date(exec.startedAt).toLocaleString('en-GB')}
+                        </td>
+                        <td className="py-2 px-3 font-mono">{exec.durationMs}ms</td>
+                        <td className="py-2 px-3">
+                          <span
+                            className={`badge text-[10px] ${
+                              exec.status === 'success'
+                                ? 'badge-success'
+                                : exec.status === 'warning'
+                                ? 'badge-warning'
+                                : 'badge-error'
+                            }`}
+                          >
+                            {exec.status}
+                          </span>
+                        </td>
+                        <td className="py-2 px-3 text-right font-bold text-emerald-600 dark:text-emerald-400">
+                          {exec.brandClicks}
+                        </td>
+                        <td className="py-2 px-3 text-right font-mono">{exec.brandImpressions}</td>
+                        <td className="py-2 px-3">
+                          <button
+                            type="button"
+                            onClick={() => setExpandedExecId(isExpanded ? null : exec.id)}
+                            className="text-sky-600 dark:text-sky-400 hover:underline font-semibold flex items-center gap-1"
+                          >
+                            {exec.actionsExecuted.length} action(s) {isExpanded ? '▲' : '▼'}
+                          </button>
+                        </td>
+                        <td className="py-2 px-3 text-[var(--muted)] truncate max-w-[260px]" title={exec.summary}>
+                          {exec.summary}
+                        </td>
+                      </tr>
+                      {isExpanded && (
+                        <tr className="bg-[var(--surface)]/60">
+                          <td colSpan={7} className="p-4 border-t border-b border-[var(--border)]">
+                            <div className="space-y-3">
+                              <div className="flex flex-wrap items-center justify-between gap-2">
+                                <h5 className="text-xs font-bold text-[var(--foreground)] m-0">
+                                  Actions Executed in this Cycle ({exec.actionsExecuted.length})
+                                </h5>
+                                <div className="flex items-center gap-2">
+                                  {exec.storageStatus && (
+                                    <span className="text-[10px] font-mono text-[var(--muted)]">
+                                      Storage: {exec.storageStatus.branch || 'monitoring-history'} {exec.storageStatus.sha ? `[SHA: ${exec.storageStatus.sha.slice(0, 7)}]` : ''}
+                                    </span>
+                                  )}
+                                  <button
+                                    type="button"
+                                    onClick={() => downloadJson(exec, `firstread-cycle-${exec.id}.json`)}
+                                    className="text-[10px] text-sky-600 dark:text-sky-400 hover:underline font-semibold flex items-center gap-1"
+                                  >
+                                    <Download className="w-3 h-3" /> Export Cycle JSON
+                                  </button>
+                                </div>
+                              </div>
+                              <div className="space-y-1.5">
+                                {exec.actionsExecuted.map(act => (
+                                  <div key={act.id} className="p-2.5 rounded bg-[var(--card)] border border-[var(--border)] text-xs flex flex-col gap-1">
+                                    <div className="flex flex-wrap items-center justify-between gap-2">
+                                      <div className="flex items-center gap-2">
+                                        <span className={`badge text-[9px] py-0 ${act.status === 'success' ? 'badge-success' : act.status === 'skipped' ? 'badge-warning' : 'badge-error'}`}>
+                                          {act.status}
+                                        </span>
+                                        <strong className="font-mono text-[var(--foreground)]">{act.actionType}</strong>
+                                        <span className="text-[var(--muted)] truncate max-w-xs">{act.target}</span>
+                                      </div>
+                                      <span className="text-[10px] text-[var(--muted)] font-mono">{new Date(act.timestamp).toLocaleTimeString('en-GB')}</span>
+                                    </div>
+                                    <p className="text-[11px] text-[var(--muted)] m-0">{act.details}</p>
+                                    {act.error && (
+                                      <p className="text-[11px] text-rose-500 m-0 font-mono">{act.error}</p>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </Fragment>
                   );
                 })}
               </tbody>

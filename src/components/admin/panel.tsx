@@ -8,18 +8,10 @@ import { Button } from '@/components/ui/button';
 import { FirstReadPanel } from './firstread-panel';
 
 const titles: Record<string, string> = {
-  overview: 'Autonomous AI SEO engine & site vitals.',
-  strategy: 'Keyword opportunities, cannibalisation checks & internal linking graph.',
-  content: 'Content production, headline refinement & automated QA gates.',
-  posts: 'Browse live published articles from FirstRead WordPress.',
-  technical: 'Robots.txt, XML Sitemaps, protocols & schema validation.',
-  history: 'Historical audit runs & monitoring snapshots.',
-  settings: 'Autonomous platform configuration & security controls.',
-  // Backward compatibility aliases
-  homepage: 'Homepage SEO & semantic heading hierarchy.',
-  articles: 'Article-level SEO audit & content metrics.',
-  recommendations: 'AI-assisted SEO proposals & content opportunities.',
-  google: 'Google Search Console & GA4 readiness status.'
+  overview: 'Autonomous AI SEO engine focused on brand keyword "firstread".',
+  brand: 'Autonomous AI SEO engine focused on brand keyword "firstread".',
+  history: 'Autonomous cron execution history & permanent snapshot reports.',
+  google: 'Google Search Console, GA4 & Web Search Indexing API readiness.'
 };
 
 export function AdminPanel({ section }: { section: string }) {

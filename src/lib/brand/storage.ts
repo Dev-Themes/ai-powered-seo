@@ -26,8 +26,10 @@ export interface CachedMeta {
  * Returns GitHub storage configuration strictly enforcing the dedicated monitoring-history branch
  */
 export function getGitHubConfig(): GitHubConfig {
-  const repository = process.env.GITHUB_REPOSITORY ? process.env.GITHUB_REPOSITORY.trim() : null;
-  const token = process.env.GITHUB_TOKEN ? process.env.GITHUB_TOKEN.trim() : null;
+  const repoCandidate = process.env.GITHUB_REPOSITORY || process.env.GITHUB_REPO;
+  const repository = repoCandidate ? repoCandidate.trim() : 'Dev-Themes/ai-powered-seo';
+  const tokenCandidate = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
+  const token = tokenCandidate ? tokenCandidate.trim() : null;
 
   // Requirement: NEVER commit directly to main. Strictly enforce monitoring-history.
   let branch = process.env.GITHUB_MONITORING_BRANCH ? process.env.GITHUB_MONITORING_BRANCH.trim() : MONITORING_BRANCH;
@@ -172,36 +174,64 @@ async function ensureMonitoringBranchExists(
 
   if (checkRes.ok) return; // Branch already exists
 
-  // Get SHA of default branch (main)
-  const repoUrl = `https://api.github.com/repos/${config.repository}`;
-  const repoRes = await customFetch(repoUrl, {
-    headers: {
-      Authorization: `Bearer ${config.token}`,
-      'User-Agent': 'FirstRead-SEO-Monitoring',
-      Accept: 'application/vnd.github.v3+json'
+  // Get default branch name (usually main)
+  let defaultBranch = 'main';
+  try {
+    const repoUrl = `https://api.github.com/repos/${config.repository}`;
+    const repoRes = await customFetch(repoUrl, {
+      headers: {
+        Authorization: `Bearer ${config.token}`,
+        'User-Agent': 'FirstRead-SEO-Monitoring',
+        Accept: 'application/vnd.github.v3+json'
+      }
+    });
+    if (repoRes.ok) {
+      const repoData = (await repoRes.json()) as { default_branch?: string };
+      if (repoData.default_branch) defaultBranch = repoData.default_branch;
     }
-  });
+  } catch {}
 
-  if (!repoRes.ok) return;
-  const repoData = (await repoRes.json()) as { default_branch?: string };
-  const defaultBranch = repoData.default_branch || 'main';
-
-  const refUrl = `https://api.github.com/repos/${config.repository}/git/ref/heads/${defaultBranch}`;
-  const refRes = await customFetch(refUrl, {
-    headers: {
-      Authorization: `Bearer ${config.token}`,
-      'User-Agent': 'FirstRead-SEO-Monitoring',
-      Accept: 'application/vnd.github.v3+json'
+  // Resolve base commit SHA via commits endpoint (most reliable across all GitHub API scopes)
+  let baseSha: string | undefined;
+  try {
+    const commitUrl = `https://api.github.com/repos/${config.repository}/commits/${encodeURIComponent(defaultBranch)}`;
+    const commitRes = await customFetch(commitUrl, {
+      headers: {
+        Authorization: `Bearer ${config.token}`,
+        'User-Agent': 'FirstRead-SEO-Monitoring',
+        Accept: 'application/vnd.github.v3+json'
+      }
+    });
+    if (commitRes.ok) {
+      const commitData = (await commitRes.json()) as { sha?: string };
+      baseSha = commitData.sha;
     }
-  });
+  } catch {}
 
-  if (!refRes.ok) return;
-  const refData = (await refRes.json()) as { object?: { sha?: string } };
-  const baseSha = refData.object?.sha;
-  if (!baseSha) return;
+  if (!baseSha) {
+    try {
+      const refUrl = `https://api.github.com/repos/${config.repository}/git/refs/heads/${encodeURIComponent(defaultBranch)}`;
+      const refRes = await customFetch(refUrl, {
+        headers: {
+          Authorization: `Bearer ${config.token}`,
+          'User-Agent': 'FirstRead-SEO-Monitoring',
+          Accept: 'application/vnd.github.v3+json'
+        }
+      });
+      if (refRes.ok) {
+        const refData = (await refRes.json()) as { object?: { sha?: string } };
+        baseSha = refData.object?.sha;
+      }
+    } catch {}
+  }
+
+  if (!baseSha) {
+    console.warn(`[Brand Storage] Could not resolve base commit SHA for default branch '${defaultBranch}'.`);
+    return;
+  }
 
   // Create refs/heads/monitoring-history
-  await customFetch(`https://api.github.com/repos/${config.repository}/git/refs`, {
+  const createRes = await customFetch(`https://api.github.com/repos/${config.repository}/git/refs`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${config.token}`,
@@ -214,6 +244,11 @@ async function ensureMonitoringBranchExists(
       sha: baseSha
     })
   });
+
+  if (!createRes.ok) {
+    const errText = await createRes.text().catch(() => '');
+    console.warn(`[Brand Storage] Failed to create branch '${config.branch}': HTTP ${createRes.status} ${errText}`);
+  }
 }
 
 /**

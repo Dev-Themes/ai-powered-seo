@@ -27,7 +27,11 @@ import {
   MousePointer,
   Eye,
   Percent,
-  Activity
+  Activity,
+  Zap,
+  Play,
+  History,
+  GitBranch
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { api } from './api';
@@ -45,18 +49,18 @@ import type {
   GoogleConnectionsTestResult
 } from '@/lib/integrations/google';
 import { BrandGrowthView } from './brand-growth-view';
-import type { BrandGrowthEngineState } from '@/lib/brand/types';
+import type { BrandGrowthEngineState, AutonomousExecutionRecord } from '@/lib/brand/types';
 
 export type DashboardSection =
   | 'overview'
   | 'brand'
+  | 'history'
+  | 'google'
   | 'posts'
   | 'homepage'
   | 'articles'
   | 'technical'
   | 'recommendations'
-  | 'history'
-  | 'google'
   | 'settings';
 
 interface ReportHistoryItem {
@@ -330,6 +334,7 @@ export function FirstReadPanel({ initialSection = 'overview' }: { initialSection
   // FirstRead Brand Growth & Autonomous Indexing Engine state
   const [brandState, setBrandState] = useState<BrandGrowthEngineState | null>(null);
   const [brandLoading, setBrandLoading] = useState(false);
+  const [selectedCronExecution, setSelectedCronExecution] = useState<AutonomousExecutionRecord | null>(null);
 
   const fetchBrandState = useCallback(async () => {
     setBrandLoading(true);
@@ -349,14 +354,18 @@ export function FirstReadPanel({ initialSection = 'overview' }: { initialSection
     setError('');
     try {
       const res = await api('firstread/brand/run', {});
-      if (res?.state) setBrandState(res.state);
+      if (res?.state) {
+        setBrandState(res.state);
+      } else {
+        await fetchBrandState();
+      }
       setMessage(res?.execution?.summary || 'Autonomous cycle completed successfully.');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Autonomous cycle failed.');
     } finally {
       setBrandLoading(false);
     }
-  }, []);
+  }, [fetchBrandState]);
 
   const handleToggleBrandPause = useCallback(async (pause: boolean) => {
     setBrandLoading(true);
@@ -805,71 +814,37 @@ export function FirstReadPanel({ initialSection = 'overview' }: { initialSection
 
         <div className="flex flex-wrap items-center gap-2">
           <Button
-            variant="outline"
             size="sm"
-            onClick={() => triggerAudit('sampled')}
-            disabled={auditing || loading}
+            onClick={handleRunBrandCycle}
+            disabled={brandLoading || brandState?.status === 'running'}
+            className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-xs h-8 shadow-xs"
           >
-            <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${auditing ? 'animate-spin' : ''}`} />
-            Run Sampled Audit (100)
+            <Play className={`w-3.5 h-3.5 mr-1.5 ${brandLoading || brandState?.status === 'running' ? 'animate-spin' : ''}`} />
+            {brandLoading || brandState?.status === 'running' ? 'Running Cycle…' : 'Run Autonomous Cycle Now'}
           </Button>
+
           <Button
             variant="outline"
             size="sm"
-            onClick={() => triggerAudit('full')}
-            disabled={auditing || loading}
+            onClick={() => void fetchBrandState()}
+            disabled={brandLoading}
+            className="text-xs h-8"
           >
-            <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${auditing ? 'animate-spin' : ''}`} />
-            Run Full Audit
-          </Button>
-          {audit && !audit.summary.isComplete && (audit.summary.notAudited ?? 0) > 0 && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => triggerAudit('continue')}
-              disabled={auditing || loading}
-              className="border-sky-500 text-sky-600 dark:text-sky-400"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${auditing ? 'animate-spin' : ''}`} />
-              Continue Incomplete Audit ({audit.summary.notAudited} left)
-            </Button>
-          )}
-          {audit && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => downloadJson(audit, `firstread-audit-${Date.now()}.json`)}
-            >
-              <Download className="w-3.5 h-3.5 mr-1.5" />
-              Export JSON Report
-            </Button>
-          )}
-          <Button
-            size="sm"
-            onClick={triggerRecommendations}
-            disabled={recommending || !audit}
-          >
-            <Sparkles className={`w-3.5 h-3.5 mr-1.5 ${recommending ? 'animate-spin' : ''}`} />
-            {recommending ? 'Generating…' : 'Generate AI Proposals'}
+            <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${brandLoading ? 'animate-spin' : ''}`} />
+            Refresh
           </Button>
         </div>
       </div>
 
-      {/* Sub-Navigation Tabs (9 Sections) */}
+      {/* Sub-Navigation Tabs: Autonomous Engine, Cron Job History, Google Integrations */}
       <div className="flex flex-wrap gap-1 border-b border-[var(--border)] pb-2">
         {([
-          { slug: 'overview', label: 'Overview', icon: Globe },
-          { slug: 'brand', label: 'FirstRead Brand Growth', icon: TrendingUp },
-          { slug: 'posts', label: `WordPress Articles (${currentSiteInfo?.totalPosts ?? totalPostsCount ?? '…'})`, icon: BookOpen },
-          { slug: 'homepage', label: 'Homepage SEO', icon: Globe },
-          { slug: 'articles', label: `Articles SEO (${audit?.summary.totalChecked || 0})`, icon: FileText },
-          { slug: 'technical', label: `Technical SEO (${audit?.technical.protocolIssues.length || 0})`, icon: ShieldCheck },
-          { slug: 'recommendations', label: 'AI Recommendations', icon: Sparkles },
-          { slug: 'history', label: `Audit History (${reportHistory.length})`, icon: Calendar },
-          { slug: 'google', label: 'Google Integrations', icon: SlidersHorizontal },
-          { slug: 'settings', label: 'Settings', icon: Lock }
+          { slug: 'brand', label: 'Autonomous Engine', icon: Zap },
+          { slug: 'history', label: `Cron Job History (${brandState?.executionHistory?.length || 0})`, icon: History },
+          { slug: 'google', label: 'Google Integrations', icon: SlidersHorizontal }
         ] as const).map(({ slug, label, icon: IconComp }) => {
-          const isActive = activeSection === slug;
+          const isBrandActive = (activeSection === 'overview' || activeSection === 'brand' || !activeSection) && slug === 'brand';
+          const isActive = activeSection === slug || isBrandActive;
           return (
             <button
               key={slug}
@@ -892,397 +867,10 @@ export function FirstReadPanel({ initialSection = 'overview' }: { initialSection
         <div className="skeleton h-56" role="status" aria-label="Loading FirstRead dashboard data" />
       ) : (
         <>
-          {/* ========================================================= */}
-          {/* SECTION 1: OVERVIEW */}
-          {/* ========================================================= */}
-          {activeSection === 'overview' && (
-            <div className="space-y-6">
-              {/* Site Information Grid */}
-              <div className="panel">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <span className="eyebrow">TARGET SPECIFICATION</span>
-                    <h3 className="text-base font-bold text-[var(--foreground)]">FirstRead Target Website Information</h3>
-                  </div>
-                  <span className="badge badge-success">
-                    <CheckCircle className="w-3.5 h-3.5" /> Connected (HTTP 200)
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
-                  <div className="p-3.5 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
-                    <span className="text-[var(--muted)] block font-medium mb-1">Website Name</span>
-                    <strong className="text-sm font-semibold text-[var(--foreground)] block">
-                      {currentSiteInfo?.name || 'Firstread'}
-                    </strong>
-                    <small className="text-[var(--muted-light)]">WordPress Site Title</small>
-                  </div>
-
-                  <div className="p-3.5 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
-                    <span className="text-[var(--muted)] block font-medium mb-1">Target Origin</span>
-                    <a
-                      href="https://firstread.co.uk"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-sm font-semibold text-sky-600 dark:text-sky-400 flex items-center gap-1 font-mono"
-                    >
-                      https://firstread.co.uk <ExternalLink className="w-3 h-3" />
-                    </a>
-                    <small className="text-[var(--muted-light)]">Canonical Public Domain</small>
-                  </div>
-
-                  <div className="p-3.5 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
-                    <span className="text-[var(--muted)] block font-medium mb-1">Server &amp; Plugins</span>
-                    <strong className="text-sm font-semibold text-[var(--foreground)] block">
-                      {currentSiteInfo?.serverEngine || 'LiteSpeed (PHP)'}
-                    </strong>
-                    <small className="text-[var(--muted-light)]">Yoast SEO, Elementor</small>
-                  </div>
-
-                  <div className="p-3.5 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
-                    <span className="text-[var(--muted)] block font-medium mb-1">Security Mode</span>
-                    <strong className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 block">
-                      Enforced Read-Only
-                    </strong>
-                    <small className="text-[var(--muted-light)]">Writes Permanently Blocked</small>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4 text-xs">
-                  <div className="p-3.5 rounded-lg border border-[var(--border)] bg-[var(--card)]">
-                    <span className="text-[var(--muted)] block font-medium mb-1">Published Articles</span>
-                    <strong className="text-xl font-bold text-[var(--foreground)] block">
-                      {currentSiteInfo ? currentSiteInfo.totalPosts.toLocaleString('en-GB') : '…'}
-                    </strong>
-                    <small className="text-[var(--muted-light)]">Public posts in WordPress</small>
-                  </div>
-
-                  <div className="p-3.5 rounded-lg border border-[var(--border)] bg-[var(--card)]">
-                    <span className="text-[var(--muted)] block font-medium mb-1">Public Pages</span>
-                    <strong className="text-xl font-bold text-[var(--foreground)] block">
-                      {currentSiteInfo ? currentSiteInfo.totalPages.toLocaleString('en-GB') : '…'}
-                    </strong>
-                    <small className="text-[var(--muted-light)]">Live pages in WordPress</small>
-                  </div>
-
-                  <div className="p-3.5 rounded-lg border border-[var(--border)] bg-[var(--card)]">
-                    <span className="text-[var(--muted)] block font-medium mb-1">Categories / Tags</span>
-                    <strong className="text-xl font-bold text-[var(--foreground)] block">
-                      {currentSiteInfo ? `${currentSiteInfo.totalCategories} / ${currentSiteInfo.totalTags}` : '…'}
-                    </strong>
-                    <small className="text-[var(--muted-light)]">Taxonomy entries count</small>
-                  </div>
-
-                  <div
-                    className="p-3.5 rounded-lg border border-[var(--border)] bg-[var(--card)] cursor-pointer hover:border-sky-500 transition-colors"
-                    onClick={() => setUserTab('google')}
-                    role="button"
-                    tabIndex={0}
-                    title="Click to view Google Search Console & GA4 integrations"
-                  >
-                    <span className="text-[var(--muted)] block font-medium mb-1">Google Integration</span>
-                    {googleState?.configured ? (
-                      <span className="badge badge-success mt-1">Connected</span>
-                    ) : (
-                      <span className="badge badge-warning mt-1">Awaiting Authorization</span>
-                    )}
-                    <small className="text-[var(--muted-light)] block mt-1">GSC &amp; GA4 interfaces ready</small>
-                  </div>
-                </div>
-              </div>
-
-              {/* Audit Scope & Pipeline Metrics */}
-              {audit && (
-                <div className="panel bg-[var(--surface)] border-[var(--border)]">
-                  <div className="flex items-center justify-between mb-3">
-                    <div>
-                      <span className="eyebrow">AUDIT PIPELINE SCOPE</span>
-                      <h4 className="text-sm font-bold text-[var(--foreground)]">Audit Coverage &amp; Processing Scope</h4>
-                    </div>
-                    {audit.summary.auditScope === 'sampled' || audit.summary.isComplete === false ? (
-                      <span className="badge badge-warning">
-                        <AlertCircle className="w-3 h-3" /> Sampled ({audit.summary.coveragePercentage ?? Math.round(((audit.summary.totalAudited ?? audit.summary.totalChecked) / (audit.summary.totalDiscovered ?? currentSiteInfo?.totalPosts ?? 1)) * 100)}% Coverage)
-                      </span>
-                    ) : (
-                      <span className="badge badge-success">
-                        <CheckCircle className="w-3 h-3" /> Full Coverage Verified
-                      </span>
-                    )}
-                  </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 text-xs">
-                    <div className="p-3 rounded-lg border border-[var(--border)] bg-[var(--card)]">
-                      <span className="text-[var(--muted)] block font-medium mb-1">Discovered URLs</span>
-                      <strong className="text-lg font-bold text-[var(--foreground)] block">
-                        {audit.summary.totalDiscovered ?? audit.summary.articlesDiscovered ?? currentSiteInfo?.totalPosts ?? 0}
-                      </strong>
-                      <small className="text-[var(--muted-light)]">WordPress REST API</small>
-                    </div>
-                    <div className="p-3 rounded-lg border border-[var(--border)] bg-[var(--card)]">
-                      <span className="text-[var(--muted)] block font-medium mb-1">Audited URLs</span>
-                      <strong className="text-lg font-bold text-sky-600 dark:text-sky-400 block">
-                        {audit.summary.totalAudited ?? audit.summary.articlesAudited ?? audit.summary.totalChecked}
-                      </strong>
-                      <small className="text-[var(--muted-light)]">Deep SEO Scanned</small>
-                    </div>
-                    <div className="p-3 rounded-lg border border-[var(--border)] bg-[var(--card)]">
-                      <span className="text-[var(--muted)] block font-medium mb-1">Remaining URLs</span>
-                      <strong className="text-lg font-bold text-amber-600 dark:text-amber-400 block">
-                        {audit.summary.notAudited ?? audit.summary.articlesSkipped ?? 0}
-                      </strong>
-                      <small className="text-[var(--muted-light)]">{audit.summary.isComplete ? 'All URLs Audited' : 'Pending Sample Scope'}</small>
-                    </div>
-                    <div className="p-3 rounded-lg border border-[var(--border)] bg-[var(--card)]">
-                      <span className="text-[var(--muted)] block font-medium mb-1">Failed URLs</span>
-                      <strong className="text-lg font-bold text-[var(--foreground)] block">
-                        {audit.summary.failedRequestsCount ?? 0}
-                      </strong>
-                      <small className="text-[var(--muted-light)]">Network/Timeout Errors</small>
-                    </div>
-                    <div className="p-3 rounded-lg border border-[var(--border)] bg-[var(--card)]">
-                      <span className="text-[var(--muted)] block font-medium mb-1">Coverage Rate</span>
-                      <strong className="text-lg font-bold text-emerald-600 dark:text-emerald-400 block">
-                        {audit.summary.coveragePercentage ?? Math.round(((audit.summary.totalAudited ?? audit.summary.totalChecked) / (audit.summary.totalDiscovered ?? currentSiteInfo?.totalPosts ?? 1)) * 100)}%
-                      </strong>
-                      <small className="text-[var(--muted-light)]">{audit.summary.isComplete ? 'Complete Coverage' : 'Sampled Scope'}</small>
-                    </div>
-                  </div>
-
-                  {/* Issue Severity Breakdown */}
-                  <div className="grid grid-cols-3 gap-3 text-xs mt-3 pt-3 border-t border-[var(--border)]">
-                    <div className="p-2.5 rounded-lg border border-rose-200 dark:border-rose-900/50 bg-rose-50/50 dark:bg-rose-950/20">
-                      <span className="text-rose-700 dark:text-rose-300 block font-semibold">Critical Issues</span>
-                      <strong className="text-lg font-bold text-rose-700 dark:text-rose-300 block">
-                        {audit.summary.criticalCount}
-                      </strong>
-                      <small className="text-rose-600/80 dark:text-rose-400/80">Requires immediate attention</small>
-                    </div>
-                    <div className="p-2.5 rounded-lg border border-amber-200 dark:border-amber-900/50 bg-amber-50/50 dark:bg-amber-950/20">
-                      <span className="text-amber-700 dark:text-amber-300 block font-semibold">SEO Warnings</span>
-                      <strong className="text-lg font-bold text-amber-700 dark:text-amber-300 block">
-                        {audit.summary.warningCount}
-                      </strong>
-                      <small className="text-amber-600/80 dark:text-amber-400/80">Title length, body H1s, protocol</small>
-                    </div>
-                    <div className="p-2.5 rounded-lg border border-sky-200 dark:border-sky-900/50 bg-sky-50/50 dark:bg-sky-950/20">
-                      <span className="text-sky-700 dark:text-sky-300 block font-semibold">Informational Findings</span>
-                      <strong className="text-lg font-bold text-sky-700 dark:text-sky-300 block">
-                        {audit.summary.infoCount}
-                      </strong>
-                      <small className="text-sky-600/80 dark:text-sky-400/80">Decorative alt, brief meta, internal links</small>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* SEO Health Metrics Grid */}
-              {audit && (
-                <div className="stats-grid">
-                  <div className="stat">
-                    <span className="label">Articles Audited</span>
-                    <strong>{audit.summary.totalChecked}</strong>
-                    <small>Full scope: {audit.siteInfo.totalPosts} published posts</small>
-                  </div>
-
-                  <div className="stat">
-                    <span className="label">Protocol Issues</span>
-                    <strong className={(audit.summary.protocolIssuesCount ?? audit.summary.criticalCount) > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}>
-                      {audit.summary.protocolIssuesCount ?? audit.summary.criticalCount}
-                    </strong>
-                    <small>HTTP sitemap &amp; site URL config</small>
-                  </div>
-
-                  <div className="stat">
-                    <span className="label">SEO Warnings</span>
-                    <strong className={audit.summary.warningCount > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}>
-                      {audit.summary.warningCount}
-                    </strong>
-                    <small>Title lengths &amp; descriptions</small>
-                  </div>
-
-                  <div className="stat">
-                    <span className="label">Missing Image Alt</span>
-                    <strong className={(audit.summary.missingAltTotal ?? audit.summary.missingAltImagesTotal ?? 0) > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}>
-                      {audit.summary.missingAltTotal ?? audit.summary.missingAltImagesTotal ?? 0}
-                    </strong>
-                    <small>
-                      {audit.summary.emptyAltTotal !== undefined
-                        ? `${audit.summary.emptyAltTotal} decorative (empty alt)`
-                        : 'Images without alt text'}
-                    </small>
-                  </div>
-
-                  <div className="stat">
-                    <span className="label">Duplicate Title Tags</span>
-                    <strong className={audit.summary.duplicateTitlesCount > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}>
-                      {audit.summary.duplicateTitlesCount}
-                    </strong>
-                    <small>Duplicate title tags detected</small>
-                  </div>
-                </div>
-              )}
-
-              {/* Actionable Findings Card */}
-              {audit ? (
-                <div className="panel">
-                  <h3 className="text-sm font-bold text-[var(--foreground)] mb-3">Key Actionable Findings</h3>
-                  <div className="space-y-3">
-                    {audit.technical.protocolIssues.map((p, i) => (
-                      <div key={i} className="p-3.5 rounded-lg border border-rose-300 dark:border-rose-900 bg-rose-50 dark:bg-rose-950/20 flex items-start gap-3">
-                        <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 mt-0.5 shrink-0" />
-                        <div className="text-xs">
-                          <strong className="text-rose-900 dark:text-rose-200 block font-semibold">Protocol Inconsistency Detected</strong>
-                          <span className="text-rose-800 dark:text-rose-300">{p.details}</span>
-                        </div>
-                      </div>
-                    ))}
-
-                    {(audit.summary.missingAltTotal ?? audit.summary.missingAltImagesTotal ?? 0) > 0 && (
-                      <div className="p-3.5 rounded-lg border border-amber-300 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/20 flex items-start gap-3">
-                        <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
-                        <div className="text-xs">
-                          <strong className="text-amber-900 dark:text-amber-200 block font-semibold">Image Accessibility Gaps</strong>
-                          <span className="text-amber-800 dark:text-amber-300">
-                            {audit.summary.missingAltTotal ?? audit.summary.missingAltImagesTotal} images completely lack alt attributes across audited articles.
-                            {audit.summary.emptyAltTotal !== undefined && ` (${audit.summary.emptyAltTotal} decorative images have empty alt="")`}
-                          </span>
-                        </div>
-                      </div>
-                    )}
-
-                    {audit.summary.duplicateTitlesCount > 0 && (
-                      <div className="p-3.5 rounded-lg border border-amber-300 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/20 flex items-start gap-3">
-                        <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
-                        <div className="text-xs">
-                          <strong className="text-amber-900 dark:text-amber-200 block font-semibold">Duplicate Title Tag Detected</strong>
-                          <span className="text-amber-800 dark:text-amber-300">
-                            {audit.summary.duplicateTitlesCount} duplicate title tag instances found across articles.
-                          </span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ) : (
-                <div className="panel text-center py-10">
-                  <Globe className="w-10 h-10 text-[var(--muted)] mx-auto mb-3" />
-                  <h3 className="text-base font-semibold text-[var(--foreground)]">No Audit Snapshot Loaded</h3>
-                  <p className="text-xs text-[var(--muted)] max-w-md mx-auto mb-4">
-                    Run a live read-only audit to inspect homepage metadata, headings, sitemaps, robots.txt, and sampled WordPress articles.
-                  </p>
-                  <Button onClick={triggerAudit} disabled={auditing}>
-                    <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${auditing ? 'animate-spin' : ''}`} />
-                    Start Read-Only Audit
-                  </Button>
-                </div>
-              )}
-
-              {/* ON-DEMAND AI SEO OPERATIONS STUDIO */}
-              <div className="panel space-y-4">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div>
-                    <span className="eyebrow">SERVER-SIDE AI ENGINE</span>
-                    <h3 className="text-base font-bold text-[var(--foreground)]">On-Demand AI SEO Operations</h3>
-                    <p className="text-xs text-[var(--muted)] m-0">
-                      Direct, server-side AI execution across 11 discrete SEO capabilities. Results are generated on demand and held in working session memory.
-                    </p>
-                  </div>
-                  <span className="badge badge-info">11 Direct Operations</span>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  <div>
-                    <label className="text-xs font-semibold text-[var(--foreground)] block mb-1">Select Operation:</label>
-                    <select
-                      value={selectedOperation}
-                      onChange={e => setSelectedOperation(e.target.value)}
-                      className="w-full text-xs p-2 rounded-md border border-[var(--border)] bg-[var(--surface)] text-[var(--foreground)]"
-                    >
-                      <option value="keyword-research">🔍 1. Keyword Research</option>
-                      <option value="competitor-analysis">⚔️ 2. Competitor Gap Analysis</option>
-                      <option value="search-intent">🎯 3. Search Intent Classification</option>
-                      <option value="content-gap">💡 4. Editorial Content Gap Discovery</option>
-                      <option value="topic-clusters">🌳 5. Topic Cluster &amp; Pillar Architecture</option>
-                      <option value="seo-strategy">📈 6. 90-Day SEO Strategy Roadmap</option>
-                      <option value="article-research">📝 7. Article Research &amp; Heading Outline</option>
-                      <option value="article-generation">✍️ 8. Complete Article Generation</option>
-                      <option value="article-qa">🛡️ 9. Independent Article QA Gatekeeper</option>
-                      <option value="technical-audit">⚙️ 10. Technical SEO Crawl Audit</option>
-                      <option value="recommendations">💡 11. AI Recommendation Synthesis</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="text-xs font-semibold text-[var(--foreground)] block mb-1">Seed Keyword / Topic / Niche:</label>
-                    <input
-                      type="text"
-                      value={opInput}
-                      onChange={e => setOpInput(e.target.value)}
-                      placeholder="e.g. uk property investment, canterbury"
-                      className="w-full text-xs p-2 rounded-md border border-[var(--border)] bg-[var(--surface)] text-[var(--foreground)]"
-                    />
-                  </div>
-
-                  <div className="flex items-end">
-                    <Button
-                      onClick={() => void runOperation(selectedOperation)}
-                      disabled={runningOp}
-                      className="w-full"
-                    >
-                      <Sparkles className={`w-3.5 h-3.5 mr-1.5 ${runningOp ? 'animate-spin' : ''}`} />
-                      {runningOp ? 'Running Operation…' : 'Execute Operation'}
-                    </Button>
-                  </div>
-                </div>
-
-                {opResult !== null && (
-                  <div className="p-3.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <CheckCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                        <strong className="text-xs text-[var(--foreground)]">Result: {selectedOperation}</strong>
-                        {(opResult as Record<string, unknown>)?.source === 'gemini' ? (
-                          <span className="text-[10px] bg-emerald-100 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 px-1.5 py-0.5 rounded font-medium">
-                            Gemini {((opResult as Record<string, unknown>)?.model as string) || 'AI'}
-                          </span>
-                        ) : (
-                          <span className="text-[10px] bg-amber-100 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 px-1.5 py-0.5 rounded font-medium">
-                            Heuristic Fallback
-                          </span>
-                        )}
-                        <span className="text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-1.5 py-0.5 rounded font-medium">
-                          Session-Scoped
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => downloadJson(opResult, `firstread-${selectedOperation}-${Date.now()}.json`)}
-                        >
-                          <Download className="w-3.5 h-3.5 mr-1" /> Export JSON
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setOpResult(null)}
-                        >
-                          Clear
-                        </Button>
-                      </div>
-                    </div>
-                    <pre className="text-xs font-mono bg-[var(--card)] p-3 rounded border border-[var(--border)] max-h-72 overflow-y-auto m-0 text-[var(--foreground)]">
-                      {JSON.stringify(opResult, null, 2)}
-                    </pre>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* ========================================================= */}
+{/* ========================================================= */}
           {/* SECTION: FIRSTREAD BRAND KEYWORD GROWTH & INDEXING */}
           {/* ========================================================= */}
-          {activeSection === 'brand' && (
+          {(activeSection === 'brand' || activeSection === 'overview' || !activeSection) && (
             <BrandGrowthView
               brandState={brandState}
               loading={brandLoading}
@@ -1293,937 +881,238 @@ export function FirstReadPanel({ initialSection = 'overview' }: { initialSection
               onInspectUrl={handleInspectUrl}
             />
           )}
-
+{/* ========================================================= */}
           {/* ========================================================= */}
-          {/* SECTION 2: WORDPRESS ARTICLES */}
-          {/* ========================================================= */}
-          {activeSection === 'posts' && (
-            <div className="space-y-4">
-              <div className="panel mb-0">
-                <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-                  <div>
-                    <span className="eyebrow">PUBLISHED WORDPRESS CONTENT</span>
-                    <h3 className="text-base font-bold text-[var(--foreground)]">
-                      Published WordPress Articles ({totalPostsCount.toLocaleString('en-GB')} Total)
-                    </h3>
-                    <p className="text-xs text-[var(--muted)] m-0">
-                      Live data fetched directly from <code className="text-xs">/wp-json/wp/v2/posts</code>
-                    </p>
-                  </div>
-
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => void fetchPosts(postsPage, postsPerPage)}
-                    disabled={postsLoading}
-                  >
-                    <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${postsLoading ? 'animate-spin' : ''}`} />
-                    Refresh Articles
-                  </Button>
-                </div>
-
-                {/* Filters */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                  <div className="relative">
-                    <Search className="w-4 h-4 text-[var(--muted)] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                    <input
-                      type="text"
-                      placeholder="Search articles by title or slug…"
-                      value={postSearchQuery}
-                      onChange={e => setPostSearchQuery(e.target.value)}
-                      className="search-input search-input-with-icon"
-                    />
-                  </div>
-
-                  <div>
-                    <select
-                      value={selectedCategory}
-                      onChange={e => setSelectedCategory(e.target.value)}
-                      className="search-input"
-                    >
-                      <option value="all">All Categories ({categoriesList.length})</option>
-                      {categoriesList.map(cat => (
-                        <option key={cat.id} value={cat.id.toString()}>
-                          {cat.name} {cat.count ? `(${cat.count})` : ''}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="flex items-center justify-end gap-2 text-xs text-[var(--muted)]">
-                    <span>Show:</span>
-                    <select
-                      value={postsPerPage}
-                      onChange={e => {
-                        setPostsPerPage(Number(e.target.value));
-                        setPostsPage(1);
-                      }}
-                      className="search-input w-24 py-1"
-                    >
-                      <option value="10">10 / page</option>
-                      <option value="20">20 / page</option>
-                      <option value="50">50 / page</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-
-              {/* Articles Table */}
-              {postsLoading ? (
-                <div className="skeleton h-64" role="status" aria-label="Loading WordPress articles" />
-              ) : filteredPosts.length === 0 ? (
-                <div className="panel text-center py-10">
-                  <BookOpen className="w-8 h-8 text-[var(--muted)] mx-auto mb-2" />
-                  <p className="text-sm font-semibold text-[var(--foreground)]">No articles match your search filter.</p>
-                  <p className="text-xs text-[var(--muted)]">Try adjusting your search query or category filter.</p>
-                </div>
-              ) : (
-                <div className="table-wrap">
-                  <table className="admin-table">
-                    <thead>
-                      <tr>
-                        <th style={{ width: '40%' }}>Article Title &amp; Slug</th>
-                        <th>Categories</th>
-                        <th>Published Date</th>
-                        <th>Status</th>
-                        <th style={{ textAlign: 'right' }}>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredPosts.map(post => {
-                        const title = cleanText(post.title?.rendered || 'Untitled');
-                        const excerpt = cleanText(post.excerpt?.rendered || '');
-                        const dateFormatted = post.date ? new Date(post.date).toLocaleDateString('en-GB') : '—';
-                        return (
-                          <tr key={post.id}>
-                            <td>
-                              <div className="font-semibold text-[var(--foreground)] text-sm mb-0.5">
-                                {title}
-                              </div>
-                              <div className="font-mono text-xs text-[var(--muted)] mb-1">
-                                /{post.slug}/
-                              </div>
-                              {excerpt && (
-                                <p className="text-xs text-[var(--muted)] line-clamp-2 m-0 max-w-xl">
-                                  {excerpt}
-                                </p>
-                              )}
-                            </td>
-                            <td>
-                              <div className="flex flex-wrap gap-1">
-                                {post.categories && post.categories.length > 0 ? (
-                                  post.categories.map(cId => (
-                                    <span key={cId} className="badge badge-neutral text-[10px]">
-                                      {categoryMap[cId] || `Category ${cId}`}
-                                    </span>
-                                  ))
-                                ) : (
-                                  <span className="text-xs text-[var(--muted-light)]">None</span>
-                                )}
-                              </div>
-                            </td>
-                            <td className="text-xs text-[var(--muted)] whitespace-nowrap">
-                              {dateFormatted}
-                            </td>
-                            <td>
-                              <span className="badge badge-success">
-                                Published
-                              </span>
-                            </td>
-                            <td style={{ textAlign: 'right' }}>
-                              <a
-                                href={post.link}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="button button-outline button-sm inline-flex items-center gap-1 text-xs"
-                              >
-                                View Live <ExternalLink className="w-3 h-3" />
-                              </a>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-
-              {/* Pagination Controls */}
-              <div className="flex flex-wrap items-center justify-between gap-3 p-4 panel">
-                <div className="text-xs text-[var(--muted)]">
-                  Showing page <strong>{postsPage}</strong> of <strong>{totalPagesCount}</strong> ({totalPostsCount} total articles)
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={postsPage <= 1 || postsLoading}
-                    onClick={() => setPostsPage(p => Math.max(1, p - 1))}
-                  >
-                    <ChevronLeft className="w-4 h-4 mr-1" /> Previous
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={postsPage >= totalPagesCount || postsLoading}
-                    onClick={() => setPostsPage(p => Math.min(totalPagesCount, p + 1))}
-                  >
-                    Next <ChevronRight className="w-4 h-4 ml-1" />
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* ========================================================= */}
-          {/* SECTION 3: HOMEPAGE SEO */}
-          {/* ========================================================= */}
-          {activeSection === 'homepage' && (
-            <div className="space-y-6">
-              {!audit ? (
-                <div className="panel text-center py-10">
-                  <p className="text-sm text-[var(--muted)] mb-3">Homepage SEO audit data is not loaded yet.</p>
-                  <Button onClick={triggerAudit} disabled={auditing}>Run Read-Only Audit</Button>
-                </div>
-              ) : (
-                <div className="panel space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <span className="eyebrow">RENDERED HTML INSPECTION</span>
-                      <h3 className="text-base font-bold text-[var(--foreground)]">
-                        Homepage Metadata ({audit.homepage.url})
-                      </h3>
-                    </div>
-                    <a
-                      href={audit.homepage.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="button button-outline button-sm inline-flex items-center gap-1 text-xs"
-                    >
-                      View Live Homepage <ExternalLink className="w-3 h-3" />
-                    </a>
-                  </div>
-
-                  <div className="space-y-3 text-xs">
-                    <div className="p-3.5 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
-                      <div className="flex items-center justify-between text-[var(--muted)] mb-1">
-                        <span className="font-semibold">Title Tag</span>
-                        <span>{audit.homepage.title.length} characters (Recommended: 50–60)</span>
-                      </div>
-                      <div className="text-sm font-semibold text-[var(--foreground)]">
-                        {audit.homepage.title || <span className="text-rose-600 dark:text-rose-400 italic">None specified</span>}
-                      </div>
-                    </div>
-
-                    <div className="p-3.5 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
-                      <div className="flex items-center justify-between text-[var(--muted)] mb-1">
-                        <span className="font-semibold">Meta Description</span>
-                        <span>{audit.homepage.metaDescription.length} characters (Recommended: 140–160)</span>
-                      </div>
-                      <div className="text-xs text-[var(--foreground)] leading-relaxed">
-                        {audit.homepage.metaDescription || (
-                          <span className="badge badge-warning">No meta description found in homepage HTML</span>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <div className="p-3.5 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
-                        <span className="text-[var(--muted)] block font-semibold mb-1">Canonical URL</span>
-                        <code className="text-xs text-[var(--foreground)] font-mono">{audit.homepage.canonical || 'None'}</code>
-                      </div>
-                      <div className="p-3.5 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
-                        <span className="text-[var(--muted)] block font-semibold mb-1">Robots Meta Tag</span>
-                        <code className="text-xs text-[var(--foreground)] font-mono">{audit.homepage.robotsTag || 'index, follow (default)'}</code>
-                      </div>
-                    </div>
-
-                    <div className="p-3.5 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
-                      <span className="text-[var(--muted)] block font-semibold mb-1">
-                        H1 Headings ({audit.homepage.h1Count} detected)
-                      </span>
-                      {audit.homepage.headings.length ? (
-                        <ul className="list-disc list-inside space-y-1 text-[var(--foreground)]">
-                          {audit.homepage.headings.map((h, i) => (
-                            <li key={i}>{h}</li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <span className="badge badge-warning">No H1 heading detected in rendered homepage HTML.</span>
-                      )}
-                    </div>
-                  </div>
-
-                  {audit.homepage.issues.length > 0 && (
-                    <div className="space-y-2 mt-4 pt-4 border-t border-[var(--border)]">
-                      <h4 className="text-xs font-bold text-[var(--foreground)] uppercase tracking-wide">
-                        Recommendations for Homepage
-                      </h4>
-                      {audit.homepage.issues.map((issue, idx) => (
-                        <div
-                          key={idx}
-                          className={`p-3 rounded-lg text-xs border ${
-                            issue.severity === 'critical'
-                              ? 'bg-rose-50 dark:bg-rose-950/20 border-rose-300 dark:border-rose-900 text-rose-900 dark:text-rose-200'
-                              : 'bg-amber-50 dark:bg-amber-950/20 border-amber-300 dark:border-amber-900 text-amber-900 dark:text-amber-200'
-                          }`}
-                        >
-                          <strong className="block mb-1">{issue.title}</strong>
-                          <p className="m-0 text-inherit opacity-90">{issue.description}</p>
-                          {issue.recommendation && (
-                            <p className="mt-1.5 m-0 text-inherit font-medium">
-                              <strong>Recommended Action:</strong> {issue.recommendation}
-                            </p>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* ========================================================= */}
-          {/* SECTION 4: ARTICLES SEO */}
-          {/* ========================================================= */}
-          {activeSection === 'articles' && (
-            <div className="space-y-4">
-              {!audit ? (
-                <div className="panel text-center py-10">
-                  <p className="text-sm text-[var(--muted)] mb-3">SEO audit data for articles is not loaded yet.</p>
-                  <Button onClick={triggerAudit} disabled={auditing}>Run Read-Only Audit</Button>
-                </div>
-              ) : (
-                <>
-                  <div className="panel mb-0">
-                    <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-                      <div>
-                        <span className="eyebrow">ARTICLE AUDIT METRICS</span>
-                        <h3 className="text-base font-bold text-[var(--foreground)]">
-                          Sampled Articles SEO Analysis ({audit.articles.length} Audited)
-                        </h3>
-                        <p className="text-xs text-[var(--muted)] m-0">
-                          Inspect title lengths, meta descriptions, image alt tags, word counts, and internal links.
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex flex-wrap items-center justify-between gap-3">
-                      <div className="relative flex-1 min-w-[220px]">
-                        <Search className="w-4 h-4 text-[var(--muted)] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                        <input
-                          type="text"
-                          placeholder="Filter articles by title or slug…"
-                          value={articleSearchQuery}
-                          onChange={e => setArticleSearchQuery(e.target.value)}
-                          className="search-input search-input-with-icon"
-                        />
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <SlidersHorizontal className="w-4 h-4 text-[var(--muted)]" />
-                        <select
-                          value={filterIssue}
-                          onChange={e => setFilterIssue(e.target.value)}
-                          className="search-input"
-                        >
-                          <option value="all">All Audited Articles ({audit.articles.length})</option>
-                          <option value="issues">With Identified Issues</option>
-                          <option value="missing_alt">Missing Image Alt</option>
-                          <option value="long_title">Long Title (&gt;65 chars)</option>
-                          <option value="missing_desc">Missing Meta Description</option>
-                          <option value="no_links">Zero Internal Links</option>
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="table-wrap">
-                    <table className="admin-table">
-                      <thead>
-                        <tr>
-                          <th>Article</th>
-                          <th>Words</th>
-                          <th>Headings</th>
-                          <th>SEO Title</th>
-                          <th>Meta Description</th>
-                          <th>Images</th>
-                          <th>Internal Links</th>
-                          <th>Status</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {filteredAuditedArticles.map(a => {
-                          const isExpanded = expandedArticle === a.id;
-                          return (
-                            <tr
-                              key={a.id}
-                              className="cursor-pointer"
-                              onClick={() => setExpandedArticle(isExpanded ? null : a.id)}
-                            >
-                              <td>
-                                <div className="font-semibold text-[var(--foreground)] text-sm">{a.title}</div>
-                                <div className="text-[var(--muted)] text-xs font-mono">/{a.slug}/</div>
-                              </td>
-                              <td className="text-xs">{a.wordCount} words</td>
-                              <td className="text-xs">
-                                {(a.bodyH1Count ?? a.h1Count ?? 0) > 0 ? (
-                                  <span className="badge badge-warning" title={`${a.bodyH1Count ?? a.h1Count} H1 tags in content body (duplicate with theme title H1)`}>
-                                    {a.bodyH1Count ?? a.h1Count} Body H1
-                                  </span>
-                                ) : (
-                                  <span className="text-[var(--muted)]" title="Theme renders post title as primary H1; content uses clean H2/H3 hierarchy">
-                                    Theme H1
-                                  </span>
-                                )}
-                                <div className="text-[10px] text-[var(--muted-light)] mt-0.5">
-                                  {a.h2Count} H2 &bull; {a.h3Count} H3
-                                </div>
-                              </td>
-                              <td>
-                                <span className={a.seoTitle.length > 65 ? 'badge badge-warning' : 'text-xs'}>
-                                  {a.seoTitle.length} chars
-                                </span>
-                              </td>
-                              <td>
-                                {a.seoDescription ? (
-                                  <span className="badge badge-success">Present ({a.seoDescription.length})</span>
-                                ) : (
-                                  <span className="badge badge-critical">Missing</span>
-                                )}
-                              </td>
-                              <td>
-                                {(a.missingAltCount ?? a.missingAltImagesCount ?? 0) > 0 ? (
-                                  <span className="badge badge-warning">
-                                    {a.missingAltCount ?? a.missingAltImagesCount} missing alt
-                                  </span>
-                                ) : (
-                                  <span className="text-xs text-[var(--muted)]">{a.totalImagesCount} ok</span>
-                                )}
-                                {(a.emptyAltCount ?? 0) > 0 && (
-                                  <div className="text-[10px] text-[var(--muted-light)] mt-0.5">
-                                    {a.emptyAltCount} decorative
-                                  </div>
-                                )}
-                              </td>
-                              <td className="text-xs">{a.internalLinksCount} links</td>
-                              <td>
-                                {a.issues.length > 0 ? (
-                                  <span className="badge badge-warning">
-                                    {a.issues.length} {a.issues.length === 1 ? 'issue' : 'issues'}
-                                  </span>
-                                ) : (
-                                  <span className="badge badge-success">
-                                    <CheckCircle className="w-3 h-3" /> Healthy
-                                  </span>
-                                )}
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-
-                  {/* Expandable Article Details */}
-                  {expandedArticle && (() => {
-                    const a = audit.articles.find(art => art.id === expandedArticle);
-                    if (!a) return null;
-                    return (
-                      <div className="panel space-y-4 border-2 border-sky-400 dark:border-sky-700">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <span className="eyebrow">ARTICLE SEO INSPECTION</span>
-                            <h3 className="text-base font-bold text-[var(--foreground)]">{a.title}</h3>
-                            <a
-                              href={a.link}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-xs text-sky-600 dark:text-sky-400 flex items-center gap-1 font-mono mt-1"
-                            >
-                              {a.link} <ExternalLink className="w-3 h-3" />
-                            </a>
-                          </div>
-                          <Button variant="ghost" size="sm" onClick={() => setExpandedArticle(null)}>
-                            Close Details
-                          </Button>
-                        </div>
-
-                        {/* Heading & Image KPI Breakdown */}
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
-                          <div className="p-2.5 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
-                            <span className="text-[var(--muted)] block">Heading Structure</span>
-                            <strong className="text-sm font-semibold text-[var(--foreground)] block">
-                              {(a.bodyH1Count ?? a.h1Count ?? 0) > 0 ? `${a.bodyH1Count ?? a.h1Count} Body H1 (Defect)` : 'Clean Hierarchy'}
-                            </strong>
-                            <small className="text-[var(--muted-light)]">Theme H1 + {a.h2Count} H2, {a.h3Count} H3</small>
-                          </div>
-                          <div className="p-2.5 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
-                            <span className="text-[var(--muted)] block">Image Alt Coverage</span>
-                            <strong className="text-sm font-semibold text-[var(--foreground)] block">
-                              {(a.missingAltCount ?? a.missingAltImagesCount ?? 0) === 0 ? '100% Covered' : `${a.missingAltCount ?? a.missingAltImagesCount} Missing`}
-                            </strong>
-                            <small className="text-[var(--muted-light)]">{a.totalImagesCount} total &bull; {a.emptyAltCount ?? 0} decorative</small>
-                          </div>
-                          <div className="p-2.5 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
-                            <span className="text-[var(--muted)] block">Word Count</span>
-                            <strong className="text-sm font-semibold text-[var(--foreground)] block">
-                              {a.wordCount} words
-                            </strong>
-                            <small className="text-[var(--muted-light)]">{a.internalLinksCount} internal links</small>
-                          </div>
-                          <div className="p-2.5 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
-                            <span className="text-[var(--muted)] block">SEO Description</span>
-                            <strong className="text-sm font-semibold text-[var(--foreground)] block">
-                              {a.seoDescription ? `${a.seoDescription.length} chars` : 'Missing'}
-                            </strong>
-                            <small className="text-[var(--muted-light)]">Title: {a.seoTitle.length} chars</small>
-                          </div>
-                        </div>
-
-                        <div className="space-y-3 text-xs">
-                          <div className="p-3.5 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
-                            <span className="text-[var(--muted)] block font-semibold mb-1">
-                              SEO Title ({a.seoTitle.length} chars)
-                            </span>
-                            <p className="text-[var(--foreground)] font-medium m-0">{a.seoTitle}</p>
-                          </div>
-                          <div className="p-3.5 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
-                            <span className="text-[var(--muted)] block font-semibold mb-1">
-                              Meta Description ({a.seoDescription.length} chars)
-                            </span>
-                            <p className="text-[var(--foreground)] m-0">{a.seoDescription || '(None specified)'}</p>
-                          </div>
-                        </div>
-
-                        {a.issues.length > 0 ? (
-                          <div className="space-y-2">
-                            <h4 className="text-xs font-bold text-[var(--foreground)] uppercase tracking-wide">
-                              Detected Issues ({a.issues.length})
-                            </h4>
-                            {a.issues.map(iss => (
-                              <div
-                                key={iss.id}
-                                className={`p-3 rounded-lg text-xs border ${
-                                  iss.severity === 'critical'
-                                    ? 'bg-rose-50 dark:bg-rose-950/20 border-rose-300 dark:border-rose-900 text-rose-900 dark:text-rose-200'
-                                    : iss.severity === 'warning'
-                                    ? 'bg-amber-50 dark:bg-amber-950/20 border-amber-300 dark:border-amber-900 text-amber-900 dark:text-amber-200'
-                                    : 'bg-sky-50 dark:bg-sky-950/20 border-sky-300 dark:border-sky-900 text-sky-900 dark:text-sky-200'
-                                }`}
-                              >
-                                <div className="flex items-center justify-between gap-2 mb-1">
-                                  <span className="font-bold">{iss.title}</span>
-                                  <span className={`badge ${
-                                    iss.severity === 'critical' ? 'badge-danger' :
-                                    iss.severity === 'warning' ? 'badge-warning' : 'badge-neutral'
-                                  }`}>
-                                    {iss.severity.toUpperCase()}
-                                  </span>
-                                </div>
-                                <p className="m-0 text-inherit opacity-90">{iss.description}</p>
-                                {iss.recommendation && (
-                                  <p className="mt-1.5 m-0 text-inherit font-medium">
-                                    <strong>Suggestion:</strong> {iss.recommendation}
-                                  </p>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium m-0">
-                            No issues flagged for this article.
-                          </p>
-                        )}
-
-                        {a.imageAudits && a.imageAudits.length > 0 && (
-                          <div className="space-y-2 pt-2">
-                            <h4 className="text-xs font-bold text-[var(--foreground)] uppercase tracking-wide">
-                              Image Alt Audit Details ({a.imageAudits.length} images evaluated)
-                            </h4>
-                            <div className="space-y-1.5 max-h-48 overflow-auto">
-                              {a.imageAudits.map((img, i) => (
-                                <div key={i} className="p-2 rounded border border-[var(--border)] bg-[var(--surface)] text-[11px] flex items-center justify-between gap-2">
-                                  <div className="truncate flex-1 font-mono text-[var(--muted)]">
-                                    {img.src.split('/').pop() || img.src}
-                                    {img.alt && <span className="text-[var(--foreground)] font-sans ml-2">&ldquo;{img.alt}&rdquo;</span>}
-                                  </div>
-                                  <span className={`badge shrink-0 ${
-                                    img.classification === 'missing_alt' ? 'badge-danger' :
-                                    img.classification === 'generic_alt' ? 'badge-warning' :
-                                    img.classification === 'empty_alt' ? 'badge-neutral' :
-                                    'badge-success'
-                                  }`}>
-                                    {img.classification === 'missing_alt' ? 'Missing Alt' :
-                                     img.classification === 'empty_alt' ? 'Decorative (empty alt)' :
-                                     img.classification === 'generic_alt' ? 'Generic Alt' :
-                                     'Descriptive'}
-                                  </span>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })()}
-                </>
-              )}
-            </div>
-          )}
-
-          {/* ========================================================= */}
-          {/* SECTION 5: TECHNICAL SEO */}
-          {/* ========================================================= */}
-          {activeSection === 'technical' && (
-            <div className="space-y-6">
-              {!audit ? (
-                <div className="panel text-center py-10">
-                  <p className="text-sm text-[var(--muted)] mb-3">Technical SEO audit data is not loaded yet.</p>
-                  <Button onClick={triggerAudit} disabled={auditing}>Run Read-Only Audit</Button>
-                </div>
-              ) : (
-                <>
-                  <div className="panel">
-                    <div className="flex items-center justify-between mb-3">
-                      <div>
-                        <span className="eyebrow">CRAWL CONTROLS</span>
-                        <h3 className="text-base font-bold text-[var(--foreground)]">Robots.txt Analysis</h3>
-                      </div>
-                      <span className="badge badge-success">Accessible (HTTP 200)</span>
-                    </div>
-                    <div className="p-3.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] font-mono text-xs whitespace-pre-wrap text-[var(--foreground)] max-h-48 overflow-auto">
-                      {audit.technical.robotsTxtContent || 'No robots.txt content available.'}
-                    </div>
-                  </div>
-
-                  <div className="panel">
-                    <div className="flex items-center justify-between mb-3">
-                      <div>
-                        <span className="eyebrow">INDEXING SITEMAPS</span>
-                        <h3 className="text-base font-bold text-[var(--foreground)]">XML Sitemap Status</h3>
-                      </div>
-                      <span className="badge badge-success">Valid Sitemap Index</span>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs mb-4">
-                      <div className="p-3.5 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
-                        <span className="text-[var(--muted)] block font-semibold mb-1">Index URL</span>
-                        <a
-                          href={audit.technical.sitemapIndexUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-sky-600 dark:text-sky-400 font-mono flex items-center gap-1"
-                        >
-                          {audit.technical.sitemapIndexUrl} <ExternalLink className="w-3 h-3" />
-                        </a>
-                      </div>
-                      <div className="p-3.5 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
-                        <span className="text-[var(--muted)] block font-semibold mb-1">Sub-Sitemaps Detected</span>
-                        <span className="font-semibold text-[var(--foreground)]">
-                          {audit.technical.sitemapCount} sub-sitemaps (post, page, category, author, tag)
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Root Cause Grouping */}
-                    {audit.technical.rootCauseGroups && audit.technical.rootCauseGroups.length > 0 && (
-                      <div className="mb-4 p-4 rounded-lg border border-amber-300 dark:border-amber-900 bg-amber-50/70 dark:bg-amber-950/30 text-xs">
-                        <div className="flex items-center gap-2 mb-1.5">
-                          <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
-                          <strong className="text-sm font-bold text-amber-900 dark:text-amber-200">
-                            Root Cause Grouping: {audit.technical.rootCauseGroups[0].rootCause}
-                          </strong>
-                        </div>
-                        <p className="text-amber-800 dark:text-amber-300 mb-2 leading-relaxed">
-                          {audit.technical.rootCauseGroups[0].description}
-                        </p>
-                        <div className="p-2.5 rounded bg-amber-100/70 dark:bg-amber-900/40 text-amber-900 dark:text-amber-100 font-medium">
-                          <strong>Recommended Solution:</strong> {audit.technical.rootCauseGroups[0].recommendation}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Protocol Findings Detail List */}
-                    {audit.technical.protocolIssues.length > 0 && (
-                      <div className="space-y-2">
-                        <strong className="text-xs font-semibold text-[var(--foreground)] block mb-1">
-                          Protocol Findings ({audit.technical.protocolIssues.length} items evaluated):
-                        </strong>
-                        {audit.technical.protocolIssues.map((p, idx) => (
-                          <div key={idx} className="p-3 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-xs space-y-1.5">
-                            <div className="flex items-center justify-between flex-wrap gap-2">
-                              <span className="font-mono text-sky-600 dark:text-sky-400 font-semibold">
-                                {p.originalUrl || p.type}
-                              </span>
-                              <div className="flex items-center gap-1.5">
-                                <span className={`badge ${p.severity === 'critical' ? 'badge-danger' : 'badge-warning'}`}>
-                                  {p.severity === 'critical' ? 'Critical' : 'Warning'}
-                                </span>
-                                {p.httpStatus && (
-                                  <span className="badge badge-neutral font-mono">
-                                    HTTP {p.httpStatus} &rarr; 200
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                            <p className="text-[var(--foreground)] m-0">{p.details}</p>
-                            {p.redirectChain && p.redirectChain.length > 1 && (
-                              <div className="text-[var(--muted)] font-mono text-[11px]">
-                                Redirect Chain: {p.redirectChain.join(' \u2192 ')}
-                              </div>
-                            )}
-                            <div className="flex flex-wrap gap-3 text-[11px] text-[var(--muted)] pt-1">
-                              <span>HTTPS Accessible: <strong className="text-emerald-600 dark:text-emerald-400 font-medium">Yes (200 OK)</strong></span>
-                              <span>Canonical Consistent: <strong className="text-emerald-600 dark:text-emerald-400 font-medium">Yes (HTTPS)</strong></span>
-                              {p.recommendation && (
-                                <span className="text-[var(--foreground)]">Action: {p.recommendation}</span>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="panel">
-                    <span className="eyebrow">STRUCTURED DATA</span>
-                    <h3 className="text-base font-bold text-[var(--foreground)] mb-2">Structured Data (Schema.org)</h3>
-                    <p className="text-xs text-[var(--muted)] mb-3">
-                      Detected Schema.org JSON-LD graph objects provided by Yoast SEO:
-                    </p>
-                    <div className="flex flex-wrap gap-2 text-xs mb-3">
-                      {audit.technical.schemaValidation.typesFound.map(t => (
-                        <span key={t} className="badge badge-neutral font-mono">
-                          {t}
-                        </span>
-                      ))}
-                    </div>
-                    {audit.technical.schemaValidation.richResultsNotice && (
-                      <p className="text-xs text-[var(--muted)] m-0 border-t border-[var(--border)] pt-2 italic">
-                        {audit.technical.schemaValidation.richResultsNotice}
-                      </p>
-                    )}
-                  </div>
-                </>
-              )}
-            </div>
-          )}
-
-          {/* ========================================================= */}
-          {/* SECTION 6: AI RECOMMENDATIONS */}
-          {/* ========================================================= */}
-          {activeSection === 'recommendations' && (
-            <div className="space-y-6">
-              <div className="panel">
-                <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
-                  <div>
-                    <span className="eyebrow">EDITORIAL ASSISTANCE</span>
-                    <h3 className="text-base font-bold text-[var(--foreground)]">AI-Powered SEO Proposals</h3>
-                    <p className="text-xs text-[var(--muted)] m-0">
-                      All suggestions are non-destructive proposals generated on demand. Marking a recommendation as &ldquo;Reviewed&rdquo; records state in current working session memory only and <strong>never modifies WordPress</strong>.
-                    </p>
-                  </div>
-                  <Button
-                    size="sm"
-                    onClick={triggerRecommendations}
-                    disabled={recommending}
-                  >
-                    <Sparkles className={`w-3.5 h-3.5 mr-1.5 ${recommending ? 'animate-spin' : ''}`} />
-                    {recommending ? 'Analyzing…' : 'Generate Proposals'}
-                  </Button>
-                </div>
-              </div>
-
-              {!recommendations ? (
-                <div className="panel text-center py-10">
-                  <Sparkles className="w-8 h-8 text-sky-600 dark:text-sky-400 mx-auto mb-2" />
-                  <p className="text-xs text-[var(--muted)] mb-3">No active recommendation set loaded.</p>
-                  <Button size="sm" onClick={triggerRecommendations} disabled={recommending}>
-                    Generate AI Proposals
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <div className="p-3.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-xs text-[var(--foreground)]">
-                    <strong className="font-semibold block mb-1">Executive Summary:</strong> {recommendations.summary}
-                  </div>
-
-                  {recommendations.recommendations.map(rec => {
-                    const isApproved = approvedIds.has(rec.id);
-                    return (
-                      <div key={rec.id} className="panel space-y-3">
-                        <div className="flex items-center justify-between">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span
-                              className={`badge ${
-                                rec.priority === 'high'
-                                  ? 'badge-critical'
-                                  : rec.priority === 'medium'
-                                  ? 'badge-warning'
-                                  : 'badge-info'
-                              }`}
-                            >
-                              {rec.priority} Priority
-                            </span>
-                            <span
-                              className={`badge ${
-                                rec.source === 'deterministic_audit'
-                                  ? 'badge-neutral'
-                                  : 'badge-info'
-                              }`}
-                            >
-                              {rec.source === 'deterministic_audit' ? 'Deterministic Audit Finding' : 'Gemini AI Suggestion'}
-                            </span>
-                            <span className="text-xs text-[var(--muted)] font-mono">/{rec.slug}</span>
-                          </div>
-                          <Button
-                            variant={isApproved ? 'outline' : 'default'}
-                            size="sm"
-                            onClick={() => toggleApproval(rec.id)}
-                            className="text-xs"
-                          >
-                            {isApproved ? (
-                              <>
-                                <CheckCircle className="w-3.5 h-3.5 mr-1 text-emerald-600 dark:text-emerald-400" />
-                                Approved (Internal)
-                              </>
-                            ) : (
-                              'Mark Reviewed'
-                            )}
-                          </Button>
-                        </div>
-
-                        <div>
-                          <h4 className="text-sm font-bold text-[var(--foreground)] m-0">{rec.issue}</h4>
-                          <p className="text-xs text-[var(--muted)] mt-1 m-0">{rec.reasoning}</p>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-                          <div className="p-3.5 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
-                            <span className="text-[var(--muted)] block mb-1 font-semibold">Current State</span>
-                            {rec.currentValue.title && <p className="m-0 mb-1"><strong>Title:</strong> {rec.currentValue.title}</p>}
-                            {rec.currentValue.description && <p className="m-0 mb-1"><strong>Description:</strong> {rec.currentValue.description}</p>}
-                            {rec.currentValue.structure && <p className="m-0">{rec.currentValue.structure}</p>}
-                          </div>
-                          <div className="p-3.5 rounded-lg border border-sky-300 dark:border-sky-800 bg-sky-50 dark:bg-sky-950/20">
-                            <span className="text-sky-700 dark:text-sky-300 block mb-1 font-semibold">Proposed Recommendation</span>
-                            {rec.recommendedValue.title && <p className="m-0 mb-1 font-medium"><strong>Title:</strong> {rec.recommendedValue.title}</p>}
-                            {rec.recommendedValue.description && <p className="m-0 mb-1"><strong>Description:</strong> {rec.recommendedValue.description}</p>}
-                            {rec.recommendedValue.structure && <p className="m-0">{rec.recommendedValue.structure}</p>}
-                          </div>
-                        </div>
-
-                        <div className="text-[11px] text-[var(--muted)] flex flex-wrap gap-4 pt-2 border-t border-[var(--border)]">
-                          <span><strong>Evidence:</strong> {rec.evidence}</span>
-                          <span><strong>Limitations:</strong> {rec.limitations}</span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* ========================================================= */}
-          {/* SECTION 7: AUDIT HISTORY */}
+          {/* SECTION: AUTONOMOUS CRON JOB & EXECUTION HISTORY */}
           {/* ========================================================= */}
           {activeSection === 'history' && (
             <div className="space-y-6">
+              {/* Header Panel */}
               <div className="panel">
-                <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+                <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
                   <div>
-                    <span className="eyebrow">MONITORING TIMELINE</span>
-                    <h3 className="text-base font-bold text-[var(--foreground)]">Historical SEO Reports (Session &amp; Local)</h3>
-                    <p className="text-xs text-[var(--muted)] m-0">
-                      Snapshots generated during the current session and cached temporarily in serverless storage. No database persistence is used.
+                    <span className="eyebrow">AUTONOMOUS RUN ARCHIVE</span>
+                    <h3 className="text-base font-bold text-[var(--foreground)] m-0">
+                      Autonomous Cron Job History &amp; Execution Snapshots
+                    </h3>
+                    <p className="text-xs text-[var(--muted)] m-0 mt-1">
+                      Verifiable scheduled daily cron runs and manual autonomous cycles. Every cycle produces an immutable snapshot detailing indexing submissions, sitemap pings, schema verification, brand query telemetry, and commit receipts to the dedicated <code className="font-semibold text-xs text-sky-700 dark:text-sky-300">monitoring-history</code> branch.
                     </p>
                   </div>
+
                   <div className="flex items-center gap-2">
-                    {audit && (
-                      <Button variant="outline" size="sm" onClick={() => downloadJson(audit, `firstread-audit-${Date.now()}.json`)}>
-                        <Download className="w-3.5 h-3.5 mr-1" /> Export Audit
-                      </Button>
-                    )}
-                    {recommendations && (
-                      <Button variant="outline" size="sm" onClick={() => downloadJson(recommendations, `firstread-recommendations-${Date.now()}.json`)}>
-                        <Download className="w-3.5 h-3.5 mr-1" /> Export Proposals
-                      </Button>
-                    )}
-                    <Button variant="outline" size="sm" onClick={() => void refreshData()}>
-                      <RefreshCw className="w-3.5 h-3.5 mr-1" /> Refresh
+                    <Button
+                      size="sm"
+                      onClick={handleRunBrandCycle}
+                      disabled={brandLoading || brandState?.status === 'running'}
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-xs shadow-xs"
+                    >
+                      <Play className={`w-3.5 h-3.5 mr-1.5 ${brandLoading || brandState?.status === 'running' ? 'animate-spin' : ''}`} />
+                      {brandLoading || brandState?.status === 'running' ? 'Running Cycle…' : 'Run Autonomous Cycle Now'}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => void fetchBrandState()}
+                      disabled={brandLoading}
+                    >
+                      <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${brandLoading ? 'animate-spin' : ''}`} />
+                      Refresh
                     </Button>
                   </div>
                 </div>
 
-                {reportHistory.length === 0 ? (
-                  <p className="text-xs text-[var(--muted)] py-4">No audit reports recorded yet.</p>
+                {/* Storage & Schedule Status Bar */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs pt-3 border-t border-[var(--border)]">
+                  <div className="p-3 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
+                    <span className="text-[var(--muted)] block font-medium mb-1">Vercel Daily Cron Schedule</span>
+                    <strong className="text-sm font-mono text-[var(--foreground)] flex items-center gap-1.5">
+                      <Calendar className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
+                      0 6 * * * (06:00 UTC)
+                    </strong>
+                  </div>
+                  <div className="p-3 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
+                    <span className="text-[var(--muted)] block font-medium mb-1">Total Recorded Runs</span>
+                    <strong className="text-sm font-bold text-[var(--foreground)] flex items-center gap-1.5">
+                      <History className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                      {(brandState?.executionHistory || []).length} Executions
+                    </strong>
+                  </div>
+                  <div className="p-3 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
+                    <span className="text-[var(--muted)] block font-medium mb-1">Permanent Git Store</span>
+                    <span className="text-xs font-mono text-sky-700 dark:text-sky-300 flex items-center gap-1">
+                      <GitBranch className="w-3.5 h-3.5" />
+                      {brandState?.storageStatus?.branch || 'monitoring-history'}
+                    </span>
+                  </div>
+                  <div className="p-3 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
+                    <span className="text-[var(--muted)] block font-medium mb-1">Last Storage Commit</span>
+                    <span className="text-xs font-mono text-[var(--foreground)] truncate block" title={brandState?.storageStatus?.sha || 'None'}>
+                      {brandState?.storageStatus?.sha ? brandState.storageStatus.sha.slice(0, 10) : 'Pending initial push'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Executions List */}
+              <div className="panel">
+                <div className="flex items-center justify-between pb-3 border-b border-[var(--border)] mb-4">
+                  <div>
+                    <h4 className="text-sm font-bold text-[var(--foreground)] m-0">
+                      Recorded Cron &amp; Autonomous Executions
+                    </h4>
+                    <p className="text-xs text-[var(--muted)] m-0">
+                      Click any run to view its full execution snapshot, indexing actions, and telemetry breakdown.
+                    </p>
+                  </div>
+                  {brandState?.executionHistory && brandState.executionHistory.length > 0 && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const blob = new Blob([JSON.stringify(brandState.executionHistory, null, 2)], {
+                          type: 'application/json'
+                        });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `firstread-cron-history-${Date.now()}.json`;
+                        a.click();
+                        URL.revokeObjectURL(url);
+                      }}
+                      className="text-xs"
+                    >
+                      <Download className="w-3.5 h-3.5 mr-1.5" /> Export All Runs
+                    </Button>
+                  )}
+                </div>
+
+                {(!brandState?.executionHistory || brandState.executionHistory.length === 0) ? (
+                  <div className="p-8 text-center rounded-lg border border-dashed border-[var(--border)] bg-[var(--surface)] space-y-3">
+                    <History className="w-8 h-8 text-[var(--muted)] mx-auto" />
+                    <div>
+                      <p className="text-sm font-semibold text-[var(--foreground)] m-0">No Autonomous Cron Executions Recorded Yet</p>
+                      <p className="text-xs text-[var(--muted)] m-0 mt-1 max-w-md mx-auto">
+                        Trigger a run right now with &quot;Run Autonomous Cycle Now&quot; or wait for the automated Vercel Cron job at 06:00 UTC. Every run writes an immutable report to the <code className="text-xs font-mono">monitoring-history</code> branch.
+                      </p>
+                    </div>
+                    <Button
+                      size="sm"
+                      onClick={handleRunBrandCycle}
+                      disabled={brandLoading || brandState?.status === 'running'}
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-xs mt-2"
+                    >
+                      <Play className="w-3.5 h-3.5 mr-1.5" /> Run First Autonomous Cycle
+                    </Button>
+                  </div>
                 ) : (
-                  <div className="space-y-2">
-                    {reportHistory.map(r => (
-                      <div
-                        key={r.id}
-                        className="p-3.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] flex items-center justify-between text-xs"
-                      >
-                        <div className="flex items-center gap-3">
-                          <Calendar className="w-4 h-4 text-[var(--muted)]" />
-                          <div>
-                            <span className="font-mono font-semibold text-[var(--foreground)] block">{r.id}</span>
-                            <span className="text-[var(--muted)]">
-                              {new Date(r.createdAt).toLocaleString('en-GB')} · Type: {r.kind} · Status: {r.status}
-                            </span>
+                  <div className="space-y-3">
+                    {brandState.executionHistory.map((exec) => {
+                      const isComplete = exec.status === 'success';
+                      const isFailed = exec.status === 'failed';
+                      const actionsCount = exec.actionsExecuted?.length || 0;
+                      return (
+                        <div
+                          key={exec.id}
+                          className="p-4 rounded-lg border border-[var(--border)] bg-[var(--surface)] hover:border-sky-500/50 transition-colors flex flex-col md:flex-row md:items-center justify-between gap-4 text-xs"
+                        >
+                          <div className="space-y-1.5">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="font-mono font-bold text-sm text-[var(--foreground)]">
+                                {exec.id}
+                              </span>
+                              <span
+                                className={`px-2 py-0.5 rounded text-[11px] font-semibold uppercase tracking-wider ${
+                                  isComplete
+                                    ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800'
+                                    : isFailed
+                                    ? 'bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400 border border-rose-300 dark:border-rose-800'
+                                    : 'bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border border-amber-300 dark:border-amber-800'
+                                }`}
+                              >
+                                {exec.status}
+                              </span>
+                              <span className="px-2 py-0.5 rounded text-[11px] font-mono bg-sky-100 dark:bg-sky-950/50 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800">
+                                duration: {(exec.durationMs / 1000).toFixed(1)}s
+                              </span>
+                            </div>
+
+                            <p className="text-xs text-[var(--muted)] m-0">
+                              {new Date(exec.startedAt).toLocaleString('en-GB')} · {exec.summary || 'Autonomous cycle completed.'}
+                            </p>
+
+                            <div className="flex flex-wrap items-center gap-3 pt-1 text-[11px] text-[var(--muted)]">
+                              <span>Actions Executed: <strong className="text-[var(--foreground)]">{actionsCount}</strong></span>
+                              <span>•</span>
+                              <span>Brand Clicks: <strong className="text-emerald-600 dark:text-emerald-400 font-bold">{exec.brandClicks ?? 0}</strong></span>
+                              <span>•</span>
+                              <span>Impressions: <strong className="text-sky-600 dark:text-sky-400 font-bold">{exec.brandImpressions ?? 0}</strong></span>
+                              <span>•</span>
+                              <span>Homepage Indexed: <strong className={exec.homepageIndexed ? 'text-emerald-600 dark:text-emerald-400 font-bold' : 'text-rose-600 dark:text-rose-400 font-bold'}>{exec.homepageIndexed ? 'Yes' : 'No'}</strong></span>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2 shrink-0">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                const blob = new Blob([JSON.stringify(exec, null, 2)], {
+                                  type: 'application/json'
+                                });
+                                const url = URL.createObjectURL(blob);
+                                const a = document.createElement('a');
+                                a.href = url;
+                                a.download = `${exec.id}.json`;
+                                a.click();
+                                URL.revokeObjectURL(url);
+                              }}
+                              className="text-xs"
+                              title="Download JSON Report"
+                            >
+                              <Download className="w-3.5 h-3.5 mr-1" /> Export JSON
+                            </Button>
+                            <Button
+                              size="sm"
+                              onClick={() => setSelectedCronExecution(exec)}
+                              className="text-xs bg-[var(--primary)] text-[var(--primary-foreground)]"
+                            >
+                              View Snapshot Report →
+                            </Button>
                           </div>
                         </div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          disabled={loadingReportId === r.id}
-                          onClick={() => void loadHistoricalReport(r.id)}
-                          className="text-xs"
-                        >
-                          {loadingReportId === r.id ? (
-                            <>
-                              <RefreshCw className="w-3.5 h-3.5 mr-1.5 animate-spin" />
-                              Loading…
-                            </>
-                          ) : (
-                            <>View Snapshot →</>
-                          )}
-                        </Button>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>
 
-              {/* Snapshot Modal Viewer */}
-              {selectedHistoricalReport && (
+              {/* Execution Snapshot Report Modal */}
+              {selectedCronExecution && (
                 <div
                   className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150"
                   role="dialog"
                   aria-modal="true"
-                  aria-labelledby="snapshot-modal-title"
+                  aria-labelledby="cron-snapshot-title"
                   onClick={e => {
-                    if (e.target === e.currentTarget) setSelectedHistoricalReport(null);
+                    if (e.target === e.currentTarget) setSelectedCronExecution(null);
                   }}
                 >
                   <div className="panel max-w-3xl w-full max-h-[85vh] flex flex-col p-6 shadow-2xl overflow-hidden border-2 border-[var(--border-strong)] bg-[var(--card)]">
                     {/* Modal Header */}
                     <div className="flex items-start justify-between pb-4 border-b border-[var(--border)] gap-4">
                       <div>
-                        <span className="eyebrow">HISTORICAL SNAPSHOT ARCHIVE</span>
-                        <h3 id="snapshot-modal-title" className="text-base font-bold text-[var(--foreground)] m-0">
-                          {String(selectedHistoricalReport.id || 'Historical Snapshot')}
+                        <span className="eyebrow">AUTONOMOUS RUN SNAPSHOT</span>
+                        <h3 id="cron-snapshot-title" className="text-base font-bold text-[var(--foreground)] m-0 font-mono">
+                          {selectedCronExecution.id}
                         </h3>
                         <p className="text-xs text-[var(--muted)] m-0 mt-1">
-                          Created: {selectedHistoricalReport.createdAt ? new Date(String(selectedHistoricalReport.createdAt)).toLocaleString('en-GB') : 'Unknown'} · Kind: <span className="font-semibold uppercase">{String(selectedHistoricalReport.kind)}</span> · Status: {String(selectedHistoricalReport.status)}
+                          Started: {new Date(selectedCronExecution.startedAt).toLocaleString('en-GB')} · Duration: <span className="font-semibold font-mono">{(selectedCronExecution.durationMs / 1000).toFixed(1)}s</span> · Status: <span className="font-semibold uppercase">{selectedCronExecution.status}</span>
                         </p>
                       </div>
                       <button
                         type="button"
-                        onClick={() => setSelectedHistoricalReport(null)}
+                        onClick={() => setSelectedCronExecution(null)}
                         className="text-[var(--muted)] hover:text-[var(--foreground)] p-1.5 rounded-md hover:bg-[var(--surface)] transition-colors"
                         aria-label="Close snapshot modal"
                       >
@@ -2231,101 +1120,134 @@ export function FirstReadPanel({ initialSection = 'overview' }: { initialSection
                       </button>
                     </div>
 
-                    {/* Modal Body (Scrollable) */}
+                    {/* Modal Body */}
                     <div className="flex-1 overflow-y-auto py-4 space-y-4">
-                      {/* Summary Metrics */}
-                      {(() => {
-                        const data = selectedHistoricalReport.data as Record<string, unknown> | undefined;
-                        if (!data) return null;
-                        if (selectedHistoricalReport.kind === 'audit') {
-                          const summary = data.summary as Record<string, number> | undefined;
-                          const siteInfo = data.siteInfo as Record<string, unknown> | undefined;
-                          const technical = data.technical as Record<string, unknown> | undefined;
-                          return (
-                            <div className="space-y-3">
-                              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-                                <div className="p-3 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
-                                  <span className="text-[var(--muted)] block font-medium mb-1">Total Posts</span>
-                                  <strong className="text-base font-bold text-[var(--foreground)]">
-                                    {Number(siteInfo?.totalPosts || 0).toLocaleString('en-GB')}
-                                  </strong>
-                                </div>
-                                <div className="p-3 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
-                                  <span className="text-[var(--muted)] block font-medium mb-1">Audited Articles</span>
-                                  <strong className="text-base font-bold text-[var(--foreground)]">
-                                    {summary?.totalChecked ?? 0}
-                                  </strong>
-                                </div>
-                                <div className="p-3 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
-                                  <span className="text-[var(--muted)] block font-medium mb-1">Critical Issues</span>
-                                  <strong className={`text-base font-bold ${Number(summary?.criticalCount || 0) > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
-                                    {summary?.criticalCount ?? 0}
-                                  </strong>
-                                </div>
-                                <div className="p-3 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
-                                  <span className="text-[var(--muted)] block font-medium mb-1">SEO Warnings</span>
-                                  <strong className={`text-base font-bold ${Number(summary?.warningCount || 0) > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
-                                    {summary?.warningCount ?? 0}
-                                  </strong>
-                                </div>
-                              </div>
-                              <div className="p-3 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-xs flex flex-wrap gap-4 text-[var(--muted)]">
-                                <span>Target: <strong className="text-[var(--foreground)] font-mono">{String(data.origin || 'https://firstread.co.uk')}</strong></span>
-                                <span>Robots.txt: <strong className="text-emerald-600 dark:text-emerald-400 font-medium">{String(technical?.robotsTxtStatus || 'accessible')}</strong></span>
-                                <span>Sub-Sitemaps: <strong className="text-[var(--foreground)]">{Number(technical?.sitemapCount || 0)} detected</strong></span>
-                              </div>
-                            </div>
-                          );
-                        }
-                        if (selectedHistoricalReport.kind === 'recommend') {
-                          const summary = String(data.summary || '');
-                          const recs = (data.recommendations as Array<Record<string, unknown>>) || [];
-                          return (
-                            <div className="space-y-3">
-                              {summary && (
-                                <div className="p-3.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-xs">
-                                  <strong className="block text-[var(--foreground)] font-semibold mb-1">Executive Summary:</strong>
-                                  <p className="m-0 text-[var(--muted)] leading-relaxed">{summary}</p>
-                                </div>
-                              )}
-                              <div className="text-xs text-[var(--muted)] font-medium">
-                                Total AI Recommendations in Snapshot: <strong className="text-[var(--foreground)]">{recs.length}</strong>
-                              </div>
-                            </div>
-                          );
-                        }
-                        return null;
-                      })()}
+                      {/* Executive Summary */}
+                      {selectedCronExecution.summary && (
+                        <div className="p-3.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-xs">
+                          <strong className="block text-[var(--foreground)] font-semibold mb-1">Execution Summary:</strong>
+                          <p className="m-0 text-[var(--muted)] leading-relaxed">{selectedCronExecution.summary}</p>
+                        </div>
+                      )}
 
-                      {/* Full JSON Payload */}
+                      {/* Brand Metrics Snapshot Grid */}
+                      <div>
+                        <h5 className="text-xs font-bold text-[var(--foreground)] mb-2">FirstRead Brand Performance Snapshot</h5>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                          <div className="p-3 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
+                            <span className="text-[var(--muted)] block font-medium mb-1">Brand Clicks</span>
+                            <strong className="text-base font-bold text-emerald-600 dark:text-emerald-400">
+                              {Number(selectedCronExecution.brandClicks || 0).toLocaleString('en-GB')}
+                            </strong>
+                          </div>
+                          <div className="p-3 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
+                            <span className="text-[var(--muted)] block font-medium mb-1">Impressions</span>
+                            <strong className="text-base font-bold text-sky-600 dark:text-sky-400">
+                              {Number(selectedCronExecution.brandImpressions || 0).toLocaleString('en-GB')}
+                            </strong>
+                          </div>
+                          <div className="p-3 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
+                            <span className="text-[var(--muted)] block font-medium mb-1">Discovery Issues</span>
+                            <strong className="text-base font-bold text-[var(--foreground)]">
+                              {selectedCronExecution.discoveryIssuesCount ?? 0}
+                            </strong>
+                          </div>
+                          <div className="p-3 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
+                            <span className="text-[var(--muted)] block font-medium mb-1">Homepage Indexed</span>
+                            <strong className={`text-base font-bold ${selectedCronExecution.homepageIndexed ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
+                              {selectedCronExecution.homepageIndexed ? 'Yes' : 'No'}
+                            </strong>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Actions Executed Table */}
                       <div>
                         <div className="flex items-center justify-between mb-2">
-                          <span className="text-xs font-semibold text-[var(--foreground)]">Full Snapshot JSON Payload</span>
-                          <span className="text-[11px] text-[var(--muted)]">Raw historical record</span>
+                          <h5 className="text-xs font-bold text-[var(--foreground)] m-0">
+                            Executed Actions Receipt ({selectedCronExecution.actionsExecuted?.length || 0})
+                          </h5>
+                          <span className="text-[11px] text-[var(--muted)]">Zero content modifications strictly guaranteed</span>
                         </div>
-                        <pre className="p-3.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[11px] font-mono text-[var(--foreground)] max-h-72 overflow-auto">
-                          {JSON.stringify(selectedHistoricalReport, null, 2)}
+
+                        {(!selectedCronExecution.actionsExecuted || selectedCronExecution.actionsExecuted.length === 0) ? (
+                          <p className="text-xs text-[var(--muted)] p-3 rounded-lg border border-[var(--border)] bg-[var(--surface)] m-0">
+                            No autonomous actions were dispatched during this cycle.
+                          </p>
+                        ) : (
+                          <div className="overflow-x-auto rounded-lg border border-[var(--border)]">
+                            <table className="w-full text-xs text-left">
+                              <thead className="bg-[var(--surface)] border-b border-[var(--border)] text-[var(--muted)] font-semibold">
+                                <tr>
+                                  <th className="py-2 px-3">Action Type</th>
+                                  <th className="py-2 px-3">Target</th>
+                                  <th className="py-2 px-3">Status</th>
+                                  <th className="py-2 px-3">Details</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-[var(--border)]">
+                                {selectedCronExecution.actionsExecuted.map((act) => (
+                                  <tr key={act.id} className="hover:bg-[var(--surface)] transition-colors">
+                                    <td className="py-2 px-3 font-mono font-medium text-[var(--foreground)] whitespace-nowrap">
+                                      {act.actionType}
+                                    </td>
+                                    <td className="py-2 px-3 font-mono text-[11px] text-[var(--muted)] max-w-xs truncate" title={act.target}>
+                                      {act.target}
+                                    </td>
+                                    <td className="py-2 px-3">
+                                      <span
+                                        className={`px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase ${
+                                          act.status === 'success'
+                                            ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400'
+                                            : act.status === 'failed'
+                                            ? 'bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400'
+                                            : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400'
+                                        }`}
+                                      >
+                                        {act.status}
+                                      </span>
+                                    </td>
+                                    <td className="py-2 px-3 text-[11px] text-[var(--muted)]">
+                                      {act.details || act.error || act.reason || '—'}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Full Snapshot JSON Payload */}
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs font-semibold text-[var(--foreground)]">Full Execution Snapshot JSON Payload</span>
+                          <span className="text-[11px] text-[var(--muted)]">Raw immutable record</span>
+                        </div>
+                        <pre className="p-3.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[11px] font-mono text-[var(--foreground)] max-h-56 overflow-auto">
+                          {JSON.stringify(selectedCronExecution, null, 2)}
                         </pre>
                       </div>
                     </div>
 
                     {/* Modal Footer */}
                     <div className="pt-4 border-t border-[var(--border)] flex flex-wrap items-center justify-between gap-3">
-                      <div className="text-xs text-[var(--muted)]">
-                        Persisted in <code className="text-xs">content/reports/</code>
+                      <div className="text-xs text-[var(--muted)] flex items-center gap-1.5">
+                        <GitBranch className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
+                        Persisted on branch <code className="text-xs font-mono font-semibold text-sky-700 dark:text-sky-300">monitoring-history</code>
                       </div>
                       <div className="flex items-center gap-2">
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => {
-                            const blob = new Blob([JSON.stringify(selectedHistoricalReport, null, 2)], {
+                            const blob = new Blob([JSON.stringify(selectedCronExecution, null, 2)], {
                               type: 'application/json'
                             });
                             const url = URL.createObjectURL(blob);
                             const a = document.createElement('a');
                             a.href = url;
-                            a.download = `${String(selectedHistoricalReport.id || 'snapshot')}.json`;
+                            a.download = `${selectedCronExecution.id}.json`;
                             a.click();
                             URL.revokeObjectURL(url);
                           }}
@@ -2334,7 +1256,7 @@ export function FirstReadPanel({ initialSection = 'overview' }: { initialSection
                         </Button>
                         <Button
                           size="sm"
-                          onClick={() => setSelectedHistoricalReport(null)}
+                          onClick={() => setSelectedCronExecution(null)}
                         >
                           Close
                         </Button>
@@ -2346,7 +1268,6 @@ export function FirstReadPanel({ initialSection = 'overview' }: { initialSection
             </div>
           )}
 
-          {/* ========================================================= */}
           {/* SECTION 8: GOOGLE INTEGRATIONS */}
           {/* ========================================================= */}
           {activeSection === 'google' && (
@@ -3139,64 +2060,6 @@ export function FirstReadPanel({ initialSection = 'overview' }: { initialSection
               </div>
             </div>
             </SectionErrorBoundary>
-          )}
-
-          {/* ========================================================= */}
-          {/* SECTION 9: SETTINGS */}
-          {/* ========================================================= */}
-          {activeSection === 'settings' && (
-            <div className="space-y-6">
-              <div className="panel space-y-4">
-                <div>
-                  <span className="eyebrow">DASHBOARD CONTROLS</span>
-                  <h3 className="text-base font-bold text-[var(--foreground)]">Dashboard Configuration</h3>
-                  <p className="text-xs text-[var(--muted)] m-0">
-                    Configuration settings and security enforcement parameters for FirstRead SEO Monitor.
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-                  <div className="p-3.5 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
-                    <span className="text-[var(--muted)] block mb-1 font-semibold">Monitored Target URL</span>
-                    <span className="text-[var(--foreground)] font-mono font-medium">https://firstread.co.uk</span>
-                    <small className="text-[var(--muted-light)] block mt-1">Fixed canonical origin</small>
-                  </div>
-
-                  <div className="p-3.5 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
-                    <span className="text-[var(--muted)] block mb-1 font-semibold">Politeness Rate Limiting</span>
-                    <span className="text-[var(--foreground)] font-medium">200ms interval throttle + 15s timeout</span>
-                    <small className="text-[var(--muted-light)] block mt-1">Protects WordPress LiteSpeed cache</small>
-                  </div>
-
-                  <div className="p-3.5 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
-                    <span className="text-[var(--muted)] block mb-1 font-semibold">AI Reasoning Model</span>
-                    <span className="text-[var(--foreground)] font-medium">Google Gemini (Structured Schema)</span>
-                    <small className="text-[var(--muted-light)] block mt-1">Deterministic JSON schema enforcement</small>
-                  </div>
-
-                  <div className="p-3.5 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
-                    <span className="text-[var(--muted)] block mb-1 font-semibold">Scheduled Audits</span>
-                    <span className="text-[var(--foreground)] font-medium">GitHub Actions &amp; CLI</span>
-                    <small className="text-[var(--muted-light)] block mt-1">CLI command: npm run firstread:audit</small>
-                  </div>
-                </div>
-
-                <div className="p-3.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-xs space-y-2">
-                  <strong className="block text-[var(--foreground)] font-semibold">Simplified Application Architecture</strong>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[var(--muted)]">
-                    <div>• <strong>Persistence:</strong> In-Memory / Ephemeral Session (Zero Database Dependency)</div>
-                    <div>• <strong>Orchestration:</strong> Direct Server-Side Operations (No Background Queues)</div>
-                    <div>• <strong>Hosting:</strong> Serverless Next.js App Router</div>
-                    <div>• <strong>AI Engine:</strong> Google Gemini (with deterministic heuristic fallbacks)</div>
-                  </div>
-                </div>
-
-                <div className="p-3.5 rounded-lg border border-emerald-300 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/20 text-xs text-emerald-900 dark:text-emerald-200">
-                  <strong className="block font-semibold mb-1">WordPress Security Isolation:</strong>
-                  WordPress administrator credentials, Application Passwords, and write endpoints (POST/PUT/PATCH/DELETE) are permanently disabled. The WordPress database and files can never be mutated by this dashboard.
-                </div>
-              </div>
-            </div>
           )}
         </>
       )}
