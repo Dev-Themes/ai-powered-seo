@@ -1352,3 +1352,90 @@ export async function fetchGA4Report(options?: {
     };
   }
 }
+
+export interface GoogleIndexingApiResponse {
+  success: boolean;
+  status: number;
+  message: string;
+  targetUrl: string;
+  actionType: 'URL_UPDATED' | 'URL_DELETED';
+  notifyTime?: string;
+}
+
+/**
+ * Publishes a URL update notification directly to Google Search via the Web Search Indexing API v3.
+ * Requires:
+ * 1. Web Search Indexing API enabled in Google Cloud Console.
+ * 2. Service account email granted Owner or Full user permission in Google Search Console.
+ */
+export async function publishUrlToGoogleIndexingApi(
+  targetUrl: string,
+  type: 'URL_UPDATED' | 'URL_DELETED' = 'URL_UPDATED'
+): Promise<GoogleIndexingApiResponse> {
+  const creds = getGoogleCredentials();
+  if (!creds) {
+    return {
+      success: false,
+      status: 401,
+      message: 'Google credentials not configured.',
+      targetUrl,
+      actionType: type
+    };
+  }
+
+  const jwt = createAuthorizedJWT([
+    'https://www.googleapis.com/auth/indexing'
+  ]);
+  if (!jwt) {
+    return {
+      success: false,
+      status: 500,
+      message: 'Failed to create JWT client with Indexing API scope.',
+      targetUrl,
+      actionType: type
+    };
+  }
+
+  const endpoint = 'https://indexing.googleapis.com/v3/urlNotifications:publish';
+
+  try {
+    const res = await jwt.request<{
+      urlNotificationMetadata?: {
+        url?: string;
+        latestUpdate?: {
+          url?: string;
+          type?: string;
+          notifyTime?: string;
+        };
+      };
+    }>({
+      url: endpoint,
+      method: 'POST',
+      data: {
+        url: targetUrl,
+        type
+      }
+    });
+
+    const notifyTime = res.data?.urlNotificationMetadata?.latestUpdate?.notifyTime;
+    return {
+      success: res.status >= 200 && res.status < 300,
+      status: res.status,
+      message: `Google Indexing API accepted notification for "${targetUrl}" (${type}).`,
+      targetUrl,
+      actionType: type,
+      notifyTime
+    };
+  } catch (err: unknown) {
+    const errMsg = sanitizeGoogleError(err);
+    const status = (err as { status?: number; response?: { status?: number } })?.response?.status || 500;
+    return {
+      success: false,
+      status,
+      message: `Google Indexing API call failed: ${errMsg}`,
+      targetUrl,
+      actionType: type
+    };
+  }
+}
+

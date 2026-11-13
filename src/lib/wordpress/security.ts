@@ -119,3 +119,35 @@ export function validateReadOnlyRequest(url: string | URL, init?: RequestInit): 
 
   return parsedUrl;
 }
+
+/**
+ * Hard Guardrail: Strictly prevents any autonomous action from modifying, creating,
+ * editing, or deleting WordPress articles, posts, or page content.
+ * Fails closed immediately if any editorial/content alteration is attempted.
+ */
+export function assertNoContentModification(actionName: string, payload?: unknown): void {
+  if (payload && typeof payload === 'object') {
+    const keys = Object.keys(payload as Record<string, unknown>).map(k => k.toLowerCase());
+    const forbiddenKeys = [
+      'content',
+      'post_content',
+      'title',
+      'post_title',
+      'excerpt',
+      'post_excerpt',
+      'body',
+      'article_content',
+      'publish',
+      'status',
+      'raw'
+    ];
+
+    for (const forbidden of forbiddenKeys) {
+      if (keys.includes(forbidden)) {
+        throw new FirstReadSecurityError(
+          `Autonomous action "${actionName}" violated zero-content guardrail: forbidden field "${forbidden}" detected. The system is strictly forbidden from modifying or publishing website content.`
+        );
+      }
+    }
+  }
+}

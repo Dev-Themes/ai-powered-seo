@@ -19,7 +19,8 @@ import {
   fetchGSCReport,
   fetchGA4Report,
   testGoogleConnections,
-  diagnoseGA4Connection
+  diagnoseGA4Connection,
+  publishUrlToGoogleIndexingApi
 } from '@/lib/integrations/google';
 import {
   executeKeywordResearch,
@@ -41,7 +42,12 @@ import {
   emergencyStopAutonomousExecution
 } from '@/lib/brand/engine';
 import { handleBrandCronRequest } from '@/lib/brand/cron';
-import { inspectUrlWithGsc, submitSitemapToGsc } from '@/lib/brand/indexing';
+import {
+  inspectUrlWithGsc,
+  submitSitemapToGsc,
+  pingGoogleSitemap,
+  auditBrandStructuredData
+} from '@/lib/brand/indexing';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -325,6 +331,23 @@ export async function POST(
         }
         if (subAction === 'sitemap-submit') {
           const res = await submitSitemapToGsc();
+          return NextResponse.json(res);
+        }
+        if (subAction === 'indexing-publish') {
+          let body: { url?: string; type?: 'URL_UPDATED' | 'URL_DELETED' } = {};
+          try {
+            body = await request.json();
+          } catch {}
+          const publishUrl = body.url || 'https://firstread.co.uk/';
+          const res = await publishUrlToGoogleIndexingApi(publishUrl, body.type || 'URL_UPDATED');
+          return NextResponse.json(res);
+        }
+        if (subAction === 'sitemap-ping') {
+          const res = await pingGoogleSitemap();
+          return NextResponse.json(res);
+        }
+        if (subAction === 'schema-audit') {
+          const res = await auditBrandStructuredData();
           return NextResponse.json(res);
         }
       }

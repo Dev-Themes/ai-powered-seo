@@ -179,10 +179,13 @@ export interface AutonomousActionRecord {
   timestamp: string;
   actionType:
     | 'sitemap_submit'
+    | 'sitemap_ping'
+    | 'google_indexing_publish'
     | 'inspect_homepage'
     | 'inspect_url'
     | 'verify_robots'
     | 'verify_canonical'
+    | 'audit_schema'
     | 'recheck_indexing';
   target: string;
   status: 'success' | 'failed' | 'skipped';

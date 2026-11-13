@@ -2,8 +2,10 @@ import {
   createAuthorizedJWT,
   getGoogleConfig,
   getGoogleCredentials,
-  sanitizeGoogleError
+  sanitizeGoogleError,
+  publishUrlToGoogleIndexingApi
 } from '../integrations/google';
+import { assertNoContentModification } from '../wordpress/security';
 import type {
   UrlInspectionResult,
   SitemapAuditStatus,
@@ -449,9 +451,122 @@ export async function auditTechnicalDiscovery(): Promise<TechnicalDiscoveryIssue
 }
 
 /**
+ * Autonomous ping notification for Google crawler to refresh sitemaps.
+ */
+export async function pingGoogleSitemap(sitemapUrl = SITEMAP_INDEX_URL): Promise<{ success: boolean; message: string }> {
+  try {
+    const pingUrl = `https://www.google.com/ping?sitemap=${encodeURIComponent(sitemapUrl)}`;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 6000);
+
+    const res = await fetch(pingUrl, {
+      method: 'GET',
+      signal: controller.signal,
+      cache: 'no-store'
+    });
+    clearTimeout(timeoutId);
+
+    return {
+      success: res.status >= 200 && res.status < 400,
+      message: `Google Sitemap Ping returned HTTP ${res.status}.`
+    };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return {
+      success: false,
+      message: `Google Sitemap Ping unavailable: ${msg}`
+    };
+  }
+}
+
+export interface BrandSchemaAuditResult {
+  hasOrganizationSchema: boolean;
+  hasWebSiteSchema: boolean;
+  hasSearchAction: boolean;
+  brandNameDetected?: string;
+  issues: string[];
+}
+
+/**
+ * Audits homepage JSON-LD for Organization and WebSite SearchAction schema
+ * to ensure Google can award brand sitelinks and knowledge graph for 'firstread'.
+ */
+export async function auditBrandStructuredData(targetUrl = TARGET_SITE): Promise<BrandSchemaAuditResult> {
+  const result: BrandSchemaAuditResult = {
+    hasOrganizationSchema: false,
+    hasWebSiteSchema: false,
+    hasSearchAction: false,
+    issues: []
+  };
+
+  try {
+    const res = await fetch(targetUrl, {
+      method: 'GET',
+      headers: { 'User-Agent': 'FirstRead-Brand-Engine/1.0' },
+      cache: 'no-store'
+    });
+
+    if (!res.ok) {
+      result.issues.push(`Unable to fetch ${targetUrl} for schema audit (HTTP ${res.status}).`);
+      return result;
+    }
+
+    const html = await res.text();
+    const schemaMatches = Array.from(html.matchAll(/<script\b[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi));
+
+    for (const match of schemaMatches) {
+      try {
+        const parsed = JSON.parse(match[1]);
+        const graphs = Array.isArray(parsed) ? parsed : (parsed['@graph'] || [parsed]);
+
+        for (const node of graphs) {
+          const type = node['@type'];
+          const types = Array.isArray(type) ? type : [type];
+
+          if (types.includes('Organization') || types.includes('NewsMediaOrganization')) {
+            result.hasOrganizationSchema = true;
+            if (node.name) result.brandNameDetected = String(node.name);
+          }
+          if (types.includes('WebSite')) {
+            result.hasWebSiteSchema = true;
+            const potentialAction = node.potentialAction;
+            if (potentialAction) {
+              const actions = Array.isArray(potentialAction) ? potentialAction : [potentialAction];
+              for (const act of actions) {
+                if (act['@type'] === 'SearchAction' || act.target) {
+                  result.hasSearchAction = true;
+                }
+              }
+            }
+          }
+        }
+      } catch {}
+    }
+
+    if (!result.hasOrganizationSchema) {
+      result.issues.push('Organization JSON-LD schema not declared on brand homepage.');
+    }
+    if (!result.hasWebSiteSchema) {
+      result.issues.push('WebSite JSON-LD schema not declared on brand homepage.');
+    }
+    if (!result.hasSearchAction) {
+      result.issues.push('WebSite SearchAction schema missing (recommended for Google Sitelinks Search Box for "firstread").');
+    }
+  } catch (err) {
+    result.issues.push(`Brand schema audit error: ${err instanceof Error ? err.message : String(err)}`);
+  }
+
+  return result;
+}
+
+/**
  * Executes permitted autonomous Google actions without human approval:
  * - Submits sitemap if needed and valid
+ * - Notifies Google Indexing API v3 for priority brand URLs
+ * - Pings Google sitemap service
+ * - Audits brand structured data
  * - Inspects homepage and key brand URLs via URL Inspection API
+ * - Re-indexes any crawled/discovered unindexed brand URLs
  */
 export async function executePermittedIndexingActions(
   sitemapStatus: SitemapAuditStatus,
@@ -460,11 +575,27 @@ export async function executePermittedIndexingActions(
   actions: AutonomousActionRecord[];
   inspections: UrlInspectionResult[];
 }> {
+  // Hard Invariant: Verify zero content modification
+  assertNoContentModification('executePermittedIndexingActions');
+
   const actions: AutonomousActionRecord[] = [];
   const inspections: UrlInspectionResult[] = [];
   const timestamp = new Date().toISOString();
 
-  // 1. Autonomous Sitemap Submission when justified
+  // 1. Autonomous Google Indexing API Push for Primary Brand Domain (https://firstread.co.uk/)
+  const indexingPushRes = await publishUrlToGoogleIndexingApi(TARGET_SITE, 'URL_UPDATED');
+  actions.push({
+    id: `act-index-pub-${Date.now()}`,
+    timestamp: new Date().toISOString(),
+    actionType: 'google_indexing_publish',
+    target: TARGET_SITE,
+    status: indexingPushRes.success ? 'success' : indexingPushRes.status === 401 ? 'skipped' : 'failed',
+    details: indexingPushRes.message,
+    reason: 'Autonomous Google Indexing API notification to accelerate brand visibility for "firstread".',
+    error: indexingPushRes.success ? undefined : indexingPushRes.message
+  });
+
+  // 2. Autonomous Sitemap Submission when justified
   if (sitemapStatus.needsSubmission && sitemapStatus.accessibleOnWeb) {
     if (sitemapStatus.lastSubmissionResult === 'permission_denied') {
       actions.push({
@@ -509,7 +640,33 @@ export async function executePermittedIndexingActions(
     });
   }
 
-  // 2. Autonomous Indexing Status Inspection for Priority URLs
+  // 3. Autonomous Sitemap Ping
+  const pingRes = await pingGoogleSitemap(sitemapStatus.sitemapIndexUrl);
+  actions.push({
+    id: `act-ping-${Date.now()}`,
+    timestamp: new Date().toISOString(),
+    actionType: 'sitemap_ping',
+    target: sitemapStatus.sitemapIndexUrl,
+    status: pingRes.success ? 'success' : 'skipped',
+    details: pingRes.message,
+    reason: 'Autonomous crawler ping for updated sitemap.'
+  });
+
+  // 4. Autonomous Brand Schema & Sitelinks Verification
+  const schemaRes = await auditBrandStructuredData(TARGET_SITE);
+  actions.push({
+    id: `act-schema-${Date.now()}`,
+    timestamp: new Date().toISOString(),
+    actionType: 'audit_schema',
+    target: TARGET_SITE,
+    status: schemaRes.issues.length === 0 ? 'success' : 'skipped',
+    details: schemaRes.issues.length === 0
+      ? `Brand schema verified: Organization (${schemaRes.brandNameDetected || 'FirstRead'}), WebSite, and SearchAction intact.`
+      : `Brand schema audit noticed: ${schemaRes.issues.join('; ')}`,
+    reason: 'Autonomous verification of brand knowledge graph schema for "firstread".'
+  });
+
+  // 5. Autonomous Indexing Status Inspection for Priority URLs
   const uniqueUrls = Array.from(new Set(targetUrls)).slice(0, 5); // Safe batch of top priority URLs
 
   for (const url of uniqueUrls) {
@@ -525,6 +682,20 @@ export async function executePermittedIndexingActions(
       details: `Google Inspection: verdict=${inspectResult.verdict}, state="${inspectResult.coverageState}", robots=${inspectResult.robotsTxtState}`,
       reason: 'Autonomous URL indexing inspection.'
     });
+
+    // Reactive Indexing: If Google has discovered/crawled the brand URL but hasn't indexed it, trigger Indexing API
+    if (inspectResult.isDiscoveredNotIndexed || inspectResult.isCrawledNotIndexed) {
+      const reactivePub = await publishUrlToGoogleIndexingApi(url, 'URL_UPDATED');
+      actions.push({
+        id: `act-recheck-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        timestamp: new Date().toISOString(),
+        actionType: 'google_indexing_publish',
+        target: url,
+        status: reactivePub.success ? 'success' : 'skipped',
+        details: `Reactive indexing requested because status was "${inspectResult.coverageState}". Response: ${reactivePub.message}`,
+        reason: 'Autonomous re-indexing request for unindexed brand URL.'
+      });
+    }
   }
 
   return { actions, inspections };

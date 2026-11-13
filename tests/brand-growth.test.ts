@@ -10,8 +10,16 @@ import {
   evaluateBrandAlerts
 } from '../src/lib/brand/tracker';
 import {
-  executePermittedIndexingActions
+  executePermittedIndexingActions,
+  pingGoogleSitemap,
+  auditBrandStructuredData
 } from '../src/lib/brand/indexing';
+import {
+  publishUrlToGoogleIndexingApi
+} from '../src/lib/integrations/google';
+import {
+  assertNoContentModification
+} from '../src/lib/wordpress/security';
 import {
   loadBrandGrowthState,
   saveBrandGrowthState,
@@ -458,4 +466,69 @@ test('Scheduled Cron Execution: request when CRON_SECRET is unconfigured fails c
     process.env.CRON_SECRET = originalSecret;
   }
 });
+
+test('Zero-Content Guardrail: strictly throws error on content modification payloads', () => {
+  // Disallowed content write attempts
+  assert.throws(
+    () => assertNoContentModification('update_post', { post_content: 'New paragraph' }),
+    /zero-content guardrail: forbidden field "post_content" detected/
+  );
+  assert.throws(
+    () => assertNoContentModification('update_title', { title: 'New SEO Title' }),
+    /zero-content guardrail: forbidden field "title" detected/
+  );
+  assert.throws(
+    () => assertNoContentModification('publish_article', { body: 'Content text', publish: true }),
+    /zero-content guardrail: forbidden field "body" detected/
+  );
+
+  // Allowed technical SEO actions
+  assert.doesNotThrow(() => {
+    assertNoContentModification('google_indexing_publish', { url: 'https://firstread.co.uk/', type: 'URL_UPDATED' });
+  });
+  assert.doesNotThrow(() => {
+    assertNoContentModification('sitemap_submit', { sitemapUrl: 'https://firstread.co.uk/sitemap_index.xml' });
+  });
+});
+
+test('Google Indexing API: handles unconfigured environment gracefully without throwing', async () => {
+  // When credentials are not configured in test environment
+  const res = await publishUrlToGoogleIndexingApi('https://firstread.co.uk/', 'URL_UPDATED');
+  assert.equal(typeof res.success, 'boolean');
+  assert.equal(typeof res.status, 'number');
+  assert.equal(res.targetUrl, 'https://firstread.co.uk/');
+  assert.equal(res.actionType, 'URL_UPDATED');
+});
+
+test('Autonomous Indexing Pipeline: executes full suite of permitted technical actions', async () => {
+  const dummySitemapStatus = {
+    sitemapIndexUrl: 'https://firstread.co.uk/sitemap_index.xml',
+    accessibleOnWeb: true,
+    httpStatus: 200,
+    detectedChildSitemaps: [],
+    gscSubmittedSitemaps: [],
+    isSubmittedToGsc: true,
+    needsSubmission: false
+  };
+
+  const { actions, inspections } = await executePermittedIndexingActions(dummySitemapStatus);
+
+  assert.ok(Array.isArray(actions));
+  assert.ok(Array.isArray(inspections));
+  assert.ok(actions.length >= 3);
+
+  const actionTypes = actions.map(a => a.actionType);
+  assert.ok(actionTypes.includes('google_indexing_publish'), 'Must include Google Indexing API publish action');
+  assert.ok(actionTypes.includes('sitemap_ping'), 'Must include sitemap ping action');
+  assert.ok(actionTypes.includes('audit_schema'), 'Must include brand schema audit action');
+
+  // Verify all actions have id, timestamp, status, and reason
+  for (const act of actions) {
+    assert.ok(act.id);
+    assert.ok(act.timestamp);
+    assert.ok(['success', 'failed', 'skipped'].includes(act.status));
+    assert.ok(act.reason);
+  }
+});
+
 
