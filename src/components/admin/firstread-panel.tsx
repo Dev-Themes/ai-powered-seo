@@ -874,11 +874,17 @@ export function FirstReadPanel({ initialSection = 'overview' }: { initialSection
             <BrandGrowthView
               brandState={brandState}
               loading={brandLoading}
-              onRefresh={fetchBrandState}
+              onRefresh={async () => {
+                await Promise.all([fetchBrandState(), fetchGoogleReports()]);
+              }}
               onRunCycle={handleRunBrandCycle}
               onTogglePause={handleToggleBrandPause}
               onEmergencyStop={handleEmergencyStop}
               onInspectUrl={handleInspectUrl}
+              gscReport={gscReport}
+              ga4Report={ga4Report}
+              dateRangePreset={dateRangePreset}
+              onDatePresetChange={handleDatePresetChange}
             />
           )}
 {/* ========================================================= */}
