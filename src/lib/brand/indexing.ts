@@ -584,15 +584,24 @@ export async function executePermittedIndexingActions(
 
   // 1. Autonomous Google Indexing API Push for Primary Brand Domain (https://firstread.co.uk/)
   const indexingPushRes = await publishUrlToGoogleIndexingApi(TARGET_SITE, 'URL_UPDATED');
+  const isOwnershipDenied =
+    !indexingPushRes.success &&
+    (indexingPushRes.message.includes('Failed to verify the URL ownership') ||
+      indexingPushRes.message.includes('Permission denied') ||
+      indexingPushRes.status === 403);
+  const isSkipped = !indexingPushRes.success && (indexingPushRes.status === 401 || isOwnershipDenied);
+
   actions.push({
     id: `act-index-pub-${Date.now()}`,
     timestamp: new Date().toISOString(),
     actionType: 'google_indexing_publish',
     target: TARGET_SITE,
-    status: indexingPushRes.success ? 'success' : indexingPushRes.status === 401 ? 'skipped' : 'failed',
-    details: indexingPushRes.message,
+    status: indexingPushRes.success ? 'success' : isSkipped ? 'skipped' : 'failed',
+    details: isOwnershipDenied
+      ? 'Google Indexing API requires Owner verification; operating in Search Console Full-user mode via autonomous sitemap submissions.'
+      : indexingPushRes.message,
     reason: 'Autonomous Google Indexing API notification to accelerate brand visibility for "firstread".',
-    error: indexingPushRes.success ? undefined : indexingPushRes.message
+    error: indexingPushRes.success || isSkipped ? undefined : indexingPushRes.message
   });
 
   // 2. Autonomous Sitemap Submission when justified
