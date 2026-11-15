@@ -1,18 +1,18 @@
 {
   "status": "idle",
   "paused": false,
-  "lastRunAt": "2026-11-14T14:14:58.408Z",
+  "lastRunAt": "2026-11-15T06:32:23.838Z",
   "runningSince": null,
-  "nextScheduledRunAt": "2026-11-15T14:14:58.408Z",
+  "nextScheduledRunAt": "2026-11-16T06:32:23.838Z",
   "safeRetryCount": 0,
   "safeRetryLimit": 3,
   "latestReport": {
     "targetDomain": "https://firstread.co.uk/",
     "primaryBrandKeyword": "firstread",
-    "generatedAt": "2026-11-14T14:14:30.854Z",
+    "generatedAt": "2026-11-15T06:31:53.095Z",
     "dateRange": {
-      "startDate": "2026-10-17",
-      "endDate": "2026-11-13"
+      "startDate": "2026-10-18",
+      "endDate": "2026-11-14"
     },
     "exactBrand": null,
     "variations": [
@@ -94,37 +94,51 @@
         "query": "site:firstread.co.uk",
         "isExactBrand": false,
         "clicks": 1,
-        "impressions": 150,
-        "ctr": 0.0067,
-        "position": 12.17,
+        "impressions": 190,
+        "ctr": 0.0053,
+        "position": 10.76,
         "landingPages": [
           {
             "page": "https://firstread.co.uk/cartetach/",
             "clicks": 1,
-            "impressions": 2,
-            "ctr": 0.5,
+            "impressions": 6,
+            "ctr": 0.1667,
             "position": 1
           },
           {
             "page": "https://firstread.co.uk/dihward/",
             "clicks": 0,
-            "impressions": 10,
+            "impressions": 14,
             "ctr": 0,
-            "position": 3.6
+            "position": 3.5
           },
           {
             "page": "https://firstread.co.uk/echostreamhub/",
             "clicks": 0,
-            "impressions": 10,
+            "impressions": 14,
             "ctr": 0,
-            "position": 4.6
+            "position": 4.5
           },
           {
             "page": "https://firstread.co.uk/jyokyo/",
             "clicks": 0,
+            "impressions": 14,
+            "ctr": 0,
+            "position": 7.43
+          },
+          {
+            "page": "https://firstread.co.uk/onionplay/",
+            "clicks": 0,
+            "impressions": 13,
+            "ctr": 0,
+            "position": 9
+          },
+          {
+            "page": "https://firstread.co.uk/cdiphone/",
+            "clicks": 0,
             "impressions": 10,
             "ctr": 0,
-            "position": 7.4
+            "position": 6.1
           },
           {
             "page": "https://firstread.co.uk/korpenpelloz/",
@@ -134,25 +148,18 @@
             "position": 8.4
           },
           {
-            "page": "https://firstread.co.uk/onionplay/",
-            "clicks": 0,
-            "impressions": 9,
-            "ctr": 0,
-            "position": 9.22
-          },
-          {
             "page": "https://firstread.co.uk/ontpresscom/",
             "clicks": 0,
-            "impressions": 9,
+            "impressions": 10,
             "ctr": 0,
-            "position": 6.44
+            "position": 6.5
           },
           {
             "page": "https://firstread.co.uk/baddiehub/",
             "clicks": 0,
-            "impressions": 8,
+            "impressions": 9,
             "ctr": 0,
-            "position": 6.25
+            "position": 5.89
           },
           {
             "page": "https://firstread.co.uk/eporer/",
@@ -162,6 +169,13 @@
             "position": 1.86
           },
           {
+            "page": "https://firstread.co.uk/movies123/",
+            "clicks": 0,
+            "impressions": 7,
+            "ctr": 0,
+            "position": 9.71
+          },
+          {
             "page": "https://firstread.co.uk/tate-mcrae-tour/",
             "clicks": 0,
             "impressions": 7,
@@ -169,11 +183,18 @@
             "position": 1
           },
           {
-            "page": "https://firstread.co.uk/cdiphone/",
+            "page": "https://firstread.co.uk/totalsportek/",
             "clicks": 0,
-            "impressions": 6,
+            "impressions": 7,
             "ctr": 0,
-            "position": 6
+            "position": 5.29
+          },
+          {
+            "page": "https://firstread.co.uk/viltnemnda/",
+            "clicks": 0,
+            "impressions": 7,
+            "ctr": 0,
+            "position": 2
           },
           {
             "page": "https://firstread.co.uk/drooski18/",
@@ -183,25 +204,11 @@
             "position": 9.75
           },
           {
-            "page": "https://firstread.co.uk/movies123/",
+            "page": "https://firstread.co.uk/thehrwp/",
             "clicks": 0,
             "impressions": 3,
             "ctr": 0,
-            "position": 10
-          },
-          {
-            "page": "https://firstread.co.uk/totalsportek/",
-            "clicks": 0,
-            "impressions": 3,
-            "ctr": 0,
-            "position": 5.33
-          },
-          {
-            "page": "https://firstread.co.uk/viltnemnda/",
-            "clicks": 0,
-            "impressions": 3,
-            "ctr": 0,
-            "position": 2
+            "position": 10.33
           },
           {
             "page": "https://firstread.co.uk/aneliz-aguilar/",
@@ -442,13 +449,6 @@
             "position": 24
           },
           {
-            "page": "https://firstread.co.uk/thehrwp/",
-            "clicks": 0,
-            "impressions": 1,
-            "ctr": 0,
-            "position": 11
-          },
-          {
             "page": "https://firstread.co.uk/torchys-tacos/",
             "clicks": 0,
             "impressions": 1,
@@ -505,9 +505,9 @@
     ],
     "totalBrandedSummary": {
       "clicks": 228,
-      "impressions": 519,
-      "ctr": 0.4393,
-      "averagePosition": 5.88
+      "impressions": 559,
+      "ctr": 0.4079,
+      "averagePosition": 5.85
     },
     "comparison7d": {
       "clicks": {
@@ -518,24 +518,24 @@
         "trend": "improving"
       },
       "impressions": {
-        "current": 22,
+        "current": 62,
         "previous": 81,
-        "absoluteChange": -59,
-        "percentageChange": -72.84,
+        "absoluteChange": -19,
+        "percentageChange": -23.46,
         "trend": "declining"
       },
       "ctr": {
-        "current": 0.0455,
+        "current": 0.0161,
         "previous": 0,
-        "absoluteChange": 0.0455,
+        "absoluteChange": 0.0161,
         "percentageChange": null,
         "trend": "improving"
       },
       "position": {
-        "current": 5.14,
+        "current": 5.37,
         "previous": 18.74,
-        "absoluteChange": -13.6,
-        "percentageChange": -72.57,
+        "absoluteChange": -13.37,
+        "percentageChange": -71.34,
         "trend": "improving"
       }
     },
@@ -548,24 +548,24 @@
         "trend": "declining"
       },
       "impressions": {
-        "current": 519,
-        "previous": 2300,
-        "absoluteChange": -1781,
-        "percentageChange": -77.43,
+        "current": 559,
+        "previous": 2290,
+        "absoluteChange": -1731,
+        "percentageChange": -75.59,
         "trend": "declining"
       },
       "ctr": {
-        "current": 0.4393,
-        "previous": 0.5643,
-        "absoluteChange": -0.125,
-        "percentageChange": -22.15,
+        "current": 0.4079,
+        "previous": 0.5668,
+        "absoluteChange": -0.1589,
+        "percentageChange": -28.03,
         "trend": "declining"
       },
       "position": {
-        "current": 5.88,
+        "current": 5.85,
         "previous": 4.8,
-        "absoluteChange": 1.08,
-        "percentageChange": 22.5,
+        "absoluteChange": 1.05,
+        "percentageChange": 21.87,
         "trend": "declining"
       }
     },
@@ -578,19 +578,19 @@
     },
     "alerts": [
       {
-        "id": "alert-imp-decline-1794665671531",
+        "id": "alert-imp-decline-1794724313599",
         "severity": "critical",
         "type": "declining_impressions",
         "title": "Declining Brand Impressions",
-        "description": "Branded search impressions dropped 77.4% compared to the prior 28-day window (519 vs 2300).",
+        "description": "Branded search impressions dropped 75.6% compared to the prior 28-day window (559 vs 2290).",
         "metric": "impressions",
-        "currentValue": 519,
-        "previousValue": 2300,
+        "currentValue": 559,
+        "previousValue": 2290,
         "recommendation": "Verify homepage indexing status, sitemap freshness, and schema markup to restore brand search appearance.",
-        "detectedAt": "2026-11-14T14:14:31.531Z"
+        "detectedAt": "2026-11-15T06:31:53.599Z"
       },
       {
-        "id": "alert-clicks-decline-1794665671531",
+        "id": "alert-clicks-decline-1794724313599",
         "severity": "critical",
         "type": "declining_clicks",
         "title": "Declining Brand Clicks",
@@ -599,34 +599,34 @@
         "currentValue": 228,
         "previousValue": 1298,
         "recommendation": "Check whether third-party or sub-page results are cannibalising clicks away from the homepage.",
-        "detectedAt": "2026-11-14T14:14:31.531Z"
+        "detectedAt": "2026-11-15T06:31:53.599Z"
       },
       {
-        "id": "alert-pos-deterioration-1794665671531",
+        "id": "alert-pos-deterioration-1794724313599",
         "severity": "critical",
         "type": "ranking_deterioration",
         "title": "Brand Ranking Deterioration",
-        "description": "Average branded search position is 5.9 (expected top position 1.0 - 2.0).",
+        "description": "Average branded search position is 5.8 (expected top position 1.0 - 2.0).",
         "metric": "position",
-        "currentValue": 5.88,
+        "currentValue": 5.85,
         "previousValue": 4.8,
         "recommendation": "Inspect brand entity signals, homepage canonical declaration, and robots.txt accessibility.",
-        "detectedAt": "2026-11-14T14:14:31.531Z"
+        "detectedAt": "2026-11-15T06:31:53.599Z"
       }
     ]
   },
   "latestGa4Correlation": {
     "period": {
-      "startDate": "2026-10-17",
-      "endDate": "2026-11-13"
+      "startDate": "2026-10-18",
+      "endDate": "2026-11-14"
     },
-    "totalOrganicSessions": 307,
-    "totalOrganicUsers": 303,
+    "totalOrganicSessions": 306,
+    "totalOrganicUsers": 302,
     "totalOrganicPageviews": 333,
-    "averageEngagementRate": 0.1173,
+    "averageEngagementRate": 0.1111,
     "homepageOrganicSessions": 226,
-    "homepageShareOfOrganic": 73.6,
-    "nonHomepageOrganicSessions": 81,
+    "homepageShareOfOrganic": 73.9,
+    "nonHomepageOrganicSessions": 80,
     "correlatedGscBrandClicks": 228,
     "brandToOrganicHomepageRatio": 1.01,
     "landingPages": [
@@ -640,26 +640,26 @@
       },
       {
         "landingPage": "/monkey-app-leaks",
-        "sessions": 31,
-        "pageviews": 32,
-        "users": 31,
-        "engagementRate": 0.2258,
+        "sessions": 32,
+        "pageviews": 33,
+        "users": 32,
+        "engagementRate": 0.2188,
         "isHomepage": false
       },
       {
         "landingPage": "/mollie-benedict",
-        "sessions": 12,
-        "pageviews": 12,
-        "users": 12,
-        "engagementRate": 0.5833,
+        "sessions": 11,
+        "pageviews": 11,
+        "users": 11,
+        "engagementRate": 0.5455,
         "isHomepage": false
       },
       {
         "landingPage": "/how-old-is-tom-cruise",
-        "sessions": 6,
-        "pageviews": 12,
-        "users": 5,
-        "engagementRate": 0.6667,
+        "sessions": 5,
+        "pageviews": 11,
+        "users": 4,
+        "engagementRate": 0.6,
         "isHomepage": false
       },
       {
@@ -716,6 +716,14 @@
         "pageviews": 2,
         "users": 2,
         "engagementRate": 0.5,
+        "isHomepage": false
+      },
+      {
+        "landingPage": "/taylor-breesey",
+        "sessions": 2,
+        "pageviews": 4,
+        "users": 2,
+        "engagementRate": 1,
         "isHomepage": false
       },
       {
@@ -823,22 +831,6 @@
         "isHomepage": false
       },
       {
-        "landingPage": "/taylor-breesey",
-        "sessions": 1,
-        "pageviews": 2,
-        "users": 1,
-        "engagementRate": 1,
-        "isHomepage": false
-      },
-      {
-        "landingPage": "/ted-danson-blackface",
-        "sessions": 1,
-        "pageviews": 1,
-        "users": 1,
-        "engagementRate": 1,
-        "isHomepage": false
-      },
-      {
         "landingPage": "/vipleague",
         "sessions": 1,
         "pageviews": 1,
@@ -850,7 +842,7 @@
   },
   "homepageInspection": {
     "url": "https://firstread.co.uk/",
-    "inspectedAt": "2026-11-14T14:14:33.409Z",
+    "inspectedAt": "2026-11-15T06:31:58.438Z",
     "verdict": "PASS",
     "coverageState": "Submitted and indexed",
     "robotsTxtState": "ALLOWED",
@@ -868,7 +860,7 @@
   "recentInspections": [
     {
       "url": "https://firstread.co.uk/",
-      "inspectedAt": "2026-11-14T14:14:33.409Z",
+      "inspectedAt": "2026-11-15T06:31:58.438Z",
       "verdict": "PASS",
       "coverageState": "Submitted and indexed",
       "robotsTxtState": "ALLOWED",
@@ -885,7 +877,7 @@
     },
     {
       "url": "https://firstread.co.uk/about-us/",
-      "inspectedAt": "2026-11-14T14:14:39.651Z",
+      "inspectedAt": "2026-11-15T06:32:04.625Z",
       "verdict": "PASS",
       "coverageState": "Submitted and indexed",
       "robotsTxtState": "ALLOWED",
@@ -902,7 +894,7 @@
     },
     {
       "url": "https://firstread.co.uk/contact-us/",
-      "inspectedAt": "2026-11-14T14:14:45.818Z",
+      "inspectedAt": "2026-11-15T06:32:11.030Z",
       "verdict": "PASS",
       "coverageState": "Submitted and indexed",
       "robotsTxtState": "ALLOWED",
@@ -919,7 +911,7 @@
     },
     {
       "url": "https://firstread.co.uk/category/news/",
-      "inspectedAt": "2026-11-14T14:14:52.038Z",
+      "inspectedAt": "2026-11-15T06:32:17.625Z",
       "verdict": "PASS",
       "coverageState": "Submitted and indexed",
       "robotsTxtState": "ALLOWED",
@@ -955,6 +947,93 @@
   },
   "discoveryIssues": [],
   "executionHistory": [
+    {
+      "id": "exec-1794724312811",
+      "startedAt": "2026-11-15T06:31:52.811Z",
+      "completedAt": "2026-11-15T06:32:23.838Z",
+      "durationMs": 31027,
+      "status": "warning",
+      "actionsExecuted": [
+        {
+          "id": "act-index-pub-1794724318315",
+          "timestamp": "2026-11-15T06:31:58.315Z",
+          "actionType": "google_indexing_publish",
+          "target": "https://firstread.co.uk/",
+          "status": "skipped",
+          "details": "Google Indexing API requires Owner verification; operating in Search Console Full-user mode via autonomous sitemap submissions.",
+          "reason": "Autonomous Google Indexing API notification to accelerate brand visibility for \"firstread\"."
+        },
+        {
+          "id": "act-sitemap-skip-1794724318315",
+          "timestamp": "2026-11-15T06:31:58.137Z",
+          "actionType": "sitemap_submit",
+          "target": "https://firstread.co.uk/sitemap_index.xml",
+          "status": "skipped",
+          "details": "Autonomous sitemap submission paused: Service account has Viewer/Restricted permissions in GSC. Autonomous submission requires Full permission in Search Console > Settings > Users & permissions.",
+          "reason": "Service account lacks GSC Full write permission. Awaiting client authorization."
+        },
+        {
+          "id": "act-ping-1794724318407",
+          "timestamp": "2026-11-15T06:31:58.407Z",
+          "actionType": "sitemap_ping",
+          "target": "https://firstread.co.uk/sitemap_index.xml",
+          "status": "skipped",
+          "details": "Google Sitemap Ping returned HTTP 404.",
+          "reason": "Autonomous crawler ping for updated sitemap."
+        },
+        {
+          "id": "act-schema-1794724318438",
+          "timestamp": "2026-11-15T06:31:58.438Z",
+          "actionType": "audit_schema",
+          "target": "https://firstread.co.uk/",
+          "status": "success",
+          "details": "Brand schema verified: Organization (Firstread), WebSite, and SearchAction intact.",
+          "reason": "Autonomous verification of brand knowledge graph schema for \"firstread\"."
+        },
+        {
+          "id": "act-inspect-1794724324625-4l29",
+          "timestamp": "2026-11-15T06:32:04.625Z",
+          "actionType": "inspect_homepage",
+          "target": "https://firstread.co.uk/",
+          "status": "success",
+          "details": "Google Inspection: verdict=PASS, state=\"Submitted and indexed\", robots=ALLOWED",
+          "reason": "Autonomous URL indexing inspection."
+        },
+        {
+          "id": "act-inspect-1794724331029-mrmn",
+          "timestamp": "2026-11-15T06:32:11.030Z",
+          "actionType": "inspect_url",
+          "target": "https://firstread.co.uk/about-us/",
+          "status": "success",
+          "details": "Google Inspection: verdict=PASS, state=\"Submitted and indexed\", robots=ALLOWED",
+          "reason": "Autonomous URL indexing inspection."
+        },
+        {
+          "id": "act-inspect-1794724337625-lum1",
+          "timestamp": "2026-11-15T06:32:17.625Z",
+          "actionType": "inspect_url",
+          "target": "https://firstread.co.uk/contact-us/",
+          "status": "success",
+          "details": "Google Inspection: verdict=PASS, state=\"Submitted and indexed\", robots=ALLOWED",
+          "reason": "Autonomous URL indexing inspection."
+        },
+        {
+          "id": "act-inspect-1794724343838-lrps",
+          "timestamp": "2026-11-15T06:32:23.838Z",
+          "actionType": "inspect_url",
+          "target": "https://firstread.co.uk/category/news/",
+          "status": "success",
+          "details": "Google Inspection: verdict=PASS, state=\"Submitted and indexed\", robots=ALLOWED",
+          "reason": "Autonomous URL indexing inspection."
+        }
+      ],
+      "alertsCount": 3,
+      "discoveryIssuesCount": 0,
+      "brandClicks": 228,
+      "brandImpressions": 559,
+      "homepageIndexed": true,
+      "summary": "Completed autonomous cycle in 31027ms: Tracked 228 brand clicks (559 impressions). Homepage indexing verdict: PASS. Executed 8 action(s)."
+    },
     {
       "id": "exec-1794665670522",
       "startedAt": "2026-11-14T14:14:30.522Z",
@@ -1136,7 +1215,7 @@
     "durable": true,
     "provider": "github",
     "branch": "monitoring-history",
-    "sha": "0f5f93246b75547912634b0bb929da1d9c1f9aed",
-    "lastSyncAt": "2026-11-14T14:14:30.850Z"
+    "sha": "e831f79db178eca7b59b3851da99d3c67606dd4b",
+    "lastSyncAt": "2026-11-15T06:31:53.092Z"
   }
 }
