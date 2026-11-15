@@ -290,10 +290,16 @@ export async function auditSitemapStatus(previousStatus?: SitemapAuditStatus | n
   );
 
   const isSubmittedToGsc = Boolean(matchingGscEntry);
+  const recentlySubmitted = Boolean(
+    previousStatus?.lastSubmissionResult === 'success' &&
+    previousStatus?.lastSubmissionAttempt &&
+    (Date.now() - new Date(previousStatus.lastSubmissionAttempt).getTime() < 24 * 3600000)
+  );
+
   let needsSubmission = false;
   let justification: string | undefined;
 
-  if (accessibleOnWeb && !isSubmittedToGsc) {
+  if (accessibleOnWeb && !isSubmittedToGsc && !recentlySubmitted) {
     needsSubmission = true;
     justification = 'Primary sitemap_index.xml is accessible on web but has not been submitted to Google Search Console.';
   } else if (matchingGscEntry && (matchingGscEntry.errors ?? 0) > 0) {
@@ -469,6 +475,13 @@ export async function pingGoogleSitemap(sitemapUrl = SITEMAP_INDEX_URL): Promise
       cache: 'no-store'
     });
     clearTimeout(timeoutId);
+
+    if (res.status === 404) {
+      return {
+        success: true,
+        message: 'Google sitemap ping endpoint is retired by Google (HTTP 404); sitemap is actively managed via Google Search Console API.'
+      };
+    }
 
     return {
       success: res.status >= 200 && res.status < 400,

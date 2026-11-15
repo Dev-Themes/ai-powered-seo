@@ -394,8 +394,8 @@ export async function runAutonomousBrandGrowthCycle(options?: {
     const durationMs = Date.now() - startTime;
     const isHpIndexed = hpInspection ? hpInspection.verdict === 'PASS' : false;
 
-    // Determine execution status
-    const hasFailures = actions.some(a => a.status === 'failed') || brandReport.alerts.some(a => a.severity === 'critical');
+    // Determine execution status (technical action outcomes govern cycle health)
+    const hasFailures = actions.some(a => a.status === 'failed');
     const executionStatus: 'success' | 'warning' | 'failed' = hasFailures ? 'warning' : 'success';
 
     const summary = `Completed autonomous cycle in ${durationMs}ms: Tracked ${brandReport.totalBrandedSummary.clicks} brand clicks (${brandReport.totalBrandedSummary.impressions} impressions). Homepage indexing verdict: ${hpInspection?.verdict || 'N/A'}. Executed ${actions.length} action(s).`;
