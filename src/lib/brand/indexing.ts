@@ -311,7 +311,11 @@ export async function auditSitemapStatus(previousStatus?: SitemapAuditStatus | n
     needsSubmission,
     submissionJustification: justification,
     lastSubmissionAttempt: previousStatus?.lastSubmissionAttempt,
-    lastSubmissionResult: previousStatus?.lastSubmissionResult
+    lastSubmissionResult:
+      previousStatus?.lastSubmissionAttempt &&
+      Date.now() - new Date(previousStatus.lastSubmissionAttempt).getTime() > 3600000
+        ? undefined
+        : previousStatus?.lastSubmissionResult
   };
 }
 
