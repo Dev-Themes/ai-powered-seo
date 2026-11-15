@@ -1,15 +1,15 @@
 {
   "status": "idle",
   "paused": false,
-  "lastRunAt": "2026-11-15T06:32:23.838Z",
+  "lastRunAt": "2026-11-15T09:10:14.775Z",
   "runningSince": null,
-  "nextScheduledRunAt": "2026-11-16T06:32:23.838Z",
+  "nextScheduledRunAt": "2026-11-16T09:10:14.775Z",
   "safeRetryCount": 0,
   "safeRetryLimit": 3,
   "latestReport": {
     "targetDomain": "https://firstread.co.uk/",
     "primaryBrandKeyword": "firstread",
-    "generatedAt": "2026-11-15T06:31:53.095Z",
+    "generatedAt": "2026-11-15T09:09:46.172Z",
     "dateRange": {
       "startDate": "2026-10-18",
       "endDate": "2026-11-14"
@@ -578,7 +578,7 @@
     },
     "alerts": [
       {
-        "id": "alert-imp-decline-1794724313599",
+        "id": "alert-imp-decline-1794733786869",
         "severity": "critical",
         "type": "declining_impressions",
         "title": "Declining Brand Impressions",
@@ -587,10 +587,10 @@
         "currentValue": 559,
         "previousValue": 2290,
         "recommendation": "Verify homepage indexing status, sitemap freshness, and schema markup to restore brand search appearance.",
-        "detectedAt": "2026-11-15T06:31:53.599Z"
+        "detectedAt": "2026-11-15T09:09:46.869Z"
       },
       {
-        "id": "alert-clicks-decline-1794724313599",
+        "id": "alert-clicks-decline-1794733786869",
         "severity": "critical",
         "type": "declining_clicks",
         "title": "Declining Brand Clicks",
@@ -599,10 +599,10 @@
         "currentValue": 228,
         "previousValue": 1298,
         "recommendation": "Check whether third-party or sub-page results are cannibalising clicks away from the homepage.",
-        "detectedAt": "2026-11-15T06:31:53.599Z"
+        "detectedAt": "2026-11-15T09:09:46.869Z"
       },
       {
-        "id": "alert-pos-deterioration-1794724313599",
+        "id": "alert-pos-deterioration-1794733786869",
         "severity": "critical",
         "type": "ranking_deterioration",
         "title": "Brand Ranking Deterioration",
@@ -611,7 +611,7 @@
         "currentValue": 5.85,
         "previousValue": 4.8,
         "recommendation": "Inspect brand entity signals, homepage canonical declaration, and robots.txt accessibility.",
-        "detectedAt": "2026-11-15T06:31:53.599Z"
+        "detectedAt": "2026-11-15T09:09:46.869Z"
       }
     ]
   },
@@ -620,13 +620,13 @@
       "startDate": "2026-10-18",
       "endDate": "2026-11-14"
     },
-    "totalOrganicSessions": 306,
-    "totalOrganicUsers": 302,
-    "totalOrganicPageviews": 333,
-    "averageEngagementRate": 0.1111,
+    "totalOrganicSessions": 304,
+    "totalOrganicUsers": 300,
+    "totalOrganicPageviews": 331,
+    "averageEngagementRate": 0.1118,
     "homepageOrganicSessions": 226,
-    "homepageShareOfOrganic": 73.9,
-    "nonHomepageOrganicSessions": 80,
+    "homepageShareOfOrganic": 74.3,
+    "nonHomepageOrganicSessions": 78,
     "correlatedGscBrandClicks": 228,
     "brandToOrganicHomepageRatio": 1.01,
     "landingPages": [
@@ -640,10 +640,10 @@
       },
       {
         "landingPage": "/monkey-app-leaks",
-        "sessions": 32,
-        "pageviews": 33,
-        "users": 32,
-        "engagementRate": 0.2188,
+        "sessions": 31,
+        "pageviews": 32,
+        "users": 31,
+        "engagementRate": 0.2258,
         "isHomepage": false
       },
       {
@@ -730,14 +730,6 @@
         "landingPage": "(not set)",
         "sessions": 1,
         "pageviews": 0,
-        "users": 1,
-        "engagementRate": 0,
-        "isHomepage": false
-      },
-      {
-        "landingPage": "/classroom-6x-1v1-lol",
-        "sessions": 1,
-        "pageviews": 1,
         "users": 1,
         "engagementRate": 0,
         "isHomepage": false
@@ -842,7 +834,7 @@
   },
   "homepageInspection": {
     "url": "https://firstread.co.uk/",
-    "inspectedAt": "2026-11-15T06:31:58.438Z",
+    "inspectedAt": "2026-11-15T09:09:48.841Z",
     "verdict": "PASS",
     "coverageState": "Submitted and indexed",
     "robotsTxtState": "ALLOWED",
@@ -860,7 +852,7 @@
   "recentInspections": [
     {
       "url": "https://firstread.co.uk/",
-      "inspectedAt": "2026-11-15T06:31:58.438Z",
+      "inspectedAt": "2026-11-15T09:09:48.841Z",
       "verdict": "PASS",
       "coverageState": "Submitted and indexed",
       "robotsTxtState": "ALLOWED",
@@ -877,7 +869,7 @@
     },
     {
       "url": "https://firstread.co.uk/about-us/",
-      "inspectedAt": "2026-11-15T06:32:04.625Z",
+      "inspectedAt": "2026-11-15T09:09:55.273Z",
       "verdict": "PASS",
       "coverageState": "Submitted and indexed",
       "robotsTxtState": "ALLOWED",
@@ -894,7 +886,7 @@
     },
     {
       "url": "https://firstread.co.uk/contact-us/",
-      "inspectedAt": "2026-11-15T06:32:11.030Z",
+      "inspectedAt": "2026-11-15T09:10:01.795Z",
       "verdict": "PASS",
       "coverageState": "Submitted and indexed",
       "robotsTxtState": "ALLOWED",
@@ -911,7 +903,7 @@
     },
     {
       "url": "https://firstread.co.uk/category/news/",
-      "inspectedAt": "2026-11-15T06:32:17.625Z",
+      "inspectedAt": "2026-11-15T09:10:08.182Z",
       "verdict": "PASS",
       "coverageState": "Submitted and indexed",
       "robotsTxtState": "ALLOWED",
@@ -942,11 +934,98 @@
     "isSubmittedToGsc": false,
     "needsSubmission": true,
     "submissionJustification": "Primary sitemap_index.xml is accessible on web but has not been submitted to Google Search Console.",
-    "lastSubmissionAttempt": "2026-11-14T09:06:45.216Z",
-    "lastSubmissionResult": "permission_denied"
+    "lastSubmissionAttempt": "2026-11-15T09:09:48.405Z",
+    "lastSubmissionResult": "success"
   },
   "discoveryIssues": [],
   "executionHistory": [
+    {
+      "id": "exec-1794733785977",
+      "startedAt": "2026-11-15T09:09:45.977Z",
+      "completedAt": "2026-11-15T09:10:14.775Z",
+      "durationMs": 28798,
+      "status": "warning",
+      "actionsExecuted": [
+        {
+          "id": "act-index-pub-1794733788632",
+          "timestamp": "2026-11-15T09:09:48.632Z",
+          "actionType": "google_indexing_publish",
+          "target": "https://firstread.co.uk/",
+          "status": "success",
+          "details": "Google Indexing API accepted notification for \"https://firstread.co.uk/\" (URL_UPDATED).",
+          "reason": "Autonomous Google Indexing API notification to accelerate brand visibility for \"firstread\"."
+        },
+        {
+          "id": "act-sitemap-1794733788720",
+          "timestamp": "2026-11-15T09:09:48.405Z",
+          "actionType": "sitemap_submit",
+          "target": "https://firstread.co.uk/sitemap_index.xml",
+          "status": "success",
+          "details": "Successfully submitted sitemap 'https://firstread.co.uk/sitemap_index.xml' to Google Search Console (HTTP 204).",
+          "reason": "Primary sitemap_index.xml is accessible on web but has not been submitted to Google Search Console."
+        },
+        {
+          "id": "act-ping-1794733788810",
+          "timestamp": "2026-11-15T09:09:48.810Z",
+          "actionType": "sitemap_ping",
+          "target": "https://firstread.co.uk/sitemap_index.xml",
+          "status": "skipped",
+          "details": "Google Sitemap Ping returned HTTP 404.",
+          "reason": "Autonomous crawler ping for updated sitemap."
+        },
+        {
+          "id": "act-schema-1794733788840",
+          "timestamp": "2026-11-15T09:09:48.840Z",
+          "actionType": "audit_schema",
+          "target": "https://firstread.co.uk/",
+          "status": "success",
+          "details": "Brand schema verified: Organization (Firstread), WebSite, and SearchAction intact.",
+          "reason": "Autonomous verification of brand knowledge graph schema for \"firstread\"."
+        },
+        {
+          "id": "act-inspect-1794733795273-sk3c",
+          "timestamp": "2026-11-15T09:09:55.273Z",
+          "actionType": "inspect_homepage",
+          "target": "https://firstread.co.uk/",
+          "status": "success",
+          "details": "Google Inspection: verdict=PASS, state=\"Submitted and indexed\", robots=ALLOWED",
+          "reason": "Autonomous URL indexing inspection."
+        },
+        {
+          "id": "act-inspect-1794733801795-e83g",
+          "timestamp": "2026-11-15T09:10:01.795Z",
+          "actionType": "inspect_url",
+          "target": "https://firstread.co.uk/about-us/",
+          "status": "success",
+          "details": "Google Inspection: verdict=PASS, state=\"Submitted and indexed\", robots=ALLOWED",
+          "reason": "Autonomous URL indexing inspection."
+        },
+        {
+          "id": "act-inspect-1794733808181-wt39",
+          "timestamp": "2026-11-15T09:10:08.181Z",
+          "actionType": "inspect_url",
+          "target": "https://firstread.co.uk/contact-us/",
+          "status": "success",
+          "details": "Google Inspection: verdict=PASS, state=\"Submitted and indexed\", robots=ALLOWED",
+          "reason": "Autonomous URL indexing inspection."
+        },
+        {
+          "id": "act-inspect-1794733814774-409b",
+          "timestamp": "2026-11-15T09:10:14.774Z",
+          "actionType": "inspect_url",
+          "target": "https://firstread.co.uk/category/news/",
+          "status": "success",
+          "details": "Google Inspection: verdict=PASS, state=\"Submitted and indexed\", robots=ALLOWED",
+          "reason": "Autonomous URL indexing inspection."
+        }
+      ],
+      "alertsCount": 3,
+      "discoveryIssuesCount": 0,
+      "brandClicks": 228,
+      "brandImpressions": 559,
+      "homepageIndexed": true,
+      "summary": "Completed autonomous cycle in 28798ms: Tracked 228 brand clicks (559 impressions). Homepage indexing verdict: PASS. Executed 8 action(s)."
+    },
     {
       "id": "exec-1794724312811",
       "startedAt": "2026-11-15T06:31:52.811Z",
@@ -1215,7 +1294,7 @@
     "durable": true,
     "provider": "github",
     "branch": "monitoring-history",
-    "sha": "e831f79db178eca7b59b3851da99d3c67606dd4b",
-    "lastSyncAt": "2026-11-15T06:31:53.092Z"
+    "sha": "ba26b3d84c2e6a4536557585a40e391a6f88f4c8",
+    "lastSyncAt": "2026-11-15T09:09:46.168Z"
   }
 }
