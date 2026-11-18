@@ -395,7 +395,7 @@ export function BrandGrowthView({
                 : 'text-[var(--muted)] hover:text-[var(--foreground)]'
             }`}
           >
-            <span>🎯</span> Brand Keyword: <code className="font-mono">&quot;firstread&quot;</code>
+            Brand Keyword: <code className="font-mono">&quot;firstread&quot;</code>
           </button>
           <button
             type="button"
@@ -406,7 +406,7 @@ export function BrandGrowthView({
                 : 'text-[var(--muted)] hover:text-[var(--foreground)]'
             }`}
           >
-            <span>🌐</span> Whole Website (All Queries)
+            Whole Website (All Queries)
           </button>
         </div>
 
@@ -438,45 +438,6 @@ export function BrandGrowthView({
       </div>
 
       {/* ========================================================= */}
-      {/* 2.5 PLAIN ENGLISH EXECUTIVE SUMMARY (NO SEO JARGON)       */}
-      {/* ========================================================= */}
-      <div className="p-4 rounded-xl border border-sky-200 dark:border-sky-900 bg-sky-50/60 dark:bg-sky-950/20 text-xs space-y-2.5">
-        <div className="flex items-center gap-2 font-bold text-sky-800 dark:text-sky-300 text-sm">
-          <span>💡</span>
-          <span>Simple Overview (No Technical SEO Knowledge Needed):</span>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-          <div className="p-3 rounded-lg bg-[var(--card)] border border-[var(--border)] shadow-2xs space-y-0.5">
-            <span className="text-[var(--muted)] text-[11px] font-medium block">Google Search Status</span>
-            <strong className="text-emerald-600 dark:text-emerald-400 font-bold text-sm block">
-              🟢 FirstRead is Live on Google
-            </strong>
-            <p className="text-[11px] text-[var(--muted)] m-0">
-              Ranked <strong className="text-[var(--foreground)]">#1 on Google</strong> for searches of &quot;firstread.co.uk&quot;.
-            </p>
-          </div>
-          <div className="p-3 rounded-lg bg-[var(--card)] border border-[var(--border)] shadow-2xs space-y-0.5">
-            <span className="text-[var(--muted)] text-[11px] font-medium block">Automated Daily Optimization</span>
-            <strong className="text-sky-600 dark:text-sky-400 font-bold text-sm block">
-              🤖 Runs Daily at 11:00 AM PKT
-            </strong>
-            <p className="text-[11px] text-[var(--muted)] m-0">
-              Notifies Google Indexing API and submits sitemaps automatically.
-            </p>
-          </div>
-          <div className="p-3 rounded-lg bg-[var(--card)] border border-[var(--border)] shadow-2xs space-y-0.5">
-            <span className="text-[var(--muted)] text-[11px] font-medium block">Zero-Risk Safety Guarantee</span>
-            <strong className="text-purple-600 dark:text-purple-400 font-bold text-sm block">
-              🛡️ Strict Read-Only Mode
-            </strong>
-            <p className="text-[11px] text-[var(--muted)] m-0">
-              Your WordPress articles, posts, and plugins are 100% safe and never modified.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* ========================================================= */}
       {/* 3. GOOGLE SEARCH CONSOLE 4 SCORECARDS (GSC STYLE)        */}
       {/* ========================================================= */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
@@ -485,18 +446,25 @@ export function BrandGrowthView({
           <div className="w-full h-1 bg-[#1a73e8] absolute top-0 left-0" />
           <div className="flex items-center justify-between text-xs text-[var(--muted)] mb-1">
             <span className="font-semibold flex items-center gap-1.5">
-              <MousePointer className="w-3.5 h-3.5 text-[#1a73e8]" /> Total Visits (Clicks)
+              <MousePointer className="w-3.5 h-3.5 text-[#1a73e8]" /> Total Clicks
             </span>
-            <span className="text-[10px] font-mono uppercase bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 px-1.5 py-0.5 rounded">
-              Visits
+            <span className="text-[10px] font-mono uppercase bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 px-1.5 py-0.5 rounded font-semibold">
+              GSC
             </span>
           </div>
           <div className="text-2xl sm:text-3xl font-bold text-[#1a73e8] tracking-tight">
             {Number(metrics.clicks).toLocaleString('en-GB')}
           </div>
-          <p className="text-[11px] text-[var(--muted)] m-0 mt-1">
-            People who searched on Google and clicked into FirstRead.
-          </p>
+          <div className="text-[11px] text-[var(--muted)] mt-1 flex items-center gap-1">
+            {metrics.deltaClicks !== null && metrics.deltaClicks !== undefined ? (
+              <span className={`font-semibold flex items-center ${metrics.deltaClicks >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                {metrics.deltaClicks >= 0 ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+                {Math.abs(metrics.deltaClicks)}% vs prior period
+              </span>
+            ) : (
+              <span>Organic search clicks</span>
+            )}
+          </div>
         </div>
 
         {/* TOTAL IMPRESSIONS (GSC Purple) */}
@@ -504,18 +472,25 @@ export function BrandGrowthView({
           <div className="w-full h-1 bg-[#7c3aed] absolute top-0 left-0" />
           <div className="flex items-center justify-between text-xs text-[var(--muted)] mb-1">
             <span className="font-semibold flex items-center gap-1.5">
-              <Eye className="w-3.5 h-3.5 text-[#7c3aed]" /> Times Shown (Impressions)
+              <Eye className="w-3.5 h-3.5 text-[#7c3aed]" /> Total Impressions
             </span>
-            <span className="text-[10px] font-mono uppercase bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 px-1.5 py-0.5 rounded">
-              Views
+            <span className="text-[10px] font-mono uppercase bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 px-1.5 py-0.5 rounded font-semibold">
+              GSC
             </span>
           </div>
           <div className="text-2xl sm:text-3xl font-bold text-[#7c3aed] tracking-tight">
             {Number(metrics.impressions).toLocaleString('en-GB')}
           </div>
-          <p className="text-[11px] text-[var(--muted)] m-0 mt-1">
-            How many times FirstRead appeared on someone&apos;s Google screen.
-          </p>
+          <div className="text-[11px] text-[var(--muted)] mt-1 flex items-center gap-1">
+            {metrics.deltaImpressions !== null && metrics.deltaImpressions !== undefined ? (
+              <span className={`font-semibold flex items-center ${metrics.deltaImpressions >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                {metrics.deltaImpressions >= 0 ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+                {Math.abs(metrics.deltaImpressions)}% vs prior period
+              </span>
+            ) : (
+              <span>Total search appearances</span>
+            )}
+          </div>
         </div>
 
         {/* AVERAGE CTR (GSC Green) */}
@@ -523,18 +498,18 @@ export function BrandGrowthView({
           <div className="w-full h-1 bg-[#10b981] absolute top-0 left-0" />
           <div className="flex items-center justify-between text-xs text-[var(--muted)] mb-1">
             <span className="font-semibold flex items-center gap-1.5">
-              <Percent className="w-3.5 h-3.5 text-[#10b981]" /> Click Rate (CTR)
+              <Percent className="w-3.5 h-3.5 text-[#10b981]" /> Average CTR
             </span>
-            <span className="text-[10px] font-mono uppercase bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 px-1.5 py-0.5 rounded">
-              Rate
+            <span className="text-[10px] font-mono uppercase bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 px-1.5 py-0.5 rounded font-semibold">
+              CTR
             </span>
           </div>
           <div className="text-2xl sm:text-3xl font-bold text-[#10b981] tracking-tight font-mono">
             {metrics.ctr}
           </div>
-          <p className="text-[11px] text-[var(--muted)] m-0 mt-1">
-            Percentage of people who saw FirstRead on Google and decided to click.
-          </p>
+          <div className="text-[11px] text-[var(--muted)] mt-1">
+            <span>Average click-through rate</span>
+          </div>
         </div>
 
         {/* AVERAGE POSITION (GSC Amber) */}
@@ -542,18 +517,24 @@ export function BrandGrowthView({
           <div className="w-full h-1 bg-[#f59e0b] absolute top-0 left-0" />
           <div className="flex items-center justify-between text-xs text-[var(--muted)] mb-1">
             <span className="font-semibold flex items-center gap-1.5">
-              <TrendingUp className="w-3.5 h-3.5 text-[#f59e0b]" /> Google Rank (Position)
+              <TrendingUp className="w-3.5 h-3.5 text-[#f59e0b]" /> Average Position
             </span>
-            <span className="text-[10px] font-mono uppercase bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 px-1.5 py-0.5 rounded">
+            <span className="text-[10px] font-mono uppercase bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 px-1.5 py-0.5 rounded font-semibold">
               Rank
             </span>
           </div>
           <div className="text-2xl sm:text-3xl font-bold text-[#f59e0b] tracking-tight font-mono">
-            #{metrics.position}
+            {metrics.position}
           </div>
-          <p className="text-[11px] text-[var(--muted)] m-0 mt-1">
-            Average rank on Google (Rank #1 means the very top of Google).
-          </p>
+          <div className="text-[11px] text-[var(--muted)] mt-1">
+            {report?.homepagePerformance?.isRankingNumberOne ? (
+              <span className="text-emerald-600 font-semibold flex items-center gap-1">
+                <Check className="w-3 h-3" /> Homepage Ranked #1 on Google
+              </span>
+            ) : (
+              <span>Average Google SERP ranking</span>
+            )}
+          </div>
         </div>
       </div>
 
@@ -848,203 +829,178 @@ export function BrandGrowthView({
 
         {/* TAB 1: QUERIES TABLE */}
         {activeTab === 'queries' && (
-          <div className="space-y-3">
-            <div className="p-3 rounded-lg bg-sky-50/50 dark:bg-sky-950/20 border border-sky-200 dark:border-sky-900 text-xs text-[var(--muted)] flex items-start gap-2">
-              <span className="text-base shrink-0">💡</span>
-              <p className="m-0 leading-relaxed">
-                <strong className="text-[var(--foreground)]">What this table means:</strong> These are the exact words real people typed into Google search before visiting FirstRead. <strong className="text-emerald-600 dark:text-emerald-400">Google Visits</strong> shows real people who clicked in. <strong className="text-amber-600 dark:text-amber-400">Google Rank</strong> shows where FirstRead appears in results (Rank #1 is the top spot).
-              </p>
-            </div>
-
-            <div className="overflow-x-auto rounded-xl border border-[var(--border)]">
-              <table className="w-full text-xs text-left">
-                <thead className="bg-[var(--surface)] border-b border-[var(--border)] text-[var(--muted)] font-semibold">
-                  <tr>
-                    <th className="py-2.5 px-3">Google Search Query</th>
-                    <th className="py-2.5 px-3">Category</th>
-                    <th className="py-2.5 px-3 text-right">Google Visits (Clicks)</th>
-                    <th className="py-2.5 px-3 text-right">Times Shown (Views)</th>
-                    <th className="py-2.5 px-3 text-right">Click Rate (%)</th>
-                    <th className="py-2.5 px-3 text-right">Google Rank</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[var(--border)]">
-                  {queryRows.map((row, idx) => {
-                    const isExact = row.type === 'Exact Brand';
-                    return (
-                      <tr
-                        key={idx}
-                        className={`hover:bg-[var(--surface)] transition-colors ${
-                          isExact ? 'bg-sky-50/50 dark:bg-sky-950/20 font-medium' : ''
-                        }`}
-                      >
-                        <td className="py-2.5 px-3 font-mono font-semibold text-[var(--foreground)]">
-                          {row.query}
-                        </td>
-                        <td className="py-2.5 px-3">
-                          <span
-                            className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
-                              isExact
-                                ? 'bg-sky-100 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 border border-sky-300 dark:border-sky-800'
-                                : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400'
-                            }`}
-                          >
-                            {row.type === 'Exact Brand' ? '🎯 Brand Keyword' : 'Related Query'}
-                          </span>
-                        </td>
-                        <td className="py-2.5 px-3 text-right font-bold text-emerald-600 dark:text-emerald-400">
-                          {Number(row.clicks).toLocaleString('en-GB')}
-                        </td>
-                        <td className="py-2.5 px-3 text-right font-medium text-[var(--foreground)]">
-                          {Number(row.impressions).toLocaleString('en-GB')}
-                        </td>
-                        <td className="py-2.5 px-3 text-right font-mono font-semibold">
-                          {(Number(row.ctr) * 100).toFixed(1)}%
-                        </td>
-                        <td className="py-2.5 px-3 text-right font-mono font-bold text-amber-600 dark:text-amber-400">
-                          {Number(row.position) > 0 ? `#${Number(row.position).toFixed(1)}` : '—'}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                  {queryRows.length === 0 && (
-                    <tr>
-                      <td colSpan={6} className="py-8 text-center text-xs text-[var(--muted)]">
-                        No query matching &quot;{tableSearchQuery}&quot; found.
+          <div className="overflow-x-auto rounded-xl border border-[var(--border)]">
+            <table className="w-full text-xs text-left">
+              <thead className="bg-[var(--surface)] border-b border-[var(--border)] text-[var(--muted)] font-semibold">
+                <tr>
+                  <th className="py-2.5 px-3">Query</th>
+                  <th className="py-2.5 px-3">Type</th>
+                  <th className="py-2.5 px-3 text-right">Clicks</th>
+                  <th className="py-2.5 px-3 text-right">Impressions</th>
+                  <th className="py-2.5 px-3 text-right">CTR</th>
+                  <th className="py-2.5 px-3 text-right">Position</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[var(--border)]">
+                {queryRows.map((row, idx) => {
+                  const isExact = row.type === 'Exact Brand';
+                  return (
+                    <tr
+                      key={idx}
+                      className={`hover:bg-[var(--surface)] transition-colors ${
+                        isExact ? 'bg-sky-50/50 dark:bg-sky-950/20 font-medium' : ''
+                      }`}
+                    >
+                      <td className="py-2.5 px-3 font-mono font-semibold text-[var(--foreground)]">
+                        {row.query}
+                      </td>
+                      <td className="py-2.5 px-3">
+                        <span
+                          className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
+                            isExact
+                              ? 'bg-sky-100 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 border border-sky-300 dark:border-sky-800'
+                              : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400'
+                          }`}
+                        >
+                          {row.type === 'Exact Brand' ? 'Brand' : 'Related'}
+                        </span>
+                      </td>
+                      <td className="py-2.5 px-3 text-right font-bold text-emerald-600 dark:text-emerald-400">
+                        {Number(row.clicks).toLocaleString('en-GB')}
+                      </td>
+                      <td className="py-2.5 px-3 text-right font-medium text-[var(--foreground)]">
+                        {Number(row.impressions).toLocaleString('en-GB')}
+                      </td>
+                      <td className="py-2.5 px-3 text-right font-mono font-semibold">
+                        {(Number(row.ctr) * 100).toFixed(1)}%
+                      </td>
+                      <td className="py-2.5 px-3 text-right font-mono font-bold text-amber-600 dark:text-amber-400">
+                        {Number(row.position) > 0 ? Number(row.position).toFixed(1) : '—'}
                       </td>
                     </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+                  );
+                })}
+                {queryRows.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="py-8 text-center text-xs text-[var(--muted)]">
+                      No query matching &quot;{tableSearchQuery}&quot; found.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
         )}
 
         {/* TAB 2: TOP PAGES TABLE */}
         {activeTab === 'pages' && (
-          <div className="space-y-3">
-            <div className="p-3 rounded-lg bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900 text-xs text-[var(--muted)] flex items-start gap-2">
-              <span className="text-base shrink-0">💡</span>
-              <p className="m-0 leading-relaxed">
-                <strong className="text-[var(--foreground)]">What this table means:</strong> These are the pages on FirstRead that Google shows to searchers. The main <strong className="text-emerald-600 dark:text-emerald-400">Homepage (/)</strong> brings in the primary brand search visitors.
-              </p>
-            </div>
-
-            <div className="overflow-x-auto rounded-xl border border-[var(--border)]">
-              <table className="w-full text-xs text-left">
-                <thead className="bg-[var(--surface)] border-b border-[var(--border)] text-[var(--muted)] font-semibold">
-                  <tr>
-                    <th className="py-2.5 px-3">Page Name &amp; URL</th>
-                    <th className="py-2.5 px-3 text-right">Google Visits</th>
-                    <th className="py-2.5 px-3 text-right">Times Shown</th>
-                    <th className="py-2.5 px-3 text-right">Click Rate (%)</th>
-                    <th className="py-2.5 px-3 text-right">Google Rank</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[var(--border)]">
-                  {pageRows.map((row, idx) => {
-                    const isHp = row.page === 'https://firstread.co.uk/' || row.page.endsWith('firstread.co.uk/');
-                    const isAbout = row.page.includes('/about-us');
-                    const isContact = row.page.includes('/contact-us');
-                    const isNews = row.page.includes('/category/news');
-                    return (
-                      <tr key={idx} className={`hover:bg-[var(--surface)] transition-colors ${isHp ? 'bg-sky-50/40 dark:bg-sky-950/20 font-medium' : ''}`}>
-                        <td className="py-2.5 px-3 font-mono text-[var(--foreground)] truncate max-w-md" title={row.page}>
-                          <div className="flex items-center gap-2">
-                            {isHp && (
-                              <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300">
-                                🏠 Homepage
-                              </span>
-                            )}
-                            {isAbout && (
-                              <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
-                                ℹ️ About
-                              </span>
-                            )}
-                            {isContact && (
-                              <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
-                                📞 Contact
-                              </span>
-                            )}
-                            {isNews && (
-                              <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
-                                📰 News
-                              </span>
-                            )}
-                            {!isHp && !isAbout && !isContact && !isNews && (
-                              <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
-                                📄 Article
-                              </span>
-                            )}
-                            <span className="truncate">{row.page}</span>
-                          </div>
-                        </td>
-                        <td className="py-2.5 px-3 text-right font-bold text-emerald-600 dark:text-emerald-400">
-                          {Number(row.clicks).toLocaleString('en-GB')}
-                        </td>
-                        <td className="py-2.5 px-3 text-right font-medium text-[var(--foreground)]">
-                          {Number(row.impressions).toLocaleString('en-GB')}
-                        </td>
-                        <td className="py-2.5 px-3 text-right font-mono font-semibold">
-                          {(Number(row.ctr) * 100).toFixed(1)}%
-                        </td>
-                        <td className="py-2.5 px-3 text-right font-mono font-bold text-amber-600 dark:text-amber-400">
-                          #{Number(row.position).toFixed(1)}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                  {pageRows.length === 0 && (
-                    <tr>
-                      <td colSpan={5} className="py-8 text-center text-xs text-[var(--muted)]">
-                        No pages recorded for this period.
+          <div className="overflow-x-auto rounded-xl border border-[var(--border)]">
+            <table className="w-full text-xs text-left">
+              <thead className="bg-[var(--surface)] border-b border-[var(--border)] text-[var(--muted)] font-semibold">
+                <tr>
+                  <th className="py-2.5 px-3">Page</th>
+                  <th className="py-2.5 px-3 text-right">Clicks</th>
+                  <th className="py-2.5 px-3 text-right">Impressions</th>
+                  <th className="py-2.5 px-3 text-right">CTR</th>
+                  <th className="py-2.5 px-3 text-right">Position</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[var(--border)]">
+                {pageRows.map((row, idx) => {
+                  const isHp = row.page === 'https://firstread.co.uk/' || row.page.endsWith('firstread.co.uk/');
+                  const isAbout = row.page.includes('/about-us');
+                  const isContact = row.page.includes('/contact-us');
+                  const isNews = row.page.includes('/category/news');
+                  return (
+                    <tr key={idx} className={`hover:bg-[var(--surface)] transition-colors ${isHp ? 'bg-sky-50/40 dark:bg-sky-950/20 font-medium' : ''}`}>
+                      <td className="py-2.5 px-3 font-mono text-[var(--foreground)] truncate max-w-md" title={row.page}>
+                        <div className="flex items-center gap-2">
+                          {isHp && (
+                            <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300">
+                              Homepage
+                            </span>
+                          )}
+                          {isAbout && (
+                            <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
+                              About
+                            </span>
+                          )}
+                          {isContact && (
+                            <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
+                              Contact
+                            </span>
+                          )}
+                          {isNews && (
+                            <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
+                              News
+                            </span>
+                          )}
+                          {!isHp && !isAbout && !isContact && !isNews && (
+                            <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
+                              Article
+                            </span>
+                          )}
+                          <span className="truncate">{row.page}</span>
+                        </div>
+                      </td>
+                      <td className="py-2.5 px-3 text-right font-bold text-emerald-600 dark:text-emerald-400">
+                        {Number(row.clicks).toLocaleString('en-GB')}
+                      </td>
+                      <td className="py-2.5 px-3 text-right font-medium text-[var(--foreground)]">
+                        {Number(row.impressions).toLocaleString('en-GB')}
+                      </td>
+                      <td className="py-2.5 px-3 text-right font-mono font-semibold">
+                        {(Number(row.ctr) * 100).toFixed(1)}%
+                      </td>
+                      <td className="py-2.5 px-3 text-right font-mono font-bold text-amber-600 dark:text-amber-400">
+                        {Number(row.position).toFixed(1)}
                       </td>
                     </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+                  );
+                })}
+                {pageRows.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="py-8 text-center text-xs text-[var(--muted)]">
+                      No pages recorded for this period.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
         )}
 
         {/* TAB 3: GA4 TRAFFIC TABLE */}
         {activeTab === 'ga4' && (
           <div className="space-y-3">
-            <div className="p-3 rounded-lg bg-purple-50/50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-900 text-xs text-[var(--muted)] flex items-start gap-2">
-              <span className="text-base shrink-0">💡</span>
-              <p className="m-0 leading-relaxed">
-                <strong className="text-[var(--foreground)]">What this table means:</strong> Real website traffic from Google Analytics 4. These are live human visitors who read FirstRead articles after finding the site on Google.
-              </p>
-            </div>
-
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs mb-2">
               <div className="p-3.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] space-y-0.5">
-                <span className="text-[var(--muted)] text-[11px] block">Total Website Visits</span>
+                <span className="text-[var(--muted)] text-[11px] block">Organic Sessions</span>
                 <strong className="text-xl font-bold text-emerald-600 dark:text-emerald-400 block">
                   {ga4Report?.data?.summary?.sessions ?? 0}
                 </strong>
-                <span className="text-[10px] text-[var(--muted)]">Visits originating from Google search</span>
+                <span className="text-[10px] text-[var(--muted)]">Visits originating from search</span>
               </div>
               <div className="p-3.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] space-y-0.5">
-                <span className="text-[var(--muted)] text-[11px] block">Total Articles Read</span>
+                <span className="text-[var(--muted)] text-[11px] block">Total Pageviews</span>
                 <strong className="text-xl font-bold text-[var(--foreground)] block">
                   {ga4Report?.data?.summary?.screenPageViews ?? 0}
                 </strong>
-                <span className="text-[10px] text-[var(--muted)]">Total pages viewed by visitors</span>
+                <span className="text-[10px] text-[var(--muted)]">Total pages viewed</span>
               </div>
               <div className="p-3.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] space-y-0.5">
-                <span className="text-[var(--muted)] text-[11px] block">Unique Visitors</span>
+                <span className="text-[var(--muted)] text-[11px] block">Total Users</span>
                 <strong className="text-xl font-bold text-sky-600 dark:text-sky-400 block">
                   {ga4Report?.data?.summary?.totalUsers ?? 0}
                 </strong>
-                <span className="text-[10px] text-[var(--muted)]">Individual people who visited</span>
+                <span className="text-[10px] text-[var(--muted)]">Unique visitors</span>
               </div>
               <div className="p-3.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] space-y-0.5">
-                <span className="text-[var(--muted)] text-[11px] block">Reading Engagement</span>
+                <span className="text-[var(--muted)] text-[11px] block">Engagement Rate</span>
                 <strong className="text-xl font-bold text-indigo-600 dark:text-indigo-400 block">
                   {((ga4Report?.data?.summary?.engagementRate ?? 0) * 100).toFixed(1)}%
                 </strong>
-                <span className="text-[10px] text-[var(--muted)]">Visitors who stayed and read the content</span>
+                <span className="text-[10px] text-[var(--muted)]">Engaged session percentage</span>
               </div>
             </div>
 
@@ -1053,9 +1009,9 @@ export function BrandGrowthView({
                 <thead className="bg-[var(--surface)] border-b border-[var(--border)] text-[var(--muted)] font-semibold">
                   <tr>
                     <th className="py-2.5 px-3">Landing Page</th>
-                    <th className="py-2.5 px-3 text-right">Visits</th>
-                    <th className="py-2.5 px-3 text-right">Articles Read</th>
-                    <th className="py-2.5 px-3 text-right">Active Readers</th>
+                    <th className="py-2.5 px-3 text-right">Sessions</th>
+                    <th className="py-2.5 px-3 text-right">Pageviews</th>
+                    <th className="py-2.5 px-3 text-right">Engaged Sessions</th>
                     <th className="py-2.5 px-3 text-right">Engagement Rate</th>
                   </tr>
                 </thead>
@@ -1095,13 +1051,6 @@ export function BrandGrowthView({
         {/* TAB 4: INDEXING HEALTH */}
         {activeTab === 'indexing' && (
           <div className="space-y-4">
-            <div className="p-3 rounded-lg bg-teal-50/50 dark:bg-teal-950/20 border border-teal-200 dark:border-teal-900 text-xs text-[var(--muted)] flex items-start gap-2">
-              <span className="text-base shrink-0">💡</span>
-              <p className="m-0 leading-relaxed">
-                <strong className="text-[var(--foreground)]">What this section means:</strong> This shows whether Google can read your website without errors. When all items are green, Googlebot can easily crawl and list your content in Google Search.
-              </p>
-            </div>
-
             {/* Quick URL Inspection Search Bar */}
             <form onSubmit={handleInspectSubmit} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
               <input
@@ -1113,7 +1062,7 @@ export function BrandGrowthView({
               />
               <Button type="submit" size="sm" disabled={inspecting} className="text-xs h-9">
                 <Search className="w-3.5 h-3.5 mr-1.5" />
-                {inspecting ? 'Checking with Google…' : 'Check Any URL Status'}
+                {inspecting ? 'Inspecting…' : 'Inspect URL'}
               </Button>
             </form>
 
@@ -1128,54 +1077,48 @@ export function BrandGrowthView({
               {/* 1. Homepage Indexing */}
               <div className="p-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="font-bold text-[var(--foreground)] flex items-center gap-1.5">
-                    <CheckCircle className="w-4 h-4 text-emerald-500" /> Homepage on Google
+                  <span className="font-semibold text-[var(--foreground)] flex items-center gap-1.5">
+                    <CheckCircle className="w-4 h-4 text-emerald-500" /> Homepage Status
                   </span>
-                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
-                    🟢 Active
-                  </span>
+                  <span className="badge badge-success text-[10px]">Indexed</span>
                 </div>
                 <p className="text-[11px] text-[var(--muted)] m-0 leading-relaxed">
-                  Google allows crawling and indexing. Ranked #1 for brand query variations.
+                  {hpInspection?.coverageState || 'Submitted and indexed in Google Search.'}
                 </p>
                 <div className="text-[10px] text-[var(--muted-light)] pt-1 border-t border-[var(--border)]">
-                  Googlebot Crawler Status: <strong className="text-emerald-600 font-mono">ALLOWED</strong>
+                  Robots Directive: <strong className="text-emerald-600 font-mono">ALLOWED</strong>
                 </div>
               </div>
 
               {/* 2. Canonical Protection */}
               <div className="p-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="font-bold text-[var(--foreground)] flex items-center gap-1.5">
-                    <ShieldCheck className="w-4 h-4 text-emerald-500" /> Website Link Protection
+                  <span className="font-semibold text-[var(--foreground)] flex items-center gap-1.5">
+                    <ShieldCheck className="w-4 h-4 text-emerald-500" /> Canonical URL
                   </span>
-                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
-                    🟢 Protected
-                  </span>
+                  <span className="badge badge-success text-[10px]">Aligned</span>
                 </div>
                 <p className="text-[11px] text-[var(--muted)] m-0 leading-relaxed">
-                  All Google authority points cleanly to <code className="text-sky-600 font-mono">https://firstread.co.uk/</code>.
+                  Brand search authority directs to <code className="text-sky-600 font-mono">https://firstread.co.uk/</code>.
                 </p>
                 <div className="text-[10px] text-[var(--muted-light)] pt-1 border-t border-[var(--border)]">
-                  Duplicate URL Cannibalization: <strong className="text-emerald-600 font-mono">0 ISSUES</strong>
+                  Variations: <strong className="text-emerald-600 font-mono">0 Issues</strong>
                 </div>
               </div>
 
               {/* 3. Sitemap Index */}
               <div className="p-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="font-bold text-[var(--foreground)] flex items-center gap-1.5">
-                    <Layers className="w-4 h-4 text-sky-500" /> Google Sitemap
+                  <span className="font-semibold text-[var(--foreground)] flex items-center gap-1.5">
+                    <Layers className="w-4 h-4 text-sky-500" /> Sitemap Index
                   </span>
-                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
-                    🟢 Submitted
-                  </span>
+                  <span className="badge badge-success text-[10px]">Active</span>
                 </div>
                 <p className="text-[11px] text-[var(--muted)] m-0 font-mono truncate" title="https://firstread.co.uk/sitemap_index.xml">
                   https://firstread.co.uk/sitemap_index.xml
                 </p>
                 <div className="text-[10px] text-[var(--muted-light)] pt-1 border-t border-[var(--border)]">
-                  Search Console Receipt: <strong className="text-emerald-600 font-mono">HTTP 204 ACCEPTED</strong>
+                  GSC Response: <strong className="text-emerald-600 font-mono">HTTP 204 OK</strong>
                 </div>
               </div>
             </div>

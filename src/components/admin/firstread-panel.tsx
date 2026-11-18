@@ -959,7 +959,9 @@ export function FirstReadPanel({ initialSection = 'overview' }: { initialSection
                     <span className="text-xs font-mono text-[var(--foreground)] truncate block font-semibold" title={brandState?.storageStatus?.sha || 'None'}>
                       {brandState?.storageStatus?.sha ? `Commit: ${brandState.storageStatus.sha.slice(0, 10)}` : 'Pending initial push'}
                     </span>
-                    <span className="text-[10px] text-emerald-600 font-semibold block mt-0.5">🟢 Cloud Synced</span>
+                    <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold block mt-0.5 flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Synced
+                    </span>
                   </div>
                 </div>
               </div>
