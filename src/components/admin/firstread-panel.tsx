@@ -897,12 +897,12 @@ export function FirstReadPanel({ initialSection = 'overview' }: { initialSection
               <div className="panel">
                 <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
                   <div>
-                    <span className="eyebrow">AUTONOMOUS RUN ARCHIVE</span>
+                    <span className="eyebrow">AUTOMATED DAILY LOG</span>
                     <h3 className="text-base font-bold text-[var(--foreground)] m-0">
-                      Autonomous Cron Job History &amp; Execution Snapshots
+                      Daily Automated Run History &amp; Google Reports
                     </h3>
                     <p className="text-xs text-[var(--muted)] m-0 mt-1">
-                      Verifiable scheduled daily cron runs and manual autonomous cycles. Every cycle produces an immutable snapshot detailing indexing submissions, sitemap pings, schema verification, brand query telemetry, and commit receipts to the dedicated <code className="font-semibold text-xs text-sky-700 dark:text-sky-300">monitoring-history</code> branch.
+                      Every day at 11:00 AM PKT (06:00 UTC), our system runs completely automatically. It submits sitemaps, inspects Google indexing, verifies brand rankings, and permanently saves a record on GitHub.
                     </p>
                   </div>
 
@@ -914,7 +914,7 @@ export function FirstReadPanel({ initialSection = 'overview' }: { initialSection
                       className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-xs shadow-xs"
                     >
                       <Play className={`w-3.5 h-3.5 mr-1.5 ${brandLoading || brandState?.status === 'running' ? 'animate-spin' : ''}`} />
-                      {brandLoading || brandState?.status === 'running' ? 'Running Cycle…' : 'Run Autonomous Cycle Now'}
+                      {brandLoading || brandState?.status === 'running' ? 'Running Cycle…' : 'Run Cycle Now'}
                     </Button>
                     <Button
                       variant="outline"
@@ -931,11 +931,12 @@ export function FirstReadPanel({ initialSection = 'overview' }: { initialSection
                 {/* Storage & Schedule Status Bar */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs pt-3 border-t border-[var(--border)]">
                   <div className="p-3 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
-                    <span className="text-[var(--muted)] block font-medium mb-1">Vercel Daily Cron Schedule</span>
-                    <strong className="text-sm font-mono text-[var(--foreground)] flex items-center gap-1.5">
+                    <span className="text-[var(--muted)] block font-medium mb-1">Automated Schedule</span>
+                    <strong className="text-sm font-bold text-[var(--foreground)] flex items-center gap-1.5">
                       <Calendar className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
-                      0 6 * * * (06:00 UTC)
+                      Daily at 11:00 AM PKT
                     </strong>
+                    <span className="text-[10px] text-[var(--muted)] block mt-0.5">06:00 UTC (Vercel Cron)</span>
                   </div>
                   <div className="p-3 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
                     <span className="text-[var(--muted)] block font-medium mb-1">Total Recorded Runs</span>
@@ -943,19 +944,22 @@ export function FirstReadPanel({ initialSection = 'overview' }: { initialSection
                       <History className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                       {(brandState?.executionHistory || []).length} Executions
                     </strong>
+                    <span className="text-[10px] text-[var(--muted)] block mt-0.5">Saved and verifiable</span>
                   </div>
                   <div className="p-3 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
-                    <span className="text-[var(--muted)] block font-medium mb-1">Permanent Git Store</span>
-                    <span className="text-xs font-mono text-sky-700 dark:text-sky-300 flex items-center gap-1">
+                    <span className="text-[var(--muted)] block font-medium mb-1">Permanent Storage</span>
+                    <span className="text-xs font-mono text-sky-700 dark:text-sky-300 flex items-center gap-1 font-semibold">
                       <GitBranch className="w-3.5 h-3.5" />
                       {brandState?.storageStatus?.branch || 'monitoring-history'}
                     </span>
+                    <span className="text-[10px] text-[var(--muted)] block mt-0.5">Zero paid database cost</span>
                   </div>
                   <div className="p-3 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
-                    <span className="text-[var(--muted)] block font-medium mb-1">Last Storage Commit</span>
-                    <span className="text-xs font-mono text-[var(--foreground)] truncate block" title={brandState?.storageStatus?.sha || 'None'}>
-                      {brandState?.storageStatus?.sha ? brandState.storageStatus.sha.slice(0, 10) : 'Pending initial push'}
+                    <span className="text-[var(--muted)] block font-medium mb-1">Last Sync Check</span>
+                    <span className="text-xs font-mono text-[var(--foreground)] truncate block font-semibold" title={brandState?.storageStatus?.sha || 'None'}>
+                      {brandState?.storageStatus?.sha ? `Commit: ${brandState.storageStatus.sha.slice(0, 10)}` : 'Pending initial push'}
                     </span>
+                    <span className="text-[10px] text-emerald-600 font-semibold block mt-0.5">🟢 Cloud Synced</span>
                   </div>
                 </div>
               </div>

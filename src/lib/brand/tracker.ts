@@ -115,6 +115,7 @@ async function fetchGscWindowData(
   const url = `https://searchconsole.googleapis.com/webmasters/v3/sites/${encodeURIComponent(config.gscSiteUrl)}/searchAnalytics/query`;
 
   try {
+    // 1. Fetch domain-wide top queries
     const res = await jwt.request<GscApiResponse>({
       url,
       method: 'POST',
@@ -125,7 +126,50 @@ async function fetchGscWindowData(
         rowLimit: 500
       }
     });
-    return res.data?.rows || [];
+    const generalRows = res.data?.rows || [];
+
+    // 2. Fetch targeted brand queries via dimension filter to ensure no brand variations
+    // are omitted if sitewide queries exceed the 500-row limit
+    let targetedBrandRows: GscApiRow[] = [];
+    try {
+      const brandRes = await jwt.request<GscApiResponse>({
+        url,
+        method: 'POST',
+        data: {
+          startDate,
+          endDate,
+          dimensions: ['query', 'page'],
+          dimensionFilterGroups: [
+            {
+              filters: [
+                {
+                  dimension: 'query',
+                  operator: 'contains',
+                  expression: 'firstread'
+                }
+              ]
+            }
+          ],
+          rowLimit: 250
+        }
+      });
+      targetedBrandRows = brandRes.data?.rows || [];
+    } catch {
+      // Non-fatal if dimensionFilterGroups is unmocked or restricted
+    }
+
+    // Merge and deduplicate by query and landing page
+    const mergedMap = new Map<string, GscApiRow>();
+    for (const row of [...generalRows, ...targetedBrandRows]) {
+      const queryKey = row.keys?.[0] || '';
+      const pageKey = row.keys?.[1] || '';
+      const uniqueId = `${queryKey}:::${pageKey}`;
+      if (!mergedMap.has(uniqueId)) {
+        mergedMap.set(uniqueId, row);
+      }
+    }
+
+    return Array.from(mergedMap.values());
   } catch (err) {
     console.warn('[Brand Tracker] GSC window query error:', sanitizeGoogleError(err));
     return [];
