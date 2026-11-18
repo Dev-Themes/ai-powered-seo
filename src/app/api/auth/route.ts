@@ -101,12 +101,20 @@ export async function POST(request: Request) {
   }
 }
 
-export async function DELETE(request: Request) {
+export async function DELETE() {
   try {
-    await authorize(request);
-    (await cookies()).delete(cookieName);
-    return NextResponse.json({ ok: true });
-  } catch {
-    return NextResponse.json({ error: 'Unauthorised.' }, { status: 403 });
+    const cookieStore = await cookies();
+    cookieStore.delete(cookieName);
+    cookieStore.set(cookieName, '', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 0,
+      expires: new Date(0)
+    });
+  } catch (err) {
+    console.error('Logout error clearing cookie:', err);
   }
+  return NextResponse.json({ ok: true });
 }

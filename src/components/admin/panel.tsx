@@ -30,24 +30,30 @@ export function AdminPanel({ section }: { section: string }) {
         </div>
         <div className="editor-actions">
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
-            aria-label="Sign out"
+            aria-label="Exit"
+            className="text-xs h-8 px-3 gap-1.5 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-300 dark:hover:bg-rose-950/30 dark:hover:text-rose-400"
             onClick={async () => {
               try {
-                const s = await api('session');
+                let csrf = '';
+                try {
+                  const s = await api('session');
+                  csrf = s?.csrf || '';
+                } catch {}
                 await fetch('/api/auth', {
                   method: 'DELETE',
-                  headers: { 'x-csrf-token': s.csrf }
+                  headers: csrf ? { 'x-csrf-token': csrf } : {}
                 });
-                router.push('/admin/login');
-                router.refresh();
-              } catch {
-                setError('Unable to sign out. Try again.');
+              } catch (err) {
+                console.error('Logout error:', err);
               }
+              // Unconditionally redirect back to login page
+              window.location.href = '/admin/login';
             }}
           >
-            <LogOut size={16} />
+            <LogOut size={14} />
+            <span>Exit</span>
           </Button>
         </div>
       </div>

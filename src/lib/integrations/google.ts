@@ -973,8 +973,8 @@ export async function fetchGSCReport(options?: {
   const config = getGoogleConfig();
   const creds = getGoogleCredentials();
 
-  // Default to last 28 days ending 3 days ago (GSC data stabilization latency)
-  const defaultEnd = new Date(Date.now() - 3 * 86400000);
+  // Default to last 28 days ending today
+  const defaultEnd = new Date();
   const defaultStart = new Date(defaultEnd.getTime() - 27 * 86400000);
 
   const startDate = options?.startDate || defaultStart.toISOString().split('T')[0];
@@ -1035,7 +1035,7 @@ export async function fetchGSCReport(options?: {
         startDate,
         endDate,
         dimensions: ['query'],
-        rowLimit: 25
+        rowLimit: 100
       }
     });
 
