@@ -1,15 +1,15 @@
 {
   "status": "idle",
   "paused": false,
-  "lastRunAt": "2026-11-18T06:32:21.590Z",
+  "lastRunAt": "2026-11-18T13:54:28.457Z",
   "runningSince": null,
-  "nextScheduledRunAt": "2026-11-19T06:32:21.590Z",
+  "nextScheduledRunAt": "2026-11-19T13:54:28.457Z",
   "safeRetryCount": 0,
   "safeRetryLimit": 3,
   "latestReport": {
     "targetDomain": "https://firstread.co.uk/",
     "primaryBrandKeyword": "firstread",
-    "generatedAt": "2026-11-18T06:31:53.165Z",
+    "generatedAt": "2026-11-18T13:53:57.898Z",
     "dateRange": {
       "startDate": "2026-10-21",
       "endDate": "2026-11-17"
@@ -571,7 +571,7 @@
     },
     "alerts": [
       {
-        "id": "alert-imp-decline-1794983513698",
+        "id": "alert-imp-decline-1795010039924",
         "severity": "critical",
         "type": "declining_impressions",
         "title": "Declining Brand Impressions",
@@ -580,10 +580,10 @@
         "currentValue": 210,
         "previousValue": 2639,
         "recommendation": "Verify homepage indexing status, sitemap freshness, and schema markup to restore brand search appearance.",
-        "detectedAt": "2026-11-18T06:31:53.698Z"
+        "detectedAt": "2026-11-18T13:53:59.924Z"
       },
       {
-        "id": "alert-clicks-decline-1794983513698",
+        "id": "alert-clicks-decline-1795010039924",
         "severity": "critical",
         "type": "declining_clicks",
         "title": "Declining Brand Clicks",
@@ -592,10 +592,10 @@
         "currentValue": 13,
         "previousValue": 1513,
         "recommendation": "Check whether third-party or sub-page results are cannibalising clicks away from the homepage.",
-        "detectedAt": "2026-11-18T06:31:53.698Z"
+        "detectedAt": "2026-11-18T13:53:59.924Z"
       },
       {
-        "id": "alert-pos-deterioration-1794983513698",
+        "id": "alert-pos-deterioration-1795010039924",
         "severity": "critical",
         "type": "ranking_deterioration",
         "title": "Brand Ranking Deterioration",
@@ -604,10 +604,10 @@
         "currentValue": 10.33,
         "previousValue": 4.58,
         "recommendation": "Inspect brand entity signals, homepage canonical declaration, and robots.txt accessibility.",
-        "detectedAt": "2026-11-18T06:31:53.698Z"
+        "detectedAt": "2026-11-18T13:53:59.924Z"
       },
       {
-        "id": "alert-low-ctr-1794983513698",
+        "id": "alert-low-ctr-1795010039924",
         "severity": "warning",
         "type": "low_ctr",
         "title": "Low Branded CTR",
@@ -615,7 +615,7 @@
         "metric": "ctr",
         "currentValue": "6.2%",
         "recommendation": "Review SERP snippet appearance in Google Search Console to confirm title and description relevance.",
-        "detectedAt": "2026-11-18T06:31:53.698Z"
+        "detectedAt": "2026-11-18T13:53:59.924Z"
       }
     ]
   },
@@ -846,46 +846,42 @@
   },
   "homepageInspection": {
     "url": "https://firstread.co.uk/",
-    "inspectedAt": "2026-11-18T06:31:55.799Z",
-    "verdict": "NEUTRAL",
-    "coverageState": "Crawled - currently not indexed",
+    "inspectedAt": "2026-11-18T13:54:02.279Z",
+    "verdict": "PASS",
+    "coverageState": "Submitted and indexed",
     "robotsTxtState": "ALLOWED",
     "indexingState": "INDEXING_ALLOWED",
-    "lastCrawlTime": "2026-11-15T10:14:04Z",
+    "lastCrawlTime": "2026-11-18T13:40:32Z",
     "pageFetchState": "SUCCESSFUL",
     "googleCanonical": "https://firstread.co.uk/",
     "userCanonical": "https://firstread.co.uk/",
     "canonicalMatches": true,
     "crawledAs": "MOBILE",
     "isDiscoveredNotIndexed": false,
-    "isCrawledNotIndexed": true,
-    "issues": [
-      "Crawled by Google but not indexed (content quality or duplicate evaluation)."
-    ]
+    "isCrawledNotIndexed": false,
+    "issues": []
   },
   "recentInspections": [
     {
       "url": "https://firstread.co.uk/",
-      "inspectedAt": "2026-11-18T06:31:55.799Z",
-      "verdict": "NEUTRAL",
-      "coverageState": "Crawled - currently not indexed",
+      "inspectedAt": "2026-11-18T13:54:02.279Z",
+      "verdict": "PASS",
+      "coverageState": "Submitted and indexed",
       "robotsTxtState": "ALLOWED",
       "indexingState": "INDEXING_ALLOWED",
-      "lastCrawlTime": "2026-11-15T10:14:04Z",
+      "lastCrawlTime": "2026-11-18T13:40:32Z",
       "pageFetchState": "SUCCESSFUL",
       "googleCanonical": "https://firstread.co.uk/",
       "userCanonical": "https://firstread.co.uk/",
       "canonicalMatches": true,
       "crawledAs": "MOBILE",
       "isDiscoveredNotIndexed": false,
-      "isCrawledNotIndexed": true,
-      "issues": [
-        "Crawled by Google but not indexed (content quality or duplicate evaluation)."
-      ]
+      "isCrawledNotIndexed": false,
+      "issues": []
     },
     {
       "url": "https://firstread.co.uk/about-us/",
-      "inspectedAt": "2026-11-18T06:32:02.771Z",
+      "inspectedAt": "2026-11-18T13:54:08.505Z",
       "verdict": "PASS",
       "coverageState": "Submitted and indexed",
       "robotsTxtState": "ALLOWED",
@@ -902,7 +898,7 @@
     },
     {
       "url": "https://firstread.co.uk/contact-us/",
-      "inspectedAt": "2026-11-18T06:32:08.958Z",
+      "inspectedAt": "2026-11-18T13:54:14.919Z",
       "verdict": "PASS",
       "coverageState": "Submitted and indexed",
       "robotsTxtState": "ALLOWED",
@@ -919,7 +915,7 @@
     },
     {
       "url": "https://firstread.co.uk/category/news/",
-      "inspectedAt": "2026-11-18T06:32:15.128Z",
+      "inspectedAt": "2026-11-18T13:54:21.311Z",
       "verdict": "PASS",
       "coverageState": "Submitted and indexed",
       "robotsTxtState": "ALLOWED",
@@ -975,6 +971,93 @@
   },
   "discoveryIssues": [],
   "executionHistory": [
+    {
+      "id": "exec-1795010037701",
+      "startedAt": "2026-11-18T13:53:57.701Z",
+      "completedAt": "2026-11-18T13:54:28.457Z",
+      "durationMs": 30756,
+      "status": "success",
+      "actionsExecuted": [
+        {
+          "id": "act-index-pub-1795010042155",
+          "timestamp": "2026-11-18T13:54:02.155Z",
+          "actionType": "google_indexing_publish",
+          "target": "https://firstread.co.uk/",
+          "status": "success",
+          "details": "Google Indexing API accepted notification for \"https://firstread.co.uk/\" (URL_UPDATED).",
+          "reason": "Autonomous Google Indexing API notification to accelerate brand visibility for \"firstread\"."
+        },
+        {
+          "id": "act-sitemap-skip-1795010042155",
+          "timestamp": "2026-11-18T13:54:01.848Z",
+          "actionType": "sitemap_submit",
+          "target": "https://firstread.co.uk/sitemap_index.xml",
+          "status": "skipped",
+          "details": "Sitemap already submitted and active in GSC with no reported errors; repeated submission omitted to prevent API spam.",
+          "reason": "No sitemap changes detected."
+        },
+        {
+          "id": "act-ping-1795010042251",
+          "timestamp": "2026-11-18T13:54:02.251Z",
+          "actionType": "sitemap_ping",
+          "target": "https://firstread.co.uk/sitemap_index.xml",
+          "status": "success",
+          "details": "Google sitemap ping endpoint is retired by Google (HTTP 404); sitemap is actively managed via Google Search Console API.",
+          "reason": "Autonomous crawler ping for updated sitemap."
+        },
+        {
+          "id": "act-schema-1795010042279",
+          "timestamp": "2026-11-18T13:54:02.279Z",
+          "actionType": "audit_schema",
+          "target": "https://firstread.co.uk/",
+          "status": "success",
+          "details": "Brand schema verified: Organization (Firstread), WebSite, and SearchAction intact.",
+          "reason": "Autonomous verification of brand knowledge graph schema for \"firstread\"."
+        },
+        {
+          "id": "act-inspect-1795010048505-99rj",
+          "timestamp": "2026-11-18T13:54:08.505Z",
+          "actionType": "inspect_homepage",
+          "target": "https://firstread.co.uk/",
+          "status": "success",
+          "details": "Google Inspection: verdict=PASS, state=\"Submitted and indexed\", robots=ALLOWED",
+          "reason": "Autonomous URL indexing inspection."
+        },
+        {
+          "id": "act-inspect-1795010054919-nx5c",
+          "timestamp": "2026-11-18T13:54:14.919Z",
+          "actionType": "inspect_url",
+          "target": "https://firstread.co.uk/about-us/",
+          "status": "success",
+          "details": "Google Inspection: verdict=PASS, state=\"Submitted and indexed\", robots=ALLOWED",
+          "reason": "Autonomous URL indexing inspection."
+        },
+        {
+          "id": "act-inspect-1795010061311-3gmj",
+          "timestamp": "2026-11-18T13:54:21.311Z",
+          "actionType": "inspect_url",
+          "target": "https://firstread.co.uk/contact-us/",
+          "status": "success",
+          "details": "Google Inspection: verdict=PASS, state=\"Submitted and indexed\", robots=ALLOWED",
+          "reason": "Autonomous URL indexing inspection."
+        },
+        {
+          "id": "act-inspect-1795010068457-a68v",
+          "timestamp": "2026-11-18T13:54:28.457Z",
+          "actionType": "inspect_url",
+          "target": "https://firstread.co.uk/category/news/",
+          "status": "success",
+          "details": "Google Inspection: verdict=PASS, state=\"Submitted and indexed\", robots=ALLOWED",
+          "reason": "Autonomous URL indexing inspection."
+        }
+      ],
+      "alertsCount": 4,
+      "discoveryIssuesCount": 0,
+      "brandClicks": 13,
+      "brandImpressions": 210,
+      "homepageIndexed": true,
+      "summary": "Completed autonomous cycle in 30756ms: Tracked 13 brand clicks (210 impressions). Homepage indexing verdict: PASS. Executed 8 action(s)."
+    },
     {
       "id": "exec-1794983512878",
       "startedAt": "2026-11-18T06:31:52.878Z",
@@ -1705,7 +1788,7 @@
     "durable": true,
     "provider": "github",
     "branch": "monitoring-history",
-    "sha": "3445b092fd8728971235d412a385c1e17e2a0b1b",
-    "lastSyncAt": "2026-11-18T06:31:53.160Z"
+    "sha": "42ae4be2a8c3f0954dadd8a55d7a1c0631538c72",
+    "lastSyncAt": "2026-11-18T13:53:57.895Z"
   }
 }
