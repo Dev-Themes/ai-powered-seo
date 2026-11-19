@@ -47,7 +47,9 @@ import {
   submitSitemapToGsc,
   pingGoogleSitemap,
   auditBrandStructuredData,
-  measureServerCrawlLatency
+  measureServerCrawlLatency,
+  auditCoreWebVitals,
+  auditSitemapDiscrepancy
 } from '@/lib/brand/indexing';
 
 export const runtime = 'nodejs';
@@ -163,6 +165,10 @@ export async function GET(
         data = getGoogleIntegrationReadiness();
       } else if (sub === 'latency' || sub === 'health') {
         data = await measureServerCrawlLatency();
+      } else if (sub === 'cwv' || sub === 'pagespeed') {
+        data = await auditCoreWebVitals();
+      } else if (sub === 'sitemap-audit') {
+        data = await auditSitemapDiscrepancy();
       } else if (sub === 'status' || sub === 'readiness' || sub === 'infra') {
         // Honest system status without database or Inngest dependencies
         data = {
@@ -375,6 +381,14 @@ export async function POST(
             successCount: results.filter(r => r.status === 'success').length,
             articles: results
           });
+        }
+        if (subAction === 'sitemap-audit') {
+          const res = await auditSitemapDiscrepancy();
+          return NextResponse.json(res);
+        }
+        if (subAction === 'cwv' || subAction === 'pagespeed') {
+          const res = await auditCoreWebVitals();
+          return NextResponse.json(res);
         }
       }
 

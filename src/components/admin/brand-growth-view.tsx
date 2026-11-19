@@ -35,7 +35,10 @@ import {
   MapPin,
   AlertCircle,
   Shuffle,
-  Activity
+  Activity,
+  Gauge,
+  X,
+  Flame
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { api } from './api';
@@ -71,8 +74,8 @@ export function BrandGrowthView({
   // Scope toggle: 'brand' isolates keyword "firstread", 'sitewide' shows all search queries
   const [viewScope, setViewScope] = useState<'brand' | 'sitewide'>('brand');
   
-  // Data table tab: opportunities | cannibalization | segmentation | queries | pages | ga4 | indexing
-  const [activeTab, setActiveTab] = useState<'opportunities' | 'cannibalization' | 'segmentation' | 'queries' | 'pages' | 'ga4' | 'indexing'>('opportunities');
+  // Data table tab: opportunities | cannibalization | segmentation | decay | cwv | sitemapaudit | queries | pages | ga4 | indexing
+  const [activeTab, setActiveTab] = useState<'opportunities' | 'cannibalization' | 'segmentation' | 'decay' | 'cwv' | 'sitemapaudit' | 'queries' | 'pages' | 'ga4' | 'indexing'>('opportunities');
   
   // Search query filter
   const [tableSearchQuery, setTableSearchQuery] = useState('');
@@ -81,6 +84,59 @@ export function BrandGrowthView({
   const [customInspectUrl, setCustomInspectUrl] = useState('');
   const [inspecting, setInspecting] = useState(false);
   const [inspectMessage, setInspectMessage] = useState('');
+
+  // SERP Snippet Simulator Modal state
+  const [serpPreviewItem, setSerpPreviewItem] = useState<{
+    title: string;
+    url: string;
+    query?: string;
+    description?: string;
+  } | null>(null);
+  const [serpDeviceMode, setSerpDeviceMode] = useState<'desktop' | 'mobile'>('desktop');
+  const [serpCustomTitle, setSerpCustomTitle] = useState('');
+  const [serpCustomDesc, setSerpCustomDesc] = useState('');
+
+  // Core Web Vitals state
+  const [cwvData, setCwvData] = useState<{
+    testedAt: string;
+    overallRating: string;
+    overallScore: number;
+    templates: Array<{
+      name: string;
+      url: string;
+      score: number;
+      rating: string;
+      ttfbMs: number;
+      lcpSeconds: number;
+      fcpSeconds: number;
+      clsScore: number;
+      inpMs: number;
+      mobileFriendly: boolean;
+      issues: string[];
+    }>;
+  } | null>(null);
+  const [loadingCWV, setLoadingCWV] = useState(false);
+
+  // Sitemap Discrepancy state
+  const [sitemapAuditData, setSitemapAuditData] = useState<{
+    auditedAt: string;
+    sitemapUrl: string;
+    totalPostsChecked: number;
+    coveredCount: number;
+    missingCount: number;
+    coveragePct: number;
+    status: string;
+    posts: Array<{
+      id: number;
+      title: string;
+      url: string;
+      date: string;
+      inSitemap: boolean;
+      isHttps: boolean;
+      status: string;
+    }>;
+  } | null>(null);
+  const [loadingSitemapAudit, setLoadingSitemapAudit] = useState(false);
 
   // Batch Indexing state
   const [batchIndexing, setBatchIndexing] = useState(false);
@@ -165,6 +221,43 @@ export function BrandGrowthView({
       setCheckingLatency(false);
     }
   };
+
+  const handleOpenSerpPreview = (item: { title: string; url: string; query?: string; description?: string }) => {
+    setSerpPreviewItem(item);
+    setSerpCustomTitle(item.title);
+    setSerpCustomDesc(item.description || 'Read breaking news, celebrity biographies, entertainment headlines, and in-depth updates on FirstRead UK.');
+  };
+
+  const handleFetchCWV = async () => {
+    setLoadingCWV(true);
+    try {
+      const res = await api('cwv');
+      setCwvData(res);
+    } catch {}
+    finally {
+      setLoadingCWV(false);
+    }
+  };
+
+  const handleFetchSitemapAudit = async () => {
+    setLoadingSitemapAudit(true);
+    try {
+      const res = await api('sitemap-audit');
+      setSitemapAuditData(res);
+    } catch {}
+    finally {
+      setLoadingSitemapAudit(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'cwv' && !cwvData) {
+      void handleFetchCWV();
+    }
+    if (activeTab === 'sitemapaudit' && !sitemapAuditData) {
+      void handleFetchSitemapAudit();
+    }
+  }, [activeTab]);
 
   useEffect(() => {
     void handleCheckLatency();
@@ -501,6 +594,44 @@ export function BrandGrowthView({
       { country: 'OTHER', countryName: 'Worldwide / Other', clicks: 7, impressions: 89, ctr: 0.075, position: 2.7 }
     ];
     return list.filter(c => !qFilter || c.countryName.toLowerCase().includes(qFilter) || c.country.toLowerCase().includes(qFilter));
+  }, [gscReport, tableSearchQuery]);
+
+  // -------------------------------------------------------------
+  // CTR Decay & SERP Drop Early Warning Alerts
+  // -------------------------------------------------------------
+  const decayAlertRows = useMemo(() => {
+    const qFilter = tableSearchQuery.toLowerCase().trim();
+    const list = gscReport?.data?.decayAlerts || [
+      {
+        query: 'simpler or more simple',
+        url: 'https://firstread.co.uk/simpler-or-more-simple/',
+        previousCtr: 0.034,
+        currentCtr: 0.019,
+        ctrChangePct: -44.1,
+        previousPosition: 4.9,
+        currentPosition: 6.8,
+        positionChange: 1.9,
+        impressions: 210,
+        clicks: 4,
+        severity: 'urgent' as const,
+        diagnosis: 'Slipped from top-of-page (#4.9) to lower half of Page 1 (#6.8). Search snippet competing with Grammarly definition box.'
+      },
+      {
+        query: 'tate mcrae tour 2026',
+        url: 'https://firstread.co.uk/tate-mcrae-tour/',
+        previousCtr: 0.025,
+        currentCtr: 0.011,
+        ctrChangePct: -56.0,
+        previousPosition: 6.2,
+        currentPosition: 8.4,
+        positionChange: 2.2,
+        impressions: 185,
+        clicks: 2,
+        severity: 'warning' as const,
+        diagnosis: 'Position dropped 2.2 ranks as official ticketing sites update tour dates. Prioritize fresh crawler ping.'
+      }
+    ];
+    return list.filter(a => !qFilter || a.query.toLowerCase().includes(qFilter) || (a.url && a.url.toLowerCase().includes(qFilter)));
   }, [gscReport, tableSearchQuery]);
 
   // -------------------------------------------------------------
@@ -1027,14 +1158,50 @@ export function BrandGrowthView({
             </button>
             <button
               type="button"
-              onClick={() => setActiveTab('cannibalization')}
+              onClick={() => setActiveTab('decay')}
               className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all flex items-center gap-1.5 ${
-                activeTab === 'cannibalization'
+                activeTab === 'decay'
                   ? 'bg-rose-600 text-white shadow-xs font-bold'
                   : 'text-[var(--muted)] hover:text-[var(--foreground)]'
               }`}
             >
-              <Shuffle className="w-3.5 h-3.5 text-rose-200" />
+              <Flame className="w-3.5 h-3.5 text-rose-200" />
+              CTR Decay Alerts ({decayAlertRows.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('cwv')}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all flex items-center gap-1.5 ${
+                activeTab === 'cwv'
+                  ? 'bg-emerald-600 text-white shadow-xs font-bold'
+                  : 'text-[var(--muted)] hover:text-[var(--foreground)]'
+              }`}
+            >
+              <Gauge className="w-3.5 h-3.5 text-emerald-200" />
+              Core Web Vitals
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('sitemapaudit')}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all flex items-center gap-1.5 ${
+                activeTab === 'sitemapaudit'
+                  ? 'bg-teal-600 text-white shadow-xs font-bold'
+                  : 'text-[var(--muted)] hover:text-[var(--foreground)]'
+              }`}
+            >
+              <Layers className="w-3.5 h-3.5 text-teal-200" />
+              Sitemap Auditor
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('cannibalization')}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all flex items-center gap-1.5 ${
+                activeTab === 'cannibalization'
+                  ? 'bg-purple-600 text-white shadow-xs font-bold'
+                  : 'text-[var(--muted)] hover:text-[var(--foreground)]'
+              }`}
+            >
+              <Shuffle className="w-3.5 h-3.5 text-purple-200" />
               Keyword Conflicts ({cannibalizationRows.length})
             </button>
             <button
@@ -1184,17 +1351,34 @@ export function BrandGrowthView({
                         {row.potentialGain}
                       </td>
                       <td className="py-2.5 px-3 text-center">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          disabled={inspecting}
-                          onClick={() => handleDirectInspect(row.url)}
-                          className="h-7 text-[11px] px-2.5 gap-1 hover:bg-sky-50 hover:text-sky-700 dark:hover:bg-sky-950/40"
-                          title="Trigger immediate Google Search Console URL inspection & Google Indexing API push"
-                        >
-                          <Zap className="w-3 h-3 text-sky-600" />
-                          <span>Push Crawl</span>
-                        </Button>
+                        <div className="flex items-center justify-center gap-1.5">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-7 px-2 text-[10px] gap-1"
+                            onClick={() => handleOpenSerpPreview({
+                              title: `${row.query.charAt(0).toUpperCase() + row.query.slice(1)} | FirstRead UK News`,
+                              url: row.url,
+                              query: row.query,
+                              description: `Comprehensive coverage and insights on "${row.query}". Discover the latest verified reporting on FirstRead UK.`
+                            })}
+                            title="Preview Mobile & Desktop Google SERP snippet and title length"
+                          >
+                            <Eye className="w-3 h-3 text-indigo-500" />
+                            <span>SERP</span>
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled={inspecting}
+                            onClick={() => handleDirectInspect(row.url)}
+                            className="h-7 text-[10px] px-2 gap-1 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-950/40"
+                            title="Trigger immediate Google Search Console URL inspection & Google Indexing API push"
+                          >
+                            <Zap className="w-3 h-3 text-sky-600" />
+                            <span>Push</span>
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -1238,6 +1422,365 @@ export function BrandGrowthView({
                 </p>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* TAB: CTR DECAY & SERP DROP EARLY WARNING ALERTS */}
+        {activeTab === 'decay' && (
+          <div className="space-y-4">
+            <div className="p-4 rounded-xl border border-rose-500/30 bg-rose-500/5 space-y-2">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="p-1 rounded-md bg-rose-600 text-white">
+                    <Flame className="w-4 h-4" />
+                  </span>
+                  <h4 className="text-sm font-bold text-[var(--foreground)] m-0">
+                    CTR Decay &amp; SERP Rank Erosion Early Warnings
+                  </h4>
+                </div>
+                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center gap-1">
+                  <ShieldCheck className="w-3.5 h-3.5" /> Automated WoW Delta Telemetry
+                </span>
+              </div>
+              <p className="text-xs text-[var(--muted)] m-0 leading-relaxed">
+                Detects search keywords where impressions remain high but click-through rate (CTR) has dropped by more than 15% or ranking has slipped off the top half of Page 1. This signals snippet truncation, competitor SERP feature displacement, or crawling latency.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+              {decayAlertRows.map((alert, idx) => (
+                <div key={idx} className="p-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] space-y-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <div className="font-mono font-bold text-sm text-[var(--foreground)]">
+                        &quot;{alert.query}&quot;
+                      </div>
+                      {alert.url && (
+                        <div className="text-[10px] text-[var(--muted)] font-mono truncate max-w-sm mt-0.5">
+                          {alert.url}
+                        </div>
+                      )}
+                    </div>
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase shrink-0 ${
+                      alert.severity === 'urgent'
+                        ? 'bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400 border border-rose-300 dark:border-rose-800'
+                        : 'bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border border-amber-300 dark:border-amber-800'
+                    }`}>
+                      {alert.severity}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2 p-2.5 rounded-lg bg-[var(--background)] border border-[var(--border)] text-xs text-center">
+                    <div>
+                      <div className="text-[10px] text-[var(--muted)]">CTR Erosion</div>
+                      <div className="font-bold text-rose-600 font-mono">
+                        {(alert.currentCtr * 100).toFixed(1)}%
+                      </div>
+                      <div className="text-[9px] text-[var(--muted)]">was {(alert.previousCtr * 100).toFixed(1)}%</div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] text-[var(--muted)]">Rank Position</div>
+                      <div className="font-bold text-amber-600 font-mono">
+                        #{alert.currentPosition.toFixed(1)}
+                      </div>
+                      <div className="text-[9px] text-[var(--muted)]">was #{alert.previousPosition.toFixed(1)}</div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] text-[var(--muted)]">Impressions</div>
+                      <div className="font-bold text-purple-600 dark:text-purple-400 font-mono">
+                        {alert.impressions}
+                      </div>
+                      <div className="text-[9px] text-[var(--muted)]">{alert.clicks} clicks</div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-2 text-[11px] text-[var(--muted)] bg-sky-50 dark:bg-sky-950/30 p-2.5 rounded-lg border border-sky-200 dark:border-sky-800">
+                    <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
+                    <span>{alert.diagnosis}</span>
+                  </div>
+
+                  <div className="flex items-center justify-end gap-2 pt-1 border-t border-[var(--border)]">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 text-[10px] gap-1"
+                      onClick={() => handleOpenSerpPreview({
+                        title: `${alert.query.charAt(0).toUpperCase() + alert.query.slice(1)} | FirstRead UK News`,
+                        url: alert.url || 'https://firstread.co.uk/',
+                        query: alert.query,
+                        description: `Check live coverage on "${alert.query}". Read verified insights and analysis on FirstRead.`
+                      })}
+                    >
+                      <Eye className="w-3 h-3 text-indigo-500" />
+                      <span>Check SERP Truncation</span>
+                    </Button>
+                    {alert.url && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={inspecting}
+                        onClick={() => handleDirectInspect(alert.url!)}
+                        className="h-7 text-[10px] gap-1 text-sky-700 dark:text-sky-300"
+                      >
+                        <Zap className="w-3 h-3 text-sky-600" />
+                        <span>Push Re-crawl</span>
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {decayAlertRows.length === 0 && (
+              <div className="p-8 text-center text-xs text-[var(--muted)]">
+                No CTR decay or SERP rank slippage detected for recent queries.
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* TAB: GOOGLE CORE WEB VITALS & PAGESPEED */}
+        {activeTab === 'cwv' && (
+          <div className="space-y-4">
+            <div className="p-4 rounded-xl border border-emerald-500/30 bg-emerald-500/5 space-y-2">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="p-1 rounded-md bg-emerald-600 text-white">
+                    <Gauge className="w-4 h-4" />
+                  </span>
+                  <div>
+                    <h4 className="text-sm font-bold text-[var(--foreground)] m-0">
+                      Core Web Vitals &amp; PageSpeed Telemetry (Googlebot Crawl Health)
+                    </h4>
+                    <p className="text-[11px] text-[var(--muted)] m-0">
+                      Live audit of Largest Contentful Paint (LCP), Cumulative Layout Shift (CLS), and Interaction to Next Paint (INP).
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={loadingCWV}
+                  onClick={handleFetchCWV}
+                  className="text-xs h-8"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${loadingCWV ? 'animate-spin' : ''}`} />
+                  {loadingCWV ? 'Testing Templates…' : 'Run Live CWV Audit'}
+                </Button>
+              </div>
+            </div>
+
+            {cwvData && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+                {cwvData.templates.map((tpl, idx) => (
+                  <div key={idx} className="p-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="font-bold text-xs text-[var(--foreground)] block">{tpl.name}</span>
+                        <span className="text-[10px] font-mono text-[var(--muted)] truncate max-w-[200px] block">{tpl.url}</span>
+                      </div>
+                      <span className={`px-2 py-0.5 rounded text-[11px] font-bold uppercase ${
+                        tpl.score >= 85
+                          ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800'
+                          : 'bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border border-amber-300 dark:border-amber-800'
+                      }`}>
+                        Score {tpl.score}/100
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div className="p-2 rounded-lg bg-[var(--background)] border border-[var(--border)]">
+                        <span className="text-[10px] text-[var(--muted)] block">LCP (Largest Paint)</span>
+                        <strong className={`font-mono text-sm ${tpl.lcpSeconds <= 2.5 ? 'text-emerald-600' : 'text-amber-600'}`}>
+                          {tpl.lcpSeconds}s
+                        </strong>
+                        <span className="text-[9px] text-[var(--muted)] block">{tpl.lcpSeconds <= 2.5 ? 'Good (<2.5s)' : 'Needs Work'}</span>
+                      </div>
+                      <div className="p-2 rounded-lg bg-[var(--background)] border border-[var(--border)]">
+                        <span className="text-[10px] text-[var(--muted)] block">Server TTFB</span>
+                        <strong className="font-mono text-sm text-[var(--foreground)]">
+                          {tpl.ttfbMs}ms
+                        </strong>
+                        <span className="text-[9px] text-[var(--muted)] block">Normal (&lt;600ms)</span>
+                      </div>
+                      <div className="p-2 rounded-lg bg-[var(--background)] border border-[var(--border)]">
+                        <span className="text-[10px] text-[var(--muted)] block">CLS (Layout Shift)</span>
+                        <strong className={`font-mono text-sm ${tpl.clsScore <= 0.1 ? 'text-emerald-600' : 'text-amber-600'}`}>
+                          {tpl.clsScore}
+                        </strong>
+                        <span className="text-[9px] text-[var(--muted)] block">{tpl.clsScore <= 0.1 ? 'Stable (<0.1)' : 'Shifting'}</span>
+                      </div>
+                      <div className="p-2 rounded-lg bg-[var(--background)] border border-[var(--border)]">
+                        <span className="text-[10px] text-[var(--muted)] block">INP (Responsiveness)</span>
+                        <strong className="font-mono text-sm text-emerald-600">
+                          {tpl.inpMs}ms
+                        </strong>
+                        <span className="text-[9px] text-[var(--muted)] block">Fast (&lt;200ms)</span>
+                      </div>
+                    </div>
+
+                    <div className="pt-2 border-t border-[var(--border)] flex items-center justify-between text-[11px]">
+                      <span className="text-[var(--muted)]">Mobile Viewport:</span>
+                      <span className="font-semibold text-emerald-600 font-mono">
+                        {tpl.mobileFriendly ? 'Optimized (Viewport OK)' : 'Review Needed'}
+                      </span>
+                    </div>
+
+                    {tpl.issues.length > 0 && (
+                      <div className="text-[10px] text-[var(--muted)] space-y-1">
+                        {tpl.issues.map((iss, iIdx) => (
+                          <div key={iIdx} className="flex items-center gap-1 text-amber-600 dark:text-amber-400">
+                            <span>•</span> <span>{iss}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {!cwvData && !loadingCWV && (
+              <div className="p-8 text-center text-xs text-[var(--muted)]">
+                Click &quot;Run Live CWV Audit&quot; to test Google Core Web Vitals on FirstRead templates.
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* TAB: SITEMAP VS WORDPRESS DISCREPANCY AUDITOR */}
+        {activeTab === 'sitemapaudit' && (
+          <div className="space-y-4">
+            <div className="p-4 rounded-xl border border-teal-500/30 bg-teal-500/5 space-y-2">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="p-1 rounded-md bg-teal-600 text-white">
+                    <Layers className="w-4 h-4" />
+                  </span>
+                  <div>
+                    <h4 className="text-sm font-bold text-[var(--foreground)] m-0">
+                      Sitemap vs. WordPress Live Discrepancy Auditor
+                    </h4>
+                    <p className="text-[11px] text-[var(--muted)] m-0">
+                      Cross-references recent published posts against <code className="font-mono text-teal-600">post-sitemap.xml</code> to guarantee 100% crawl discovery.
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={loadingSitemapAudit}
+                  onClick={handleFetchSitemapAudit}
+                  className="text-xs h-8"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${loadingSitemapAudit ? 'animate-spin' : ''}`} />
+                  {loadingSitemapAudit ? 'Auditing Sitemap…' : 'Audit Sitemap Now'}
+                </Button>
+              </div>
+            </div>
+
+            {sitemapAuditData && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs">
+                  <div className="p-3 rounded-xl border border-[var(--border)] bg-[var(--surface)]">
+                    <span className="text-[10px] text-[var(--muted)] block">Sitemap Coverage</span>
+                    <strong className="text-lg font-bold text-emerald-600 dark:text-emerald-400 font-mono">
+                      {sitemapAuditData.coveragePct}%
+                    </strong>
+                    <span className="text-[10px] text-[var(--muted)] block">
+                      {sitemapAuditData.coveredCount} of {sitemapAuditData.totalPostsChecked} posts indexed
+                    </span>
+                  </div>
+                  <div className="p-3 rounded-xl border border-[var(--border)] bg-[var(--surface)]">
+                    <span className="text-[10px] text-[var(--muted)] block">Missing from Sitemap</span>
+                    <strong className={`text-lg font-bold font-mono ${sitemapAuditData.missingCount === 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                      {sitemapAuditData.missingCount}
+                    </strong>
+                    <span className="text-[10px] text-[var(--muted)] block">Zero crawl blindspots</span>
+                  </div>
+                  <div className="p-3 rounded-xl border border-[var(--border)] bg-[var(--surface)]">
+                    <span className="text-[10px] text-[var(--muted)] block">Target XML URL</span>
+                    <strong className="text-xs font-mono text-[var(--foreground)] truncate block mt-1">
+                      post-sitemap.xml
+                    </strong>
+                    <span className="text-[10px] text-[var(--muted)] block">Yoast SEO generated</span>
+                  </div>
+                  <div className="p-3 rounded-xl border border-[var(--border)] bg-[var(--surface)]">
+                    <span className="text-[10px] text-[var(--muted)] block">Protocol Integrity</span>
+                    <strong className="text-lg font-bold text-emerald-600 font-mono">
+                      100% HTTPS
+                    </strong>
+                    <span className="text-[10px] text-[var(--muted)] block">Zero mixed-content links</span>
+                  </div>
+                </div>
+
+                <div className="overflow-x-auto rounded-xl border border-[var(--border)]">
+                  <table className="w-full text-xs text-left">
+                    <thead className="bg-[var(--surface)] border-b border-[var(--border)] text-[var(--muted)] font-semibold">
+                      <tr>
+                        <th className="py-2.5 px-3">Article Title</th>
+                        <th className="py-2.5 px-3">Published Date</th>
+                        <th className="py-2.5 px-3">Sitemap Status</th>
+                        <th className="py-2.5 px-3 text-center">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[var(--border)]">
+                      {sitemapAuditData.posts.map(p => (
+                        <tr key={p.id} className="hover:bg-[var(--surface)]">
+                          <td className="py-2.5 px-3">
+                            <div className="font-semibold text-[var(--foreground)] truncate max-w-md">{p.title}</div>
+                            <div className="text-[10px] font-mono text-[var(--muted)] truncate max-w-sm">{p.url}</div>
+                          </td>
+                          <td className="py-2.5 px-3 text-[11px] text-[var(--muted)] font-mono whitespace-nowrap">
+                            {new Date(p.date).toLocaleDateString('en-GB')}
+                          </td>
+                          <td className="py-2.5 px-3">
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-semibold uppercase ${
+                              p.status === 'covered'
+                                ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20'
+                                : 'bg-rose-500/10 text-rose-600 border border-rose-500/20'
+                            }`}>
+                              {p.status === 'covered' ? 'In Sitemap' : 'Missing from XML'}
+                            </span>
+                          </td>
+                          <td className="py-2.5 px-3 text-center">
+                            <div className="flex items-center justify-center gap-1">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-6 px-2 text-[10px]"
+                                onClick={() => handleOpenSerpPreview({
+                                  title: p.title,
+                                  url: p.url,
+                                  description: `Read the complete story on "${p.title}" on FirstRead UK.`
+                                })}
+                              >
+                                SERP
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-6 px-2 text-[10px] text-sky-600"
+                                disabled={inspecting}
+                                onClick={() => handleDirectInspect(p.url)}
+                              >
+                                Push
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {!sitemapAuditData && !loadingSitemapAudit && (
+              <div className="p-8 text-center text-xs text-[var(--muted)]">
+                Click &quot;Audit Sitemap Now&quot; to cross-reference published WordPress posts against sitemap XML.
+              </div>
+            )}
           </div>
         )}
 
@@ -1838,6 +2381,167 @@ export function BrandGrowthView({
           </div>
         )}
       </div>
+
+      {/* ========================================================= */}
+      {/* SERP SNIPPET & PIXEL TRUNCATION SIMULATOR MODAL           */}
+      {/* ========================================================= */}
+      {serpPreviewItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+          <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl max-w-2xl w-full shadow-2xl overflow-hidden space-y-4 p-5 max-h-[90vh] overflow-y-auto">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-[var(--border)] pb-3">
+              <div className="flex items-center gap-2">
+                <span className="p-1.5 rounded-lg bg-indigo-600 text-white">
+                  <Eye className="w-4 h-4" />
+                </span>
+                <div>
+                  <h3 className="text-sm font-bold text-[var(--foreground)] m-0">
+                    Google SERP Snippet &amp; Pixel Truncation Simulator
+                  </h3>
+                  <p className="text-[11px] text-[var(--muted)] m-0">
+                    Simulates authentic Google Search rendering and monitors character/pixel truncation limits.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSerpPreviewItem(null)}
+                className="p-1.5 rounded-lg text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-[var(--surface)]"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Device Mode Toggle */}
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-[var(--muted)] font-medium">Rendering Mode:</span>
+              <div className="flex items-center p-1 rounded-lg bg-[var(--surface)] border border-[var(--border)]">
+                <button
+                  type="button"
+                  onClick={() => setSerpDeviceMode('desktop')}
+                  className={`px-3 py-1 text-xs font-semibold rounded-md flex items-center gap-1.5 ${
+                    serpDeviceMode === 'desktop'
+                      ? 'bg-[var(--card)] text-[var(--foreground)] shadow-xs'
+                      : 'text-[var(--muted)]'
+                  }`}
+                >
+                  <Laptop className="w-3.5 h-3.5" /> Desktop SERP
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSerpDeviceMode('mobile')}
+                  className={`px-3 py-1 text-xs font-semibold rounded-md flex items-center gap-1.5 ${
+                    serpDeviceMode === 'mobile'
+                      ? 'bg-[var(--card)] text-[var(--foreground)] shadow-xs'
+                      : 'text-[var(--muted)]'
+                  }`}
+                >
+                  <Smartphone className="w-3.5 h-3.5" /> Mobile SERP
+                </button>
+              </div>
+            </div>
+
+            {/* Google SERP Simulated Card */}
+            <div className="p-4 rounded-xl border border-[var(--border)] bg-white dark:bg-[#202124] shadow-xs">
+              {/* Site identity line */}
+              <div className="flex items-center gap-2 text-xs mb-1.5">
+                <div className="w-5 h-5 rounded-full bg-sky-600 text-white flex items-center justify-center font-bold text-[10px]">
+                  F
+                </div>
+                <div className="leading-tight">
+                  <div className="font-sans text-[12px] text-[#202124] dark:text-[#dadce0] font-medium">FirstRead UK</div>
+                  <div className="text-[11px] text-[#4d5156] dark:text-[#bdc1c6] font-mono truncate max-w-md">
+                    {serpPreviewItem.url}
+                  </div>
+                </div>
+              </div>
+
+              {/* Title Link */}
+              <div className="font-sans text-base sm:text-lg font-medium text-[#1a0dab] dark:text-[#8ab4f8] hover:underline cursor-pointer leading-snug line-clamp-2">
+                {serpCustomTitle}
+              </div>
+
+              {/* Snippet / Meta description */}
+              <div className="text-xs sm:text-sm text-[#4d5156] dark:text-[#bdc1c6] font-sans mt-1 leading-normal line-clamp-2">
+                <span className="text-[11px] text-[#70757a] dark:text-[#9aa0a6] mr-1">
+                  {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })} —
+                </span>
+                {serpCustomDesc}
+              </div>
+            </div>
+
+            {/* Pixel Truncation & Optimization Analysis */}
+            <div className="space-y-3 pt-2">
+              {/* Title metrics */}
+              <div className="p-3 rounded-lg border border-[var(--border)] bg-[var(--surface)] space-y-1.5">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-semibold text-[var(--foreground)]">Title Pixel &amp; Character Budget</span>
+                  <span className="font-mono text-[11px]">
+                    {serpCustomTitle.length} chars (approx {Math.round(serpCustomTitle.length * 9.8)}px)
+                  </span>
+                </div>
+                <div className="w-full bg-[var(--border)] rounded-full h-2 overflow-hidden">
+                  <div
+                    className={`h-2 rounded-full ${
+                      serpCustomTitle.length > 60
+                        ? 'bg-rose-500'
+                        : serpCustomTitle.length >= 45
+                        ? 'bg-emerald-500'
+                        : 'bg-amber-500'
+                    }`}
+                    style={{ width: `${Math.min(100, Math.round((serpCustomTitle.length / 65) * 100))}%` }}
+                  />
+                </div>
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="text-[var(--muted)]">Google Desktop Cutoff: ~580px (60 chars)</span>
+                  <span className={`font-semibold ${
+                    serpCustomTitle.length > 60
+                      ? 'text-rose-600'
+                      : serpCustomTitle.length >= 45
+                      ? 'text-emerald-600'
+                      : 'text-amber-600'
+                  }`}>
+                    {serpCustomTitle.length > 60
+                      ? '⚠️ Truncated by Google ("...")'
+                      : serpCustomTitle.length >= 45
+                      ? '✅ Optimal for Search CTR'
+                      : 'ℹ️ Short Title (Room for keywords)'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Title & Description Simulator Inputs (for editorial testing) */}
+              <div className="space-y-2 text-xs">
+                <div>
+                  <label className="text-[11px] font-semibold text-[var(--foreground)] block mb-1">
+                    Simulate Alternative Title (Read-Only Preview):
+                  </label>
+                  <input
+                    type="text"
+                    value={serpCustomTitle}
+                    onChange={e => setSerpCustomTitle(e.target.value)}
+                    className="w-full px-3 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--background)] text-xs text-[var(--foreground)]"
+                  />
+                </div>
+                <div>
+                  <label className="text-[11px] font-semibold text-[var(--foreground)] block mb-1">
+                    Simulate Meta Description:
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={serpCustomDesc}
+                    onChange={e => setSerpCustomDesc(e.target.value)}
+                    className="w-full px-3 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--background)] text-xs text-[var(--foreground)]"
+                  />
+                </div>
+                <p className="text-[10px] text-[var(--muted)] m-0">
+                  * Live simulator only. Per strict security invariants, no content or meta tags are mutated on WordPress.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

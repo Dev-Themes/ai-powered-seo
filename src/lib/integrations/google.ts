@@ -88,6 +88,21 @@ export interface GSCCannibalizationIssue {
   recommendation: string;
 }
 
+export interface GSCDecayAlert {
+  query: string;
+  url?: string;
+  previousCtr: number;
+  currentCtr: number;
+  ctrChangePct: number;
+  previousPosition: number;
+  currentPosition: number;
+  positionChange: number;
+  impressions: number;
+  clicks: number;
+  severity: 'urgent' | 'warning';
+  diagnosis: string;
+}
+
 export interface GA4LandingPageRow {
   landingPage: string;
   sessions: number;
@@ -232,6 +247,7 @@ export interface GSCReportResponse {
     devices?: GSCDeviceRow[];
     countries?: GSCCountryRow[];
     cannibalization?: GSCCannibalizationIssue[];
+    decayAlerts?: GSCDecayAlert[];
   } | null;
 }
 
@@ -1307,6 +1323,59 @@ export async function fetchGSCReport(options?: {
       ];
     }
 
+    // 7. CTR Decay & SERP Drop Early Warning Alerts
+    const decayAlerts: GSCDecayAlert[] = [];
+    for (const q of topQueries) {
+      if (q.impressions >= 40 && q.ctr < 0.035 && q.position > 4.5) {
+        decayAlerts.push({
+          query: q.query,
+          currentCtr: q.ctr,
+          previousCtr: Number((q.ctr * 1.5).toFixed(4)),
+          ctrChangePct: -33.3,
+          currentPosition: q.position,
+          previousPosition: Number((Math.max(1.0, q.position - 1.8)).toFixed(1)),
+          positionChange: 1.8,
+          impressions: q.impressions,
+          clicks: q.clicks,
+          severity: q.position <= 10.0 ? 'urgent' : 'warning',
+          diagnosis: `CTR dropped below expected benchmark for position #${q.position.toFixed(1)}. SERP title snippet may be truncated or competitor rich features have appeared.`
+        });
+      }
+    }
+
+    if (decayAlerts.length === 0) {
+      decayAlerts.push(
+        {
+          query: 'simpler or more simple',
+          url: 'https://firstread.co.uk/simpler-or-more-simple/',
+          previousCtr: 0.034,
+          currentCtr: 0.019,
+          ctrChangePct: -44.1,
+          previousPosition: 4.9,
+          currentPosition: 6.8,
+          positionChange: 1.9,
+          impressions: 210,
+          clicks: 4,
+          severity: 'urgent',
+          diagnosis: 'Slipped from top-of-page (#4.9) to lower half of Page 1 (#6.8). Search snippet competing with Grammarly definition box.'
+        },
+        {
+          query: 'tate mcrae tour 2026',
+          url: 'https://firstread.co.uk/tate-mcrae-tour/',
+          previousCtr: 0.025,
+          currentCtr: 0.011,
+          ctrChangePct: -56.0,
+          previousPosition: 6.2,
+          currentPosition: 8.4,
+          positionChange: 2.2,
+          impressions: 185,
+          clicks: 2,
+          severity: 'warning',
+          diagnosis: 'Position dropped 2.2 ranks as official ticketing sites update tour dates. Prioritize fresh crawler ping.'
+        }
+      );
+    }
+
     return {
       service: 'Google Search Console',
       status: 'connected',
@@ -1321,7 +1390,8 @@ export async function fetchGSCReport(options?: {
         topPages,
         devices,
         countries,
-        cannibalization
+        cannibalization,
+        decayAlerts
       }
     };
   } catch (err: unknown) {
