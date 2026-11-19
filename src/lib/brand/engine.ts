@@ -1,5 +1,6 @@
 import { existsSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
+import { fetchPublishedPosts } from '../wordpress/client';
 import {
   runBrandKeywordTracking,
   correlateGA4OrganicSearch,
@@ -375,12 +376,23 @@ export async function runAutonomousBrandGrowthCycle(options?: {
     state.discoveryIssues = discoveryIssues;
 
     // 5. Execute Permitted Google Actions (Sitemap submission & URL Inspection)
-    const priorityUrls = [
+    // Dynamically include latest published post URLs to accelerate Google Indexing for fresh content
+    let recentArticleUrls: string[] = [];
+    try {
+      const recentPostsRes = await fetchPublishedPosts(1, 3);
+      if (recentPostsRes && Array.isArray(recentPostsRes.posts)) {
+        recentArticleUrls = recentPostsRes.posts.map(p => p.link).filter(Boolean);
+      }
+    } catch (err) {
+      console.warn('[Brand Engine] Failed to fetch recent posts for indexing pipeline:', err);
+    }
+
+    const priorityUrls = Array.from(new Set([
       TARGET_DOMAIN,
+      ...recentArticleUrls,
       'https://firstread.co.uk/about-us/',
-      'https://firstread.co.uk/contact-us/',
       'https://firstread.co.uk/category/news/'
-    ];
+    ])).slice(0, 5);
 
     const { actions, inspections } = await executePermittedIndexingActions(sitemapStatus, priorityUrls);
     actionsExecuted.push(...actions);

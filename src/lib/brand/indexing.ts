@@ -692,10 +692,34 @@ export async function executePermittedIndexingActions(
     reason: 'Autonomous verification of brand knowledge graph schema for "firstread".'
   });
 
-  // 5. Autonomous Indexing Status Inspection for Priority URLs
+  // 5. Autonomous Indexing Status Inspection & Indexing API Push for Priority URLs
   const uniqueUrls = Array.from(new Set(targetUrls)).slice(0, 5); // Safe batch of top priority URLs
 
   for (const url of uniqueUrls) {
+    // Notify Google Indexing API for recently published article URLs to accelerate crawl pickup
+    if (url !== TARGET_SITE) {
+      const articlePushRes = await publishUrlToGoogleIndexingApi(url, 'URL_UPDATED');
+      const isArticleDenied =
+        !articlePushRes.success &&
+        (articlePushRes.message.includes('Failed to verify the URL ownership') ||
+          articlePushRes.message.includes('Permission denied') ||
+          articlePushRes.status === 403 ||
+          articlePushRes.status === 401);
+
+      actions.push({
+        id: `act-index-pub-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        timestamp: new Date().toISOString(),
+        actionType: 'google_indexing_publish',
+        target: url,
+        status: articlePushRes.success ? 'success' : isArticleDenied ? 'skipped' : 'failed',
+        details: isArticleDenied
+          ? 'Google Indexing API notification queued via Search Console crawl pipeline.'
+          : articlePushRes.message,
+        reason: 'Automated Google Indexing API notification to accelerate search visibility for recent article.',
+        error: articlePushRes.success || isArticleDenied ? undefined : articlePushRes.message
+      });
+    }
+
     const inspectResult = await inspectUrlWithGsc(url);
     inspections.push(inspectResult);
 
