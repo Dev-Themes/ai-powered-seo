@@ -9,7 +9,9 @@ import {
 import {
   auditSitemapStatus,
   auditTechnicalDiscovery,
-  executePermittedIndexingActions
+  executePermittedIndexingActions,
+  measureServerCrawlLatency,
+  auditSitemapDiscrepancy
 } from './indexing';
 import {
   fetchRemoteStateFromGitHub,
@@ -376,10 +378,38 @@ export async function runAutonomousBrandGrowthCycle(options?: {
     state.discoveryIssues = discoveryIssues;
 
     // 5. Execute Permitted Google Actions (Sitemap submission & URL Inspection)
-    // Dynamically include latest published post URLs to accelerate Google Indexing for fresh content
+    // 5a. Autonomous Server Latency & Crawl Budget Verification
+    try {
+      const crawlHealth = await measureServerCrawlLatency(TARGET_DOMAIN);
+      actionsExecuted.push({
+        id: `act-latency-${Date.now()}`,
+        timestamp: new Date().toISOString(),
+        actionType: 'latency_audit' as any,
+        target: TARGET_DOMAIN,
+        status: crawlHealth.accessible ? 'success' : 'failed',
+        details: `Crawl response latency: ${crawlHealth.latencyMs}ms (${crawlHealth.ratingLabel}). HTTP ${crawlHealth.httpStatus}`,
+        reason: 'Autonomous crawl budget latency check for Googlebot.'
+      });
+    } catch {}
+
+    // 5b. Autonomous Sitemap Discrepancy Reconciliation
+    try {
+      const sitemapAudit = await auditSitemapDiscrepancy();
+      actionsExecuted.push({
+        id: `act-sitemap-reconcile-${Date.now()}`,
+        timestamp: new Date().toISOString(),
+        actionType: 'sitemap_audit' as any,
+        target: sitemapAudit.sitemapUrl,
+        status: sitemapAudit.missingCount === 0 ? 'success' : 'failed',
+        details: `Sitemap coverage: ${sitemapAudit.coveragePct}% (${sitemapAudit.coveredCount}/${sitemapAudit.totalPostsChecked} posts indexed). Missing: ${sitemapAudit.missingCount}`,
+        reason: 'Autonomous verification of XML sitemap sync against WordPress published posts.'
+      });
+    } catch {}
+
+    // 5c. Autonomous Striking Distance & Recent News Acceleration
     let recentArticleUrls: string[] = [];
     try {
-      const recentPostsRes = await fetchPublishedPosts(1, 3);
+      const recentPostsRes = await fetchPublishedPosts(1, 5);
       if (recentPostsRes && Array.isArray(recentPostsRes.posts)) {
         recentArticleUrls = recentPostsRes.posts.map(p => p.link).filter(Boolean);
       }
@@ -389,6 +419,7 @@ export async function runAutonomousBrandGrowthCycle(options?: {
 
     const priorityUrls = Array.from(new Set([
       TARGET_DOMAIN,
+      'https://firstread.co.uk/simpler-or-more-simple/',
       ...recentArticleUrls,
       'https://firstread.co.uk/about-us/',
       'https://firstread.co.uk/category/news/'
