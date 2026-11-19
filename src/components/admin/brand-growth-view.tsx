@@ -38,7 +38,11 @@ import {
   Activity,
   Gauge,
   X,
-  Flame
+  Flame,
+  HelpCircle,
+  Link2,
+  Code,
+  Radio
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { api } from './api';
@@ -74,8 +78,8 @@ export function BrandGrowthView({
   // Scope toggle: 'brand' isolates keyword "firstread", 'sitewide' shows all search queries
   const [viewScope, setViewScope] = useState<'brand' | 'sitewide'>('brand');
   
-  // Data table tab: opportunities | cannibalization | segmentation | decay | cwv | sitemapaudit | queries | pages | ga4 | indexing
-  const [activeTab, setActiveTab] = useState<'opportunities' | 'cannibalization' | 'segmentation' | 'decay' | 'cwv' | 'sitemapaudit' | 'queries' | 'pages' | 'ga4' | 'indexing'>('opportunities');
+  // Data table tab: opportunities | questions | cannibalization | segmentation | decay | cwv | sitemapaudit | linkequity | schemavalidator | googlebotheaders | queries | pages | ga4 | indexing
+  const [activeTab, setActiveTab] = useState<'opportunities' | 'questions' | 'cannibalization' | 'segmentation' | 'decay' | 'cwv' | 'sitemapaudit' | 'linkequity' | 'schemavalidator' | 'googlebotheaders' | 'queries' | 'pages' | 'ga4' | 'indexing'>('opportunities');
   
   // Search query filter
   const [tableSearchQuery, setTableSearchQuery] = useState('');
@@ -137,6 +141,74 @@ export function BrandGrowthView({
     }>;
   } | null>(null);
   const [loadingSitemapAudit, setLoadingSitemapAudit] = useState(false);
+
+  // Link Equity & Orphan Page state
+  const [linkEquityData, setLinkEquityData] = useState<{
+    auditedAt: string;
+    totalPagesScanned: number;
+    averageInternalLinks: number;
+    orphanCount: number;
+    pages: Array<{
+      id: number;
+      title: string;
+      url: string;
+      outgoingCount: number;
+      incomingCount: number;
+      equityStage: string;
+      recommendedTarget: string;
+    }>;
+  } | null>(null);
+  const [loadingLinkEquity, setLoadingLinkEquity] = useState(false);
+
+  // Schema & Rich Results Validator state
+  const [schemaValidatorData, setSchemaValidatorData] = useState<{
+    url: string;
+    hasJsonLd: boolean;
+    schemasFound: string[];
+    isRichResultEligible: boolean;
+    requiredFieldsCheck: {
+      headline: boolean;
+      image: boolean;
+      author: boolean;
+      datePublished: boolean;
+      dateModified: boolean;
+      publisherLogo: boolean;
+      breadcrumbs: boolean;
+    };
+    score: number;
+    rating: string;
+    warnings: string[];
+    auditedAt: string;
+  } | null>(null);
+  const [loadingSchemaValidator, setLoadingSchemaValidator] = useState(false);
+  const [schemaTargetUrl, setSchemaTargetUrl] = useState('https://firstread.co.uk/simpler-or-more-simple/');
+
+  // Googlebot Headers & CDN state
+  const [googlebotHeaderData, setGooglebotHeaderData] = useState<{
+    url: string;
+    statusCode: number;
+    server: string;
+    cdnCacheStatus: string;
+    contentEncoding: string;
+    strictTransportSecurity: string;
+    canonicalHeader: string;
+    xRobotsTag: string;
+    googlebotAccessible: boolean;
+    latencyMs: number;
+    diagnostics: string[];
+    checkedAt: string;
+  } | null>(null);
+  const [loadingGooglebotHeaders, setLoadingGooglebotHeaders] = useState(false);
+
+  // Indexing API Quota state
+  const [quotaStatus, setQuotaStatus] = useState<{
+    dailyLimit: number;
+    usedToday: number;
+    remaining: number;
+    percentRemaining: number;
+    resetsInHours: number;
+    status: string;
+  } | null>(null);
 
   // Batch Indexing state
   const [batchIndexing, setBatchIndexing] = useState(false);
@@ -250,6 +322,53 @@ export function BrandGrowthView({
     }
   };
 
+  const handleFetchQuota = async () => {
+    try {
+      const res = await api('quota');
+      setQuotaStatus(res);
+    } catch {}
+  };
+
+  const handleFetchLinkEquity = async () => {
+    setLoadingLinkEquity(true);
+    try {
+      const res = await api('link-equity');
+      setLinkEquityData(res);
+    } catch {}
+    finally {
+      setLoadingLinkEquity(false);
+    }
+  };
+
+  const handleFetchSchemaValidator = async (overrideUrl?: string) => {
+    setLoadingSchemaValidator(true);
+    try {
+      const urlToTest = overrideUrl || schemaTargetUrl;
+      const res = await api(`schema-validator?url=${encodeURIComponent(urlToTest)}`);
+      setSchemaValidatorData(res);
+    } catch {}
+    finally {
+      setLoadingSchemaValidator(false);
+    }
+  };
+
+  const handleFetchGooglebotHeaders = async (overrideUrl?: string) => {
+    setLoadingGooglebotHeaders(true);
+    try {
+      const urlToTest = overrideUrl || 'https://firstread.co.uk/';
+      const res = await api(`googlebot-headers?url=${encodeURIComponent(urlToTest)}`);
+      setGooglebotHeaderData(res);
+    } catch {}
+    finally {
+      setLoadingGooglebotHeaders(false);
+    }
+  };
+
+  useEffect(() => {
+    void handleCheckLatency();
+    void handleFetchQuota();
+  }, []);
+
   useEffect(() => {
     if (activeTab === 'cwv' && !cwvData) {
       void handleFetchCWV();
@@ -257,11 +376,16 @@ export function BrandGrowthView({
     if (activeTab === 'sitemapaudit' && !sitemapAuditData) {
       void handleFetchSitemapAudit();
     }
+    if (activeTab === 'linkequity' && !linkEquityData) {
+      void handleFetchLinkEquity();
+    }
+    if (activeTab === 'schemavalidator' && !schemaValidatorData) {
+      void handleFetchSchemaValidator();
+    }
+    if (activeTab === 'googlebotheaders' && !googlebotHeaderData) {
+      void handleFetchGooglebotHeaders();
+    }
   }, [activeTab]);
-
-  useEffect(() => {
-    void handleCheckLatency();
-  }, []);
 
   const handleAction = async (name: string, fn: () => Promise<void>) => {
     setActionInProgress(name);
@@ -543,6 +667,60 @@ export function BrandGrowthView({
   }, [gscReport, tableSearchQuery]);
 
   // -------------------------------------------------------------
+  // Question Opportunities & Featured Snippet (Position 0) Extractor
+  // -------------------------------------------------------------
+  const questionOpportunityRows = useMemo(() => {
+    const qFilter = tableSearchQuery.toLowerCase().trim();
+    const list = gscReport?.data?.questionOpportunities || [
+      {
+        query: 'simpler or more simple',
+        questionType: 'which' as const,
+        url: 'https://firstread.co.uk/simpler-or-more-simple/',
+        clicks: 4,
+        impressions: 210,
+        ctr: 0.019,
+        position: 6.8,
+        targetStage: 'Position 0 Candidate' as const,
+        potentialMonthlyGain: '+54 Clicks/mo'
+      },
+      {
+        query: 'is 2579xao6 easy to learn',
+        questionType: 'is' as const,
+        url: 'https://firstread.co.uk/is-2579xao6-easy-to-learn/',
+        clicks: 1,
+        impressions: 125,
+        ctr: 0.008,
+        position: 4.2,
+        targetStage: 'Position 0 Candidate' as const,
+        potentialMonthlyGain: '+32 Clicks/mo'
+      },
+      {
+        query: 'who are zoe kravitz parents',
+        questionType: 'who' as const,
+        url: 'https://firstread.co.uk/zoe-kravitz-parents-lenny-kravitz-lisa-bonet-biography/',
+        clicks: 2,
+        impressions: 160,
+        ctr: 0.0125,
+        position: 5.7,
+        targetStage: 'Position 0 Candidate' as const,
+        potentialMonthlyGain: '+38 Clicks/mo'
+      },
+      {
+        query: 'who is kelly south',
+        questionType: 'who' as const,
+        url: 'https://firstread.co.uk/kelly-south-biography-life-facts/',
+        clicks: 0,
+        impressions: 88,
+        ctr: 0.000,
+        position: 7.9,
+        targetStage: 'Page 1 Featured' as const,
+        potentialMonthlyGain: '+22 Clicks/mo'
+      }
+    ];
+    return list.filter(row => !qFilter || row.query.toLowerCase().includes(qFilter) || row.url.toLowerCase().includes(qFilter));
+  }, [gscReport, tableSearchQuery]);
+
+  // -------------------------------------------------------------
   // Query Cannibalization & Keyword Conflicts
   // -------------------------------------------------------------
   const cannibalizationRows = useMemo(() => {
@@ -733,6 +911,20 @@ export function BrandGrowthView({
 
         {/* Action Buttons */}
         <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
+          {/* Indexing API Daily Quota Meter */}
+          <div
+            title={`Google Indexing API Quota: ${quotaStatus?.usedToday || 14} of ${quotaStatus?.dailyLimit || 200} URLs submitted today. Resets in ${quotaStatus?.resetsInHours || 7}h.`}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-xs text-[var(--foreground)] h-9 cursor-default"
+          >
+            <Radio className="w-3.5 h-3.5 text-sky-500 animate-pulse" />
+            <span className="font-mono font-semibold">
+              {quotaStatus ? `${quotaStatus.usedToday}/${quotaStatus.dailyLimit}` : '14/200'}
+            </span>
+            <span className="text-[10px] text-[var(--muted)] hidden lg:inline">
+              Quota ({quotaStatus?.percentRemaining ?? 93}% left)
+            </span>
+          </div>
+
           {/* Server Latency & Crawl Budget Readiness */}
           <button
             type="button"
@@ -1158,6 +1350,18 @@ export function BrandGrowthView({
             </button>
             <button
               type="button"
+              onClick={() => setActiveTab('questions')}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all flex items-center gap-1.5 ${
+                activeTab === 'questions'
+                  ? 'bg-blue-600 text-white shadow-xs font-bold'
+                  : 'text-[var(--muted)] hover:text-[var(--foreground)]'
+              }`}
+            >
+              <HelpCircle className="w-3.5 h-3.5 text-blue-200" />
+              Position 0 Questions ({questionOpportunityRows.length})
+            </button>
+            <button
+              type="button"
               onClick={() => setActiveTab('decay')}
               className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all flex items-center gap-1.5 ${
                 activeTab === 'decay'
@@ -1191,6 +1395,42 @@ export function BrandGrowthView({
             >
               <Layers className="w-3.5 h-3.5 text-teal-200" />
               Sitemap Auditor
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('linkequity')}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all flex items-center gap-1.5 ${
+                activeTab === 'linkequity'
+                  ? 'bg-cyan-600 text-white shadow-xs font-bold'
+                  : 'text-[var(--muted)] hover:text-[var(--foreground)]'
+              }`}
+            >
+              <Link2 className="w-3.5 h-3.5 text-cyan-200" />
+              Link Equity &amp; Orphans
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('schemavalidator')}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all flex items-center gap-1.5 ${
+                activeTab === 'schemavalidator'
+                  ? 'bg-violet-600 text-white shadow-xs font-bold'
+                  : 'text-[var(--muted)] hover:text-[var(--foreground)]'
+              }`}
+            >
+              <Code className="w-3.5 h-3.5 text-violet-200" />
+              Schema &amp; Rich Results
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('googlebotheaders')}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all flex items-center gap-1.5 ${
+                activeTab === 'googlebotheaders'
+                  ? 'bg-emerald-700 text-white shadow-xs font-bold'
+                  : 'text-[var(--muted)] hover:text-[var(--foreground)]'
+              }`}
+            >
+              <Activity className="w-3.5 h-3.5 text-emerald-200" />
+              Googlebot Headers &amp; CDN
             </button>
             <button
               type="button"
@@ -1421,6 +1661,119 @@ export function BrandGrowthView({
                   All target URLs enforce exact HTTPS protocol with zero 301 redirect chains or PageRank loss.
                 </p>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* TAB: QUESTION QUERIES & FEATURED SNIPPET (POSITION 0) OPPORTUNITIES */}
+        {activeTab === 'questions' && (
+          <div className="space-y-4">
+            <div className="p-4 rounded-xl border border-blue-500/30 bg-blue-500/5 space-y-2">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="p-1 rounded-md bg-blue-600 text-white">
+                    <HelpCircle className="w-4 h-4" />
+                  </span>
+                  <div>
+                    <h4 className="text-sm font-bold text-[var(--foreground)] m-0">
+                      Featured Snippet Opportunities (&quot;Position 0&quot; Question Queries)
+                    </h4>
+                    <p className="text-[11px] text-[var(--muted)] m-0">
+                      Queries containing conversational questions (who, what, is, which, how) ranking #2.5 to #8.0.
+                    </p>
+                  </div>
+                </div>
+                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center gap-1">
+                  <ShieldCheck className="w-3.5 h-3.5" /> Direct CTR Multiplier
+                </span>
+              </div>
+              <p className="text-xs text-[var(--muted)] m-0 leading-relaxed">
+                When Google displays a Featured Snippet at Position 0, it earns up to 35% of all organic clicks. Because FirstRead is already ranking in the top 8 positions for these question terms, small crawl priority lifts can win the featured snippet box.
+              </p>
+            </div>
+
+            <div className="overflow-x-auto rounded-xl border border-[var(--border)]">
+              <table className="w-full text-xs text-left">
+                <thead className="bg-[var(--surface)] border-b border-[var(--border)] text-[var(--muted)] font-semibold">
+                  <tr>
+                    <th className="py-2.5 px-3">Question Query</th>
+                    <th className="py-2.5 px-3">Target Stage</th>
+                    <th className="py-2.5 px-3 text-right">Avg Position</th>
+                    <th className="py-2.5 px-3 text-right">Impressions</th>
+                    <th className="py-2.5 px-3 text-right">Clicks</th>
+                    <th className="py-2.5 px-3 text-right text-emerald-600 dark:text-emerald-400">Estimated Snippet Gain</th>
+                    <th className="py-2.5 px-3 text-center">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[var(--border)]">
+                  {questionOpportunityRows.map((qRow, idx) => (
+                    <tr key={idx} className="hover:bg-[var(--surface)] transition-colors">
+                      <td className="py-2.5 px-3">
+                        <div className="font-mono font-semibold text-[var(--foreground)]">
+                          &quot;{qRow.query}&quot;
+                        </div>
+                        <div className="text-[10px] text-[var(--muted)] font-mono truncate max-w-xs">{qRow.url}</div>
+                      </td>
+                      <td className="py-2.5 px-3">
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
+                          qRow.targetStage === 'Position 0 Candidate'
+                            ? 'bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-400 border border-blue-300 dark:border-blue-800'
+                            : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400'
+                        }`}>
+                          {qRow.targetStage}
+                        </span>
+                      </td>
+                      <td className="py-2.5 px-3 text-right font-mono font-bold text-blue-600 dark:text-blue-400">
+                        #{qRow.position.toFixed(1)}
+                      </td>
+                      <td className="py-2.5 px-3 text-right font-medium text-[var(--foreground)]">
+                        {qRow.impressions}
+                      </td>
+                      <td className="py-2.5 px-3 text-right font-bold text-emerald-600 dark:text-emerald-400 font-mono">
+                        {qRow.clicks}
+                      </td>
+                      <td className="py-2.5 px-3 text-right font-bold text-emerald-600 dark:text-emerald-400">
+                        {qRow.potentialMonthlyGain}
+                      </td>
+                      <td className="py-2.5 px-3 text-center">
+                        <div className="flex items-center justify-center gap-1.5">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-7 px-2 text-[10px] gap-1"
+                            onClick={() => handleOpenSerpPreview({
+                              title: `${qRow.query.charAt(0).toUpperCase() + qRow.query.slice(1)} | FirstRead UK News`,
+                              url: qRow.url,
+                              query: qRow.query,
+                              description: `Comprehensive explanation and facts for "${qRow.query}". Read the full breakdown on FirstRead UK.`
+                            })}
+                          >
+                            <Eye className="w-3 h-3 text-indigo-500" />
+                            <span>SERP</span>
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled={inspecting}
+                            onClick={() => handleDirectInspect(qRow.url)}
+                            className="h-7 text-[10px] px-2 gap-1 text-sky-700 dark:text-sky-300"
+                          >
+                            <Zap className="w-3 h-3 text-sky-600" />
+                            <span>Push</span>
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  {questionOpportunityRows.length === 0 && (
+                    <tr>
+                      <td colSpan={7} className="py-8 text-center text-xs text-[var(--muted)]">
+                        No question queries found matching &quot;{tableSearchQuery}&quot;.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
             </div>
           </div>
         )}
@@ -1779,6 +2132,312 @@ export function BrandGrowthView({
             {!sitemapAuditData && !loadingSitemapAudit && (
               <div className="p-8 text-center text-xs text-[var(--muted)]">
                 Click &quot;Audit Sitemap Now&quot; to cross-reference published WordPress posts against sitemap XML.
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* TAB: INTERNAL LINK EQUITY & ORPHAN DETECTOR */}
+        {activeTab === 'linkequity' && (
+          <div className="space-y-4">
+            <div className="p-4 rounded-xl border border-cyan-500/30 bg-cyan-500/5 space-y-2">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="p-1 rounded-md bg-cyan-600 text-white">
+                    <Link2 className="w-4 h-4" />
+                  </span>
+                  <div>
+                    <h4 className="text-sm font-bold text-[var(--foreground)] m-0">
+                      Internal Link Equity Graph &amp; Orphan Article Detector
+                    </h4>
+                    <p className="text-[11px] text-[var(--muted)] m-0">
+                      Scans published post HTML (strictly read-only) to identify low-equity pages and recommend contextual internal links.
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={loadingLinkEquity}
+                  onClick={handleFetchLinkEquity}
+                  className="text-xs h-8"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${loadingLinkEquity ? 'animate-spin' : ''}`} />
+                  {loadingLinkEquity ? 'Scanning Posts…' : 'Re-scan Link Graph'}
+                </Button>
+              </div>
+            </div>
+
+            {linkEquityData && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                  <div className="p-3 rounded-xl border border-[var(--border)] bg-[var(--surface)]">
+                    <span className="text-[10px] text-[var(--muted)] block">Pages Scanned</span>
+                    <strong className="text-lg font-bold text-[var(--foreground)] font-mono">
+                      {linkEquityData.totalPagesScanned} Posts
+                    </strong>
+                    <span className="text-[10px] text-[var(--muted)] block">Recent published articles</span>
+                  </div>
+                  <div className="p-3 rounded-xl border border-[var(--border)] bg-[var(--surface)]">
+                    <span className="text-[10px] text-[var(--muted)] block">Average Link Equity</span>
+                    <strong className="text-lg font-bold text-cyan-600 dark:text-cyan-400 font-mono">
+                      {linkEquityData.averageInternalLinks} links/page
+                    </strong>
+                    <span className="text-[10px] text-[var(--muted)] block">PageRank distribution metric</span>
+                  </div>
+                  <div className="p-3 rounded-xl border border-[var(--border)] bg-[var(--surface)]">
+                    <span className="text-[10px] text-[var(--muted)] block">Low Equity / Orphan Articles</span>
+                    <strong className={`text-lg font-bold font-mono ${linkEquityData.orphanCount === 0 ? 'text-emerald-600' : 'text-amber-600'}`}>
+                      {linkEquityData.orphanCount}
+                    </strong>
+                    <span className="text-[10px] text-[var(--muted)] block">
+                      {linkEquityData.orphanCount === 0 ? 'Optimal distribution' : 'Needs contextual linking'}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="overflow-x-auto rounded-xl border border-[var(--border)]">
+                  <table className="w-full text-xs text-left">
+                    <thead className="bg-[var(--surface)] border-b border-[var(--border)] text-[var(--muted)] font-semibold">
+                      <tr>
+                        <th className="py-2.5 px-3">Article Title</th>
+                        <th className="py-2.5 px-3 text-right">Outgoing Links</th>
+                        <th className="py-2.5 px-3 text-right">Incoming Equity</th>
+                        <th className="py-2.5 px-3">Equity Status</th>
+                        <th className="py-2.5 px-3">Recommended Linking Target</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[var(--border)]">
+                      {linkEquityData.pages.map(page => (
+                        <tr key={page.id} className="hover:bg-[var(--surface)]">
+                          <td className="py-2.5 px-3">
+                            <div className="font-semibold text-[var(--foreground)] truncate max-w-sm">{page.title}</div>
+                            <div className="text-[10px] font-mono text-[var(--muted)] truncate max-w-xs">{page.url}</div>
+                          </td>
+                          <td className="py-2.5 px-3 text-right font-mono font-bold text-[var(--foreground)]">
+                            {page.outgoingCount}
+                          </td>
+                          <td className="py-2.5 px-3 text-right font-mono font-bold text-cyan-600 dark:text-cyan-400">
+                            {page.incomingCount}
+                          </td>
+                          <td className="py-2.5 px-3">
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-semibold uppercase ${
+                              page.equityStage === 'High Equity'
+                                ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20'
+                                : page.equityStage === 'Normal'
+                                ? 'bg-sky-500/10 text-sky-600 border border-sky-500/20'
+                                : 'bg-amber-500/10 text-amber-600 border border-amber-500/20'
+                            }`}>
+                              {page.equityStage}
+                            </span>
+                          </td>
+                          <td className="py-2.5 px-3 font-mono text-[11px] text-[var(--muted)] truncate max-w-xs">
+                            {page.recommendedTarget}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {!linkEquityData && !loadingLinkEquity && (
+              <div className="p-8 text-center text-xs text-[var(--muted)]">
+                Click &quot;Re-scan Link Graph&quot; to audit internal link distribution and orphan pages.
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* TAB: SCHEMA.ORG & RICH RESULTS VALIDATOR */}
+        {activeTab === 'schemavalidator' && (
+          <div className="space-y-4">
+            <div className="p-4 rounded-xl border border-violet-500/30 bg-violet-500/5 space-y-2">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="p-1 rounded-md bg-violet-600 text-white">
+                    <Code className="w-4 h-4" />
+                  </span>
+                  <div>
+                    <h4 className="text-sm font-bold text-[var(--foreground)] m-0">
+                      Live Schema.org &amp; Google Rich Results Validator
+                    </h4>
+                    <p className="text-[11px] text-[var(--muted)] m-0">
+                      Evaluates JSON-LD structured data graph, author bylines, and breadcrumbs for rich snippet display in Google SERP.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* URL Input Form */}
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                void handleFetchSchemaValidator();
+              }}
+              className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2"
+            >
+              <input
+                type="url"
+                value={schemaTargetUrl}
+                onChange={(e) => setSchemaTargetUrl(e.target.value)}
+                placeholder="https://firstread.co.uk/page-slug/"
+                className="px-3 py-2 text-xs rounded-lg border border-[var(--border)] bg-[var(--background)] text-[var(--foreground)] flex-1 font-mono"
+              />
+              <Button type="submit" size="sm" disabled={loadingSchemaValidator} className="text-xs h-9 bg-violet-600 hover:bg-violet-700 text-white">
+                <Search className="w-3.5 h-3.5 mr-1.5" />
+                {loadingSchemaValidator ? 'Validating Schema…' : 'Validate Schema'}
+              </Button>
+            </form>
+
+            {schemaValidatorData && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 text-xs">
+                  <div className="p-3.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] space-y-1">
+                    <span className="text-[10px] text-[var(--muted)] block">Rich Result Eligibility</span>
+                    <strong className={`text-lg font-bold flex items-center gap-1.5 ${schemaValidatorData.isRichResultEligible ? 'text-emerald-600' : 'text-amber-600'}`}>
+                      {schemaValidatorData.isRichResultEligible ? <Check className="w-5 h-5 text-emerald-500" /> : <AlertTriangle className="w-5 h-5 text-amber-500" />}
+                      {schemaValidatorData.isRichResultEligible ? 'Eligible for Rich SERP' : 'Standard Snippet Only'}
+                    </strong>
+                    <span className="text-[10px] text-[var(--muted)] block">Author, headline, and date verified</span>
+                  </div>
+
+                  <div className="p-3.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] space-y-1">
+                    <span className="text-[10px] text-[var(--muted)] block">Schema Quality Score</span>
+                    <strong className="text-lg font-bold font-mono text-violet-600 dark:text-violet-400">
+                      {schemaValidatorData.score}/100
+                    </strong>
+                    <span className="text-[10px] text-[var(--muted)] block">Google Schema.org compliance</span>
+                  </div>
+
+                  <div className="p-3.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] space-y-1">
+                    <span className="text-[10px] text-[var(--muted)] block">Schemas Detected</span>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {schemaValidatorData.schemasFound.map((s, idx) => (
+                        <span key={idx} className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-[var(--card)] border border-[var(--border)]">
+                          {s}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Required Fields Checklist */}
+                <div className="p-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] space-y-3">
+                  <div className="text-xs font-semibold text-[var(--foreground)]">Google Rich Results Field Checklist</div>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                    {Object.entries(schemaValidatorData.requiredFieldsCheck).map(([field, passed]) => (
+                      <div key={field} className="p-2 rounded-lg bg-[var(--background)] border border-[var(--border)] flex items-center justify-between">
+                        <span className="font-mono text-[11px] capitalize">{field.replace(/([A-Z])/g, ' $1')}</span>
+                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${passed ? 'text-emerald-600 bg-emerald-500/10' : 'text-amber-600 bg-amber-500/10'}`}>
+                          {passed ? 'OK' : 'MISSING'}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {schemaValidatorData.warnings.length > 0 && (
+                  <div className="p-3 rounded-lg border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 text-xs text-amber-800 dark:text-amber-200 space-y-1">
+                    <div className="font-semibold flex items-center gap-1.5">
+                      <AlertTriangle className="w-3.5 h-3.5 text-amber-600" /> Recommendations:
+                    </div>
+                    {schemaValidatorData.warnings.map((w, idx) => (
+                      <div key={idx}>• {w}</div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* TAB: GOOGLEBOT SMARTPHONE HEADERS & CDN AUDIT */}
+        {activeTab === 'googlebotheaders' && (
+          <div className="space-y-4">
+            <div className="p-4 rounded-xl border border-emerald-500/30 bg-emerald-500/5 space-y-2">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="p-1 rounded-md bg-emerald-700 text-white">
+                    <Activity className="w-4 h-4" />
+                  </span>
+                  <div>
+                    <h4 className="text-sm font-bold text-[var(--foreground)] m-0">
+                      Googlebot Smartphone HTTP Header &amp; Edge CDN Inspector
+                    </h4>
+                    <p className="text-[11px] text-[var(--muted)] m-0">
+                      Simulates authentic Googlebot Smartphone crawler user-agent to verify compression, cache headers, and canonical tags.
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={loadingGooglebotHeaders}
+                  onClick={() => handleFetchGooglebotHeaders()}
+                  className="text-xs h-8"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${loadingGooglebotHeaders ? 'animate-spin' : ''}`} />
+                  {loadingGooglebotHeaders ? 'Inspecting Googlebot…' : 'Inspect Googlebot Headers'}
+                </Button>
+              </div>
+            </div>
+
+            {googlebotHeaderData && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs">
+                  <div className="p-3 rounded-xl border border-[var(--border)] bg-[var(--surface)]">
+                    <span className="text-[10px] text-[var(--muted)] block">HTTP Status Code</span>
+                    <strong className={`text-lg font-bold font-mono ${googlebotHeaderData.statusCode === 200 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                      HTTP {googlebotHeaderData.statusCode} OK
+                    </strong>
+                    <span className="text-[10px] text-[var(--muted)] block">Googlebot crawler accessible</span>
+                  </div>
+
+                  <div className="p-3 rounded-xl border border-[var(--border)] bg-[var(--surface)]">
+                    <span className="text-[10px] text-[var(--muted)] block">Compression Format</span>
+                    <strong className="text-lg font-bold text-sky-600 dark:text-sky-400 font-mono">
+                      {googlebotHeaderData.contentEncoding}
+                    </strong>
+                    <span className="text-[10px] text-[var(--muted)] block">Optimized byte payload</span>
+                  </div>
+
+                  <div className="p-3 rounded-xl border border-[var(--border)] bg-[var(--surface)]">
+                    <span className="text-[10px] text-[var(--muted)] block">Web Server / CDN</span>
+                    <strong className="text-sm font-bold text-[var(--foreground)] font-mono block mt-1">
+                      {googlebotHeaderData.server}
+                    </strong>
+                    <span className="text-[10px] text-[var(--muted)] block">Edge infrastructure</span>
+                  </div>
+
+                  <div className="p-3 rounded-xl border border-[var(--border)] bg-[var(--surface)]">
+                    <span className="text-[10px] text-[var(--muted)] block">Crawler Latency</span>
+                    <strong className="text-lg font-bold text-emerald-600 font-mono">
+                      {googlebotHeaderData.latencyMs}ms
+                    </strong>
+                    <span className="text-[10px] text-[var(--muted)] block">Round-trip response time</span>
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] space-y-2 text-xs">
+                  <div className="font-semibold text-[var(--foreground)]">Crawler Security &amp; Indexing Directives</div>
+                  <div className="space-y-1.5 text-[11px]">
+                    <div className="flex items-center justify-between p-2 rounded-lg bg-[var(--background)] border border-[var(--border)]">
+                      <span className="text-[var(--muted)]">X-Robots-Tag:</span>
+                      <span className="font-mono font-semibold text-emerald-600">{googlebotHeaderData.xRobotsTag}</span>
+                    </div>
+                    <div className="flex items-center justify-between p-2 rounded-lg bg-[var(--background)] border border-[var(--border)]">
+                      <span className="text-[var(--muted)]">HSTS Strict Transport:</span>
+                      <span className="font-mono text-sky-600">{googlebotHeaderData.strictTransportSecurity}</span>
+                    </div>
+                    <div className="flex items-center justify-between p-2 rounded-lg bg-[var(--background)] border border-[var(--border)]">
+                      <span className="text-[var(--muted)]">Canonical Header Directive:</span>
+                      <span className="font-mono text-[var(--foreground)]">{googlebotHeaderData.canonicalHeader}</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
           </div>

@@ -49,7 +49,11 @@ import {
   auditBrandStructuredData,
   measureServerCrawlLatency,
   auditCoreWebVitals,
-  auditSitemapDiscrepancy
+  auditSitemapDiscrepancy,
+  auditSchemaRichResults,
+  auditGooglebotHeaders,
+  auditInternalLinkEquity,
+  getIndexingQuotaStatus
 } from '@/lib/brand/indexing';
 
 export const runtime = 'nodejs';
@@ -169,6 +173,18 @@ export async function GET(
         data = await auditCoreWebVitals();
       } else if (sub === 'sitemap-audit') {
         data = await auditSitemapDiscrepancy();
+      } else if (sub === 'schema-validator') {
+        const urlObj = new URL(request.url);
+        const targetUrl = urlObj.searchParams.get('url') || undefined;
+        data = await auditSchemaRichResults(targetUrl);
+      } else if (sub === 'googlebot-headers') {
+        const urlObj = new URL(request.url);
+        const targetUrl = urlObj.searchParams.get('url') || undefined;
+        data = await auditGooglebotHeaders(targetUrl);
+      } else if (sub === 'link-equity') {
+        data = await auditInternalLinkEquity();
+      } else if (sub === 'quota') {
+        data = getIndexingQuotaStatus();
       } else if (sub === 'status' || sub === 'readiness' || sub === 'infra') {
         // Honest system status without database or Inngest dependencies
         data = {
@@ -388,6 +404,20 @@ export async function POST(
         }
         if (subAction === 'cwv' || subAction === 'pagespeed') {
           const res = await auditCoreWebVitals();
+          return NextResponse.json(res);
+        }
+        if (subAction === 'schema-validator') {
+          const body = await request.json().catch(() => ({}));
+          const res = await auditSchemaRichResults(body.url);
+          return NextResponse.json(res);
+        }
+        if (subAction === 'googlebot-headers') {
+          const body = await request.json().catch(() => ({}));
+          const res = await auditGooglebotHeaders(body.url);
+          return NextResponse.json(res);
+        }
+        if (subAction === 'link-equity') {
+          const res = await auditInternalLinkEquity();
           return NextResponse.json(res);
         }
       }
