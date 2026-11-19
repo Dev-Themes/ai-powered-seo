@@ -46,7 +46,8 @@ import {
   inspectUrlWithGsc,
   submitSitemapToGsc,
   pingGoogleSitemap,
-  auditBrandStructuredData
+  auditBrandStructuredData,
+  measureServerCrawlLatency
 } from '@/lib/brand/indexing';
 
 export const runtime = 'nodejs';
@@ -160,6 +161,8 @@ export async function GET(
         data = await loadBrandGrowthState();
       } else if (sub === 'integrations') {
         data = getGoogleIntegrationReadiness();
+      } else if (sub === 'latency' || sub === 'health') {
+        data = await measureServerCrawlLatency();
       } else if (sub === 'status' || sub === 'readiness' || sub === 'infra') {
         // Honest system status without database or Inngest dependencies
         data = {
@@ -349,6 +352,29 @@ export async function POST(
         if (subAction === 'schema-audit') {
           const res = await auditBrandStructuredData();
           return NextResponse.json(res);
+        }
+        if (subAction === 'batch-index') {
+          const recentPostsRes = await fetchPublishedPosts(1, 10);
+          const posts = recentPostsRes.posts || [];
+          const results = [];
+          for (const post of posts) {
+            if (!post.link) continue;
+            const res = await publishUrlToGoogleIndexingApi(post.link, 'URL_UPDATED');
+            const isDenied = !res.success && (res.status === 403 || res.status === 401 || res.message.includes('Permission denied'));
+            results.push({
+              id: post.id,
+              title: post.title.rendered,
+              url: post.link,
+              status: res.success ? 'success' : isDenied ? 'skipped' : 'failed',
+              message: res.message
+            });
+          }
+          return NextResponse.json({
+            ok: true,
+            totalPushed: results.length,
+            successCount: results.filter(r => r.status === 'success').length,
+            articles: results
+          });
         }
       }
 

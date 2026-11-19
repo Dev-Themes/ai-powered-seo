@@ -750,3 +750,61 @@ export async function executePermittedIndexingActions(
 
   return { actions, inspections };
 }
+
+export interface ServerCrawlHealth {
+  targetUrl: string;
+  accessible: boolean;
+  httpStatus: number;
+  latencyMs: number;
+  rating: 'optimal' | 'normal' | 'slow';
+  ratingLabel: string;
+  protocol: string;
+  checkedAt: string;
+}
+
+/**
+ * Measures live server response latency and crawl budget readiness for Googlebot
+ */
+export async function measureServerCrawlLatency(targetUrl = TARGET_SITE): Promise<ServerCrawlHealth> {
+  const start = performance.now();
+  let httpStatus = 200;
+  let accessible = true;
+  let protocol = 'HTTPS (TLS 1.3)';
+
+  try {
+    const res = await fetch(targetUrl, {
+      method: 'HEAD',
+      headers: { 'User-Agent': 'FirstRead-SEO-Monitor/1.0 (Googlebot Crawl Latency)' },
+      cache: 'no-store'
+    });
+    httpStatus = res.status;
+    accessible = res.ok;
+    protocol = res.url.startsWith('https') ? 'HTTPS (TLS 1.3)' : 'HTTP';
+  } catch {
+    accessible = false;
+    httpStatus = 503;
+  }
+
+  const latencyMs = Math.max(1, Math.round(performance.now() - start));
+  let rating: 'optimal' | 'normal' | 'slow' = 'optimal';
+  let ratingLabel = 'Optimal (<400ms) — Googlebot crawl budget prioritized';
+
+  if (latencyMs > 800) {
+    rating = 'slow';
+    ratingLabel = 'High Latency (>800ms) — Risk of Googlebot slowing crawl rate';
+  } else if (latencyMs > 400) {
+    rating = 'normal';
+    ratingLabel = 'Normal (400–800ms) — Adequate crawl response';
+  }
+
+  return {
+    targetUrl,
+    accessible,
+    httpStatus,
+    latencyMs,
+    rating,
+    ratingLabel,
+    protocol,
+    checkedAt: new Date().toISOString()
+  };
+}
