@@ -1,42 +1,42 @@
 {
   "status": "idle",
   "paused": false,
-  "lastRunAt": "2026-11-20T06:32:32.164Z",
+  "lastRunAt": "2026-11-21T06:32:46.075Z",
   "runningSince": null,
-  "nextScheduledRunAt": "2026-11-21T06:32:32.164Z",
+  "nextScheduledRunAt": "2026-11-22T06:32:46.075Z",
   "safeRetryCount": 0,
   "safeRetryLimit": 3,
   "latestReport": {
     "targetDomain": "https://firstread.co.uk/",
     "primaryBrandKeyword": "firstread",
-    "generatedAt": "2026-11-20T06:31:53.127Z",
+    "generatedAt": "2026-11-21T06:31:53.215Z",
     "dateRange": {
-      "startDate": "2026-10-23",
-      "endDate": "2026-11-19"
+      "startDate": "2026-10-24",
+      "endDate": "2026-11-20"
     },
     "exactBrand": null,
     "variations": [
       {
         "query": "firstread.co.uk",
         "isExactBrand": false,
-        "clicks": 0,
-        "impressions": 2,
-        "ctr": 0,
-        "position": 1.5,
+        "clicks": 2,
+        "impressions": 4,
+        "ctr": 0.5,
+        "position": 1.25,
         "landingPages": [
+          {
+            "page": "https://firstread.co.uk/about-us/",
+            "clicks": 2,
+            "impressions": 3,
+            "ctr": 0.6667,
+            "position": 1.33
+          },
           {
             "page": "https://firstread.co.uk/",
             "clicks": 0,
             "impressions": 1,
             "ctr": 0,
             "position": 1
-          },
-          {
-            "page": "https://firstread.co.uk/about-us/",
-            "clicks": 0,
-            "impressions": 1,
-            "ctr": 0,
-            "position": 2
           }
         ]
       },
@@ -483,68 +483,68 @@
       }
     ],
     "totalBrandedSummary": {
-      "clicks": 1,
-      "impressions": 193,
-      "ctr": 0.0052,
-      "averagePosition": 11.02
+      "clicks": 3,
+      "impressions": 195,
+      "ctr": 0.0154,
+      "averagePosition": 10.91
     },
     "comparison7d": {
       "clicks": {
-        "current": 0,
+        "current": 2,
         "previous": 1,
-        "absoluteChange": -1,
-        "percentageChange": -100,
-        "trend": "declining"
+        "absoluteChange": 1,
+        "percentageChange": 100,
+        "trend": "improving"
       },
       "impressions": {
-        "current": 0,
+        "current": 2,
         "previous": 62,
-        "absoluteChange": -62,
-        "percentageChange": -100,
+        "absoluteChange": -60,
+        "percentageChange": -96.77,
         "trend": "declining"
       },
       "ctr": {
-        "current": 0,
+        "current": 1,
         "previous": 0.0161,
-        "absoluteChange": -0.0161,
-        "percentageChange": -100,
-        "trend": "declining"
+        "absoluteChange": 0.9839,
+        "percentageChange": 6111.18,
+        "trend": "improving"
       },
       "position": {
-        "current": 0,
+        "current": 1,
         "previous": 5.37,
-        "absoluteChange": -5.37,
-        "percentageChange": -100,
+        "absoluteChange": -4.37,
+        "percentageChange": -81.38,
         "trend": "improving"
       }
     },
     "comparison28d": {
       "clicks": {
-        "current": 1,
+        "current": 3,
         "previous": 1525,
-        "absoluteChange": -1524,
-        "percentageChange": -99.93,
+        "absoluteChange": -1522,
+        "percentageChange": -99.8,
         "trend": "declining"
       },
       "impressions": {
-        "current": 193,
-        "previous": 2656,
-        "absoluteChange": -2463,
-        "percentageChange": -92.73,
+        "current": 195,
+        "previous": 2646,
+        "absoluteChange": -2451,
+        "percentageChange": -92.63,
         "trend": "declining"
       },
       "ctr": {
-        "current": 0.0052,
-        "previous": 0.5742,
-        "absoluteChange": -0.569,
-        "percentageChange": -99.09,
+        "current": 0.0154,
+        "previous": 0.5763,
+        "absoluteChange": -0.5609,
+        "percentageChange": -97.33,
         "trend": "declining"
       },
       "position": {
-        "current": 11.02,
+        "current": 10.91,
         "previous": 4.57,
-        "absoluteChange": 6.45,
-        "percentageChange": 141.14,
+        "absoluteChange": 6.34,
+        "percentageChange": 138.73,
         "trend": "declining"
       }
     },
@@ -557,83 +557,83 @@
     },
     "alerts": [
       {
-        "id": "alert-imp-decline-1795156314190",
+        "id": "alert-imp-decline-1795242714149",
         "severity": "critical",
         "type": "declining_impressions",
         "title": "Declining Brand Impressions",
-        "description": "Branded search impressions dropped 92.7% compared to the prior 28-day window (193 vs 2656).",
+        "description": "Branded search impressions dropped 92.6% compared to the prior 28-day window (195 vs 2646).",
         "metric": "impressions",
-        "currentValue": 193,
-        "previousValue": 2656,
+        "currentValue": 195,
+        "previousValue": 2646,
         "recommendation": "Verify homepage indexing status, sitemap freshness, and schema markup to restore brand search appearance.",
-        "detectedAt": "2026-11-20T06:31:54.190Z"
+        "detectedAt": "2026-11-21T06:31:54.149Z"
       },
       {
-        "id": "alert-clicks-decline-1795156314190",
+        "id": "alert-clicks-decline-1795242714149",
         "severity": "critical",
         "type": "declining_clicks",
         "title": "Declining Brand Clicks",
-        "description": "Branded search clicks declined 99.9% (1 vs 1525).",
+        "description": "Branded search clicks declined 99.8% (3 vs 1525).",
         "metric": "clicks",
-        "currentValue": 1,
+        "currentValue": 3,
         "previousValue": 1525,
         "recommendation": "Check whether third-party or sub-page results are cannibalising clicks away from the homepage.",
-        "detectedAt": "2026-11-20T06:31:54.190Z"
+        "detectedAt": "2026-11-21T06:31:54.149Z"
       },
       {
-        "id": "alert-pos-deterioration-1795156314190",
+        "id": "alert-pos-deterioration-1795242714149",
         "severity": "critical",
         "type": "ranking_deterioration",
         "title": "Brand Ranking Deterioration",
-        "description": "Average branded search position is 11.0 (expected top position 1.0 - 2.0).",
+        "description": "Average branded search position is 10.9 (expected top position 1.0 - 2.0).",
         "metric": "position",
-        "currentValue": 11.02,
+        "currentValue": 10.91,
         "previousValue": 4.57,
         "recommendation": "Inspect brand entity signals, homepage canonical declaration, and robots.txt accessibility.",
-        "detectedAt": "2026-11-20T06:31:54.190Z"
+        "detectedAt": "2026-11-21T06:31:54.149Z"
       },
       {
-        "id": "alert-low-ctr-1795156314190",
+        "id": "alert-low-ctr-1795242714149",
         "severity": "warning",
         "type": "low_ctr",
         "title": "Low Branded CTR",
-        "description": "Branded search CTR is 0.5%, which is below the expected benchmark of 25%+ for navigational brand queries.",
+        "description": "Branded search CTR is 1.5%, which is below the expected benchmark of 25%+ for navigational brand queries.",
         "metric": "ctr",
-        "currentValue": "0.5%",
+        "currentValue": "1.5%",
         "recommendation": "Review SERP snippet appearance in Google Search Console to confirm title and description relevance.",
-        "detectedAt": "2026-11-20T06:31:54.190Z"
+        "detectedAt": "2026-11-21T06:31:54.149Z"
       }
     ]
   },
   "latestGa4Correlation": {
     "period": {
-      "startDate": "2026-10-23",
-      "endDate": "2026-11-19"
+      "startDate": "2026-10-24",
+      "endDate": "2026-11-20"
     },
     "totalOrganicSessions": 84,
-    "totalOrganicUsers": 79,
-    "totalOrganicPageviews": 118,
-    "averageEngagementRate": 0.4167,
+    "totalOrganicUsers": 80,
+    "totalOrganicPageviews": 120,
+    "averageEngagementRate": 0.4286,
     "homepageOrganicSessions": 0,
     "homepageShareOfOrganic": 0,
     "nonHomepageOrganicSessions": 84,
-    "correlatedGscBrandClicks": 1,
+    "correlatedGscBrandClicks": 3,
     "brandToOrganicHomepageRatio": null,
     "landingPages": [
       {
         "landingPage": "/monkey-app-leaks",
-        "sessions": 34,
-        "pageviews": 36,
-        "users": 33,
-        "engagementRate": 0.2059,
+        "sessions": 35,
+        "pageviews": 39,
+        "users": 34,
+        "engagementRate": 0.2286,
         "isHomepage": false
       },
       {
         "landingPage": "/mollie-benedict",
-        "sessions": 11,
-        "pageviews": 11,
-        "users": 11,
-        "engagementRate": 0.4545,
+        "sessions": 12,
+        "pageviews": 12,
+        "users": 12,
+        "engagementRate": 0.5,
         "isHomepage": false
       },
       {
@@ -669,25 +669,9 @@
         "isHomepage": false
       },
       {
-        "landingPage": "/onionplay",
-        "sessions": 2,
-        "pageviews": 2,
-        "users": 1,
-        "engagementRate": 0.5,
-        "isHomepage": false
-      },
-      {
         "landingPage": "/patrick-stewart",
         "sessions": 2,
         "pageviews": 4,
-        "users": 2,
-        "engagementRate": 0.5,
-        "isHomepage": false
-      },
-      {
-        "landingPage": "/tate-mcrae-tour",
-        "sessions": 2,
-        "pageviews": 2,
         "users": 2,
         "engagementRate": 0.5,
         "isHomepage": false
@@ -781,6 +765,14 @@
         "isHomepage": false
       },
       {
+        "landingPage": "/kenya-kinski-jones",
+        "sessions": 1,
+        "pageviews": 1,
+        "users": 1,
+        "engagementRate": 1,
+        "isHomepage": false
+      },
+      {
         "landingPage": "/mascarpone",
         "sessions": 1,
         "pageviews": 3,
@@ -829,6 +821,14 @@
         "isHomepage": false
       },
       {
+        "landingPage": "/tate-mcrae-tour",
+        "sessions": 1,
+        "pageviews": 1,
+        "users": 1,
+        "engagementRate": 0,
+        "isHomepage": false
+      },
+      {
         "landingPage": "/which-sarah-j-maas-series-to-read-first",
         "sessions": 1,
         "pageviews": 8,
@@ -840,7 +840,7 @@
   },
   "homepageInspection": {
     "url": "https://firstread.co.uk/",
-    "inspectedAt": "2026-11-20T06:31:59.435Z",
+    "inspectedAt": "2026-11-21T06:32:12.663Z",
     "verdict": "PASS",
     "coverageState": "Submitted and indexed",
     "robotsTxtState": "ALLOWED",
@@ -858,7 +858,7 @@
   "recentInspections": [
     {
       "url": "https://firstread.co.uk/",
-      "inspectedAt": "2026-11-20T06:31:59.435Z",
+      "inspectedAt": "2026-11-21T06:32:12.663Z",
       "verdict": "PASS",
       "coverageState": "Submitted and indexed",
       "robotsTxtState": "ALLOWED",
@@ -875,7 +875,7 @@
     },
     {
       "url": "https://firstread.co.uk/simpler-or-more-simple/",
-      "inspectedAt": "2026-11-20T06:32:06.027Z",
+      "inspectedAt": "2026-11-21T06:32:19.265Z",
       "verdict": "PASS",
       "coverageState": "Submitted and indexed",
       "robotsTxtState": "ALLOWED",
@@ -892,7 +892,7 @@
     },
     {
       "url": "https://firstread.co.uk/tate-mcrae-tour/",
-      "inspectedAt": "2026-11-20T06:32:12.612Z",
+      "inspectedAt": "2026-11-21T06:32:25.736Z",
       "verdict": "PASS",
       "coverageState": "Submitted and indexed",
       "robotsTxtState": "ALLOWED",
@@ -909,7 +909,7 @@
     },
     {
       "url": "https://firstread.co.uk/zoe-kravitz-parents-lenny-kravitz-lisa-bonet-biography/",
-      "inspectedAt": "2026-11-20T06:32:19.161Z",
+      "inspectedAt": "2026-11-21T06:32:33.425Z",
       "verdict": "PASS",
       "coverageState": "Submitted and indexed",
       "robotsTxtState": "ALLOWED",
@@ -926,7 +926,7 @@
     },
     {
       "url": "https://firstread.co.uk/jackson-foo-wong-biography-family-life-facts/",
-      "inspectedAt": "2026-11-20T06:32:25.736Z",
+      "inspectedAt": "2026-11-21T06:32:39.701Z",
       "verdict": "PASS",
       "coverageState": "Submitted and indexed",
       "robotsTxtState": "ALLOWED",
@@ -982,6 +982,156 @@
   },
   "discoveryIssues": [],
   "executionHistory": [
+    {
+      "id": "exec-1795242712949",
+      "startedAt": "2026-11-21T06:31:52.949Z",
+      "completedAt": "2026-11-21T06:32:46.075Z",
+      "durationMs": 53126,
+      "status": "success",
+      "actionsExecuted": [
+        {
+          "id": "act-latency-1795242720210",
+          "timestamp": "2026-11-21T06:32:00.210Z",
+          "actionType": "latency_audit",
+          "target": "https://firstread.co.uk/",
+          "status": "success",
+          "details": "Crawl response latency: 21ms (Optimal (<400ms) — Googlebot crawl budget prioritized). HTTP 200",
+          "reason": "Autonomous crawl budget latency check for Googlebot."
+        },
+        {
+          "id": "act-sitemap-reconcile-1795242731044",
+          "timestamp": "2026-11-21T06:32:11.044Z",
+          "actionType": "sitemap_audit",
+          "target": "https://firstread.co.uk/post-sitemap.xml",
+          "status": "success",
+          "details": "Sitemap coverage: 100% (20/20 posts indexed). Missing: 0",
+          "reason": "Autonomous verification of XML sitemap sync against WordPress published posts."
+        },
+        {
+          "id": "act-index-pub-1795242732517",
+          "timestamp": "2026-11-21T06:32:12.517Z",
+          "actionType": "google_indexing_publish",
+          "target": "https://firstread.co.uk/",
+          "status": "success",
+          "details": "Google Indexing API accepted notification for \"https://firstread.co.uk/\" (URL_UPDATED).",
+          "reason": "Autonomous Google Indexing API notification to accelerate brand visibility for \"firstread\"."
+        },
+        {
+          "id": "act-sitemap-skip-1795242732517",
+          "timestamp": "2026-11-21T06:32:12.298Z",
+          "actionType": "sitemap_submit",
+          "target": "https://firstread.co.uk/sitemap_index.xml",
+          "status": "skipped",
+          "details": "Sitemap already submitted and active in GSC with no reported errors; repeated submission omitted to prevent API spam.",
+          "reason": "No sitemap changes detected."
+        },
+        {
+          "id": "act-ping-1795242732610",
+          "timestamp": "2026-11-21T06:32:12.610Z",
+          "actionType": "sitemap_ping",
+          "target": "https://firstread.co.uk/sitemap_index.xml",
+          "status": "success",
+          "details": "Google sitemap ping endpoint is retired by Google (HTTP 404); sitemap is actively managed via Google Search Console API.",
+          "reason": "Autonomous crawler ping for updated sitemap."
+        },
+        {
+          "id": "act-schema-1795242732662",
+          "timestamp": "2026-11-21T06:32:12.662Z",
+          "actionType": "audit_schema",
+          "target": "https://firstread.co.uk/",
+          "status": "success",
+          "details": "Brand schema verified: Organization (Firstread), WebSite, and SearchAction intact.",
+          "reason": "Autonomous verification of brand knowledge graph schema for \"firstread\"."
+        },
+        {
+          "id": "act-inspect-1795242739127-1v9h",
+          "timestamp": "2026-11-21T06:32:19.127Z",
+          "actionType": "inspect_homepage",
+          "target": "https://firstread.co.uk/",
+          "status": "success",
+          "details": "Google Inspection: verdict=PASS, state=\"Submitted and indexed\", robots=ALLOWED",
+          "reason": "Autonomous URL indexing inspection."
+        },
+        {
+          "id": "act-index-pub-1795242739264-i5yt",
+          "timestamp": "2026-11-21T06:32:19.264Z",
+          "actionType": "google_indexing_publish",
+          "target": "https://firstread.co.uk/simpler-or-more-simple/",
+          "status": "success",
+          "details": "Google Indexing API accepted notification for \"https://firstread.co.uk/simpler-or-more-simple/\" (URL_UPDATED).",
+          "reason": "Automated Google Indexing API notification to accelerate search visibility for recent article."
+        },
+        {
+          "id": "act-inspect-1795242745622-jht1",
+          "timestamp": "2026-11-21T06:32:25.622Z",
+          "actionType": "inspect_url",
+          "target": "https://firstread.co.uk/simpler-or-more-simple/",
+          "status": "success",
+          "details": "Google Inspection: verdict=PASS, state=\"Submitted and indexed\", robots=ALLOWED",
+          "reason": "Autonomous URL indexing inspection."
+        },
+        {
+          "id": "act-index-pub-1795242745736-1zsn",
+          "timestamp": "2026-11-21T06:32:25.736Z",
+          "actionType": "google_indexing_publish",
+          "target": "https://firstread.co.uk/tate-mcrae-tour/",
+          "status": "success",
+          "details": "Google Indexing API accepted notification for \"https://firstread.co.uk/tate-mcrae-tour/\" (URL_UPDATED).",
+          "reason": "Automated Google Indexing API notification to accelerate search visibility for recent article."
+        },
+        {
+          "id": "act-inspect-1795242753229-0rij",
+          "timestamp": "2026-11-21T06:32:33.229Z",
+          "actionType": "inspect_url",
+          "target": "https://firstread.co.uk/tate-mcrae-tour/",
+          "status": "success",
+          "details": "Google Inspection: verdict=PASS, state=\"Submitted and indexed\", robots=ALLOWED",
+          "reason": "Autonomous URL indexing inspection."
+        },
+        {
+          "id": "act-index-pub-1795242753425-uvt8",
+          "timestamp": "2026-11-21T06:32:33.425Z",
+          "actionType": "google_indexing_publish",
+          "target": "https://firstread.co.uk/zoe-kravitz-parents-lenny-kravitz-lisa-bonet-biography/",
+          "status": "success",
+          "details": "Google Indexing API accepted notification for \"https://firstread.co.uk/zoe-kravitz-parents-lenny-kravitz-lisa-bonet-biography/\" (URL_UPDATED).",
+          "reason": "Automated Google Indexing API notification to accelerate search visibility for recent article."
+        },
+        {
+          "id": "act-inspect-1795242759594-xngy",
+          "timestamp": "2026-11-21T06:32:39.594Z",
+          "actionType": "inspect_url",
+          "target": "https://firstread.co.uk/zoe-kravitz-parents-lenny-kravitz-lisa-bonet-biography/",
+          "status": "success",
+          "details": "Google Inspection: verdict=PASS, state=\"Submitted and indexed\", robots=ALLOWED",
+          "reason": "Autonomous URL indexing inspection."
+        },
+        {
+          "id": "act-index-pub-1795242759701-j2tr",
+          "timestamp": "2026-11-21T06:32:39.701Z",
+          "actionType": "google_indexing_publish",
+          "target": "https://firstread.co.uk/jackson-foo-wong-biography-family-life-facts/",
+          "status": "success",
+          "details": "Google Indexing API accepted notification for \"https://firstread.co.uk/jackson-foo-wong-biography-family-life-facts/\" (URL_UPDATED).",
+          "reason": "Automated Google Indexing API notification to accelerate search visibility for recent article."
+        },
+        {
+          "id": "act-inspect-1795242766075-0z10",
+          "timestamp": "2026-11-21T06:32:46.075Z",
+          "actionType": "inspect_url",
+          "target": "https://firstread.co.uk/jackson-foo-wong-biography-family-life-facts/",
+          "status": "success",
+          "details": "Google Inspection: verdict=PASS, state=\"Submitted and indexed\", robots=ALLOWED",
+          "reason": "Autonomous URL indexing inspection."
+        }
+      ],
+      "alertsCount": 4,
+      "discoveryIssuesCount": 0,
+      "brandClicks": 3,
+      "brandImpressions": 195,
+      "homepageIndexed": true,
+      "summary": "Completed autonomous cycle in 53126ms: Tracked 3 brand clicks (195 impressions). Homepage indexing verdict: PASS. Executed 13 action(s)."
+    },
     {
       "id": "exec-1795156312807",
       "startedAt": "2026-11-20T06:31:52.807Z",
@@ -2336,7 +2486,7 @@
     "durable": true,
     "provider": "github",
     "branch": "monitoring-history",
-    "sha": "b0da0bbe3f490db25a71a15be2bc2eb2332bf8cf",
-    "lastSyncAt": "2026-11-20T06:31:53.121Z"
+    "sha": "1fedc3c7f6fd6f9766dd200301bd3acf1f47a216",
+    "lastSyncAt": "2026-11-21T06:31:53.211Z"
   }
 }
