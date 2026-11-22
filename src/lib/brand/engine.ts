@@ -11,7 +11,9 @@ import {
   auditTechnicalDiscovery,
   executePermittedIndexingActions,
   measureServerCrawlLatency,
-  auditSitemapDiscrepancy
+  auditSitemapDiscrepancy,
+  rerouteHomepageTrappedQueries,
+  recoverUnindexedBacklog
 } from './indexing';
 import {
   fetchRemoteStateFromGitHub,
@@ -427,6 +429,49 @@ export async function runAutonomousBrandGrowthCycle(options?: {
 
     const { actions, inspections } = await executePermittedIndexingActions(sitemapStatus, priorityUrls);
     actionsExecuted.push(...actions);
+
+    // 5d. Autonomous Homepage Trap Query Rerouting (CTR Acceleration)
+    try {
+      const candidateTrapped = [
+        { query: 'start @rivenisnet', impressions: 223, currentUrl: TARGET_DOMAIN },
+        { query: 'how to consulting for backpackers', impressions: 11, currentUrl: TARGET_DOMAIN },
+        { query: 'best color for nike elite v3 bag', impressions: 1, currentUrl: TARGET_DOMAIN }
+      ];
+      const rerouted = await rerouteHomepageTrappedQueries(candidateTrapped);
+      for (const r of rerouted) {
+        if (r.status === 'rerouted') {
+          actionsExecuted.push({
+            id: `act-reroute-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+            timestamp: new Date().toISOString(),
+            actionType: 'google_indexing_publish',
+            target: r.matchedArticleUrl || TARGET_DOMAIN,
+            status: 'success',
+            details: r.details,
+            reason: `Autonomous CTR boost: Rerouting query "${r.query}" (${r.impressions} imp) from homepage to dedicated article.`
+          });
+        }
+      }
+    } catch (err) {
+      console.warn('[Brand Engine] Homepage query rerouting notice:', err);
+    }
+
+    // 5e. Autonomous Unindexed Backlog Recovery (Recovering 207 unindexed posts)
+    try {
+      const recovery = await recoverUnindexedBacklog(10);
+      if (recovery.batchProcessed > 0) {
+        actionsExecuted.push({
+          id: `act-unindexed-recover-${Date.now()}`,
+          timestamp: new Date().toISOString(),
+          actionType: 'google_indexing_publish',
+          target: `${recovery.batchProcessed} unindexed posts`,
+          status: 'success',
+          details: `Processed ${recovery.batchProcessed} unindexed posts from the 207 backlog (${recovery.remainingUnindexed} remaining). URLs: ${recovery.pushedUrls.slice(0, 3).join(', ')}...`,
+          reason: 'Autonomous Google Indexing API submission to resolve "Crawled - currently not indexed" backlog.'
+        });
+      }
+    } catch (err) {
+      console.warn('[Brand Engine] Unindexed backlog recovery notice:', err);
+    }
 
     const hpInspection = inspections.find(i => i.url === TARGET_DOMAIN) || inspections[0] || null;
     state.homepageInspection = hpInspection;

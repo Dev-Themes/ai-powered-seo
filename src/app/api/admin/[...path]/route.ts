@@ -53,7 +53,9 @@ import {
   auditSchemaRichResults,
   auditGooglebotHeaders,
   auditInternalLinkEquity,
-  getIndexingQuotaStatus
+  getIndexingQuotaStatus,
+  rerouteHomepageTrappedQueries,
+  recoverUnindexedBacklog
 } from '@/lib/brand/indexing';
 
 export const runtime = 'nodejs';
@@ -419,6 +421,16 @@ export async function POST(
         if (subAction === 'link-equity') {
           const res = await auditInternalLinkEquity();
           return NextResponse.json(res);
+        }
+        if (subAction === 'reroute-trapped') {
+          const body = await request.json().catch(() => ({}));
+          const res = await rerouteHomepageTrappedQueries(body.queries);
+          return NextResponse.json({ ok: true, rerouted: res });
+        }
+        if (subAction === 'recover-unindexed') {
+          const body = await request.json().catch(() => ({}));
+          const res = await recoverUnindexedBacklog(body.batchSize || 20);
+          return NextResponse.json({ ok: true, ...res });
         }
       }
 

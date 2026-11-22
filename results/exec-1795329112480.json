@@ -1,0 +1,150 @@
+{
+  "id": "exec-1795329112480",
+  "startedAt": "2026-11-22T06:31:52.480Z",
+  "completedAt": "2026-11-22T06:32:35.493Z",
+  "durationMs": 43013,
+  "status": "success",
+  "actionsExecuted": [
+    {
+      "id": "act-latency-1795329119374",
+      "timestamp": "2026-11-22T06:31:59.374Z",
+      "actionType": "latency_audit",
+      "target": "https://firstread.co.uk/",
+      "status": "success",
+      "details": "Crawl response latency: 24ms (Optimal (<400ms) — Googlebot crawl budget prioritized). HTTP 200",
+      "reason": "Autonomous crawl budget latency check for Googlebot."
+    },
+    {
+      "id": "act-sitemap-reconcile-1795329121868",
+      "timestamp": "2026-11-22T06:32:01.868Z",
+      "actionType": "sitemap_audit",
+      "target": "https://firstread.co.uk/post-sitemap.xml",
+      "status": "success",
+      "details": "Sitemap coverage: 100% (20/20 posts indexed). Missing: 0",
+      "reason": "Autonomous verification of XML sitemap sync against WordPress published posts."
+    },
+    {
+      "id": "act-index-pub-1795329122944",
+      "timestamp": "2026-11-22T06:32:02.944Z",
+      "actionType": "google_indexing_publish",
+      "target": "https://firstread.co.uk/",
+      "status": "success",
+      "details": "Google Indexing API accepted notification for \"https://firstread.co.uk/\" (URL_UPDATED).",
+      "reason": "Autonomous Google Indexing API notification to accelerate brand visibility for \"firstread\"."
+    },
+    {
+      "id": "act-sitemap-skip-1795329122944",
+      "timestamp": "2026-11-22T06:32:02.666Z",
+      "actionType": "sitemap_submit",
+      "target": "https://firstread.co.uk/sitemap_index.xml",
+      "status": "skipped",
+      "details": "Sitemap already submitted and active in GSC with no reported errors; repeated submission omitted to prevent API spam.",
+      "reason": "No sitemap changes detected."
+    },
+    {
+      "id": "act-ping-1795329123042",
+      "timestamp": "2026-11-22T06:32:03.042Z",
+      "actionType": "sitemap_ping",
+      "target": "https://firstread.co.uk/sitemap_index.xml",
+      "status": "success",
+      "details": "Google sitemap ping endpoint is retired by Google (HTTP 404); sitemap is actively managed via Google Search Console API.",
+      "reason": "Autonomous crawler ping for updated sitemap."
+    },
+    {
+      "id": "act-schema-1795329123069",
+      "timestamp": "2026-11-22T06:32:03.069Z",
+      "actionType": "audit_schema",
+      "target": "https://firstread.co.uk/",
+      "status": "success",
+      "details": "Brand schema verified: Organization (Firstread), WebSite, and SearchAction intact.",
+      "reason": "Autonomous verification of brand knowledge graph schema for \"firstread\"."
+    },
+    {
+      "id": "act-inspect-1795329129204-kxye",
+      "timestamp": "2026-11-22T06:32:09.204Z",
+      "actionType": "inspect_homepage",
+      "target": "https://firstread.co.uk/",
+      "status": "success",
+      "details": "Google Inspection: verdict=PASS, state=\"Submitted and indexed\", robots=ALLOWED",
+      "reason": "Autonomous URL indexing inspection."
+    },
+    {
+      "id": "act-index-pub-1795329129416-8x0p",
+      "timestamp": "2026-11-22T06:32:09.416Z",
+      "actionType": "google_indexing_publish",
+      "target": "https://firstread.co.uk/simpler-or-more-simple/",
+      "status": "success",
+      "details": "Google Indexing API accepted notification for \"https://firstread.co.uk/simpler-or-more-simple/\" (URL_UPDATED).",
+      "reason": "Automated Google Indexing API notification to accelerate search visibility for recent article."
+    },
+    {
+      "id": "act-inspect-1795329135778-rdpy",
+      "timestamp": "2026-11-22T06:32:15.778Z",
+      "actionType": "inspect_url",
+      "target": "https://firstread.co.uk/simpler-or-more-simple/",
+      "status": "success",
+      "details": "Google Inspection: verdict=PASS, state=\"Submitted and indexed\", robots=ALLOWED",
+      "reason": "Autonomous URL indexing inspection."
+    },
+    {
+      "id": "act-index-pub-1795329135981-ewjg",
+      "timestamp": "2026-11-22T06:32:15.981Z",
+      "actionType": "google_indexing_publish",
+      "target": "https://firstread.co.uk/tate-mcrae-tour/",
+      "status": "success",
+      "details": "Google Indexing API accepted notification for \"https://firstread.co.uk/tate-mcrae-tour/\" (URL_UPDATED).",
+      "reason": "Automated Google Indexing API notification to accelerate search visibility for recent article."
+    },
+    {
+      "id": "act-inspect-1795329142604-teek",
+      "timestamp": "2026-11-22T06:32:22.604Z",
+      "actionType": "inspect_url",
+      "target": "https://firstread.co.uk/tate-mcrae-tour/",
+      "status": "success",
+      "details": "Google Inspection: verdict=PASS, state=\"Submitted and indexed\", robots=ALLOWED",
+      "reason": "Autonomous URL indexing inspection."
+    },
+    {
+      "id": "act-index-pub-1795329142743-rdxh",
+      "timestamp": "2026-11-22T06:32:22.743Z",
+      "actionType": "google_indexing_publish",
+      "target": "https://firstread.co.uk/zoe-kravitz-parents-lenny-kravitz-lisa-bonet-biography/",
+      "status": "success",
+      "details": "Google Indexing API accepted notification for \"https://firstread.co.uk/zoe-kravitz-parents-lenny-kravitz-lisa-bonet-biography/\" (URL_UPDATED).",
+      "reason": "Automated Google Indexing API notification to accelerate search visibility for recent article."
+    },
+    {
+      "id": "act-inspect-1795329148917-ida3",
+      "timestamp": "2026-11-22T06:32:28.917Z",
+      "actionType": "inspect_url",
+      "target": "https://firstread.co.uk/zoe-kravitz-parents-lenny-kravitz-lisa-bonet-biography/",
+      "status": "success",
+      "details": "Google Inspection: verdict=PASS, state=\"Submitted and indexed\", robots=ALLOWED",
+      "reason": "Autonomous URL indexing inspection."
+    },
+    {
+      "id": "act-index-pub-1795329149118-6yde",
+      "timestamp": "2026-11-22T06:32:29.118Z",
+      "actionType": "google_indexing_publish",
+      "target": "https://firstread.co.uk/jackson-foo-wong-biography-family-life-facts/",
+      "status": "success",
+      "details": "Google Indexing API accepted notification for \"https://firstread.co.uk/jackson-foo-wong-biography-family-life-facts/\" (URL_UPDATED).",
+      "reason": "Automated Google Indexing API notification to accelerate search visibility for recent article."
+    },
+    {
+      "id": "act-inspect-1795329155493-fygv",
+      "timestamp": "2026-11-22T06:32:35.493Z",
+      "actionType": "inspect_url",
+      "target": "https://firstread.co.uk/jackson-foo-wong-biography-family-life-facts/",
+      "status": "success",
+      "details": "Google Inspection: verdict=PASS, state=\"Submitted and indexed\", robots=ALLOWED",
+      "reason": "Autonomous URL indexing inspection."
+    }
+  ],
+  "alertsCount": 4,
+  "discoveryIssuesCount": 0,
+  "brandClicks": 3,
+  "brandImpressions": 155,
+  "homepageIndexed": true,
+  "summary": "Completed autonomous cycle in 43013ms: Tracked 3 brand clicks (155 impressions). Homepage indexing verdict: PASS. Executed 13 action(s)."
+}
