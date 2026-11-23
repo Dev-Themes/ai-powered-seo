@@ -1,0 +1,736 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>FirstRead Search Dashboard</title>
+<script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0}
+.th-dark{--bg:#09090b;--card:#111113;--sub:#18181b;--line:#27272a;--line2:#1d1d21;--fg:#fafafa;--muted:#a1a1aa;--faint:#8e8e98;--blue:#60a5fa;--violet:#a78bfa;--green:#34d399;--amber:#fbbf24;--rose:#fb7185;--btn:#fafafa;--btnfg:#09090b;--hover:#16161a;--green-bg:rgba(52,211,153,.12);--blue-bg:rgba(96,165,250,.12);--violet-bg:rgba(167,139,250,.14);--amber-bg:rgba(251,191,36,.12);--rose-bg:rgba(251,113,133,.12)}
+.th-light{--bg:#fafafa;--card:#ffffff;--sub:#f4f4f5;--line:#e4e4e7;--line2:#f0f0f2;--fg:#18181b;--muted:#52525b;--faint:#6b6b76;--blue:#1d4ed8;--violet:#6d28d9;--green:#047857;--amber:#b45309;--rose:#be123c;--btn:#18181b;--btnfg:#fafafa;--hover:#f7f7f8;--green-bg:rgba(4,120,87,.09);--blue-bg:rgba(29,78,216,.08);--violet-bg:rgba(109,40,217,.08);--amber-bg:rgba(180,83,9,.09);--rose-bg:rgba(190,18,60,.08)}
+.root *{box-sizing:border-box}
+.root button{font:inherit;color:inherit;cursor:pointer}
+.root button:focus-visible,.root input:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px}
+.btn-primary{background:var(--btn);color:var(--btnfg)!important;border:0;border-radius:8px;height:40px;padding:0 16px;font-weight:500;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.btn-primary:hover{opacity:.88}
+.btn-primary:disabled{opacity:.45;cursor:default}
+.btn-ghost{background:transparent;border:1px solid var(--line);border-radius:8px;height:30px;padding:0 10px;display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:500}
+.btn-ghost:hover{background:var(--hover)}
+.btn-ghost:disabled{color:var(--green);border-color:transparent;cursor:default}
+.icon-btn{width:40px;height:40px;border-radius:8px;border:1px solid var(--line);background:transparent;display:inline-flex;align-items:center;justify-content:center;color:var(--muted)!important}
+.icon-btn:hover{background:var(--hover);color:var(--fg)!important}
+.seg{display:inline-flex;background:var(--sub);border:1px solid var(--line);border-radius:10px;padding:3px;gap:2px}
+.seg button{border:0;background:transparent;color:var(--muted);height:34px;padding:0 14px;border-radius:7px;font-weight:500;font-size:13px}
+.seg button:hover{color:var(--fg)}
+.seg button.on{background:var(--card);color:var(--fg);box-shadow:0 0 0 1px var(--line)}
+.tabs{display:flex;flex-wrap:wrap;gap:0 24px;border-bottom:1px solid var(--line)}
+.tabs button{border:0;background:none;color:var(--muted);padding:12px 2px;border-bottom:2px solid transparent;margin-bottom:-1px;font-weight:500}
+.tabs button:hover{color:var(--fg)}
+.tabs button.on{color:var(--fg);border-bottom-color:var(--fg)}
+.chip{border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:999px;height:30px;padding:0 12px;font-size:13px;font-weight:500}
+.chip:hover{color:var(--fg);background:var(--hover)}
+.chip.on{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.chip.on:hover{color:var(--bg);background:var(--fg)}
+.tag{display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:999px;font-size:12px;font-weight:500;white-space:nowrap}
+.tag-green{background:var(--green-bg);color:var(--green)}
+.tag-blue{background:var(--blue-bg);color:var(--blue)}
+.tag-violet{background:var(--violet-bg);color:var(--violet)}
+.tag-amber{background:var(--amber-bg);color:var(--amber)}
+.tag-gray{background:var(--sub);color:var(--muted)}
+.pill{display:inline-flex;align-items:center;gap:3px;height:22px;padding:0 7px 0 5px;border-radius:6px;font-size:12px;font-weight:500;font-variant-numeric:tabular-nums}
+.pill.up{background:var(--green-bg);color:var(--green)}
+.pill.down{background:var(--rose-bg);color:var(--rose)}
+.bg-blue{background:var(--blue)}.bg-violet{background:var(--violet)}.bg-green{background:var(--green)}.bg-amber{background:var(--amber)}.bg-faint{background:var(--faint)}
+.sp-blue{stroke:var(--blue)}.sp-violet{stroke:var(--violet)}.sp-green{stroke:var(--green)}.sp-amber{stroke:var(--amber)}
+.dt-blue{fill:var(--blue)}.dt-violet{fill:var(--violet)}.dt-green{fill:var(--green)}.dt-amber{fill:var(--amber)}
+.f-line{fill:var(--line)}.f-green{fill:var(--green)}.f-blue{fill:var(--blue)}
+.mono{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px}
+.num{text-align:right;font-variant-numeric:tabular-nums}
+.rowline{display:grid;column-gap:16px;padding:0 20px;align-items:center;border-bottom:1px solid var(--line2);min-height:50px}
+.rowhead{min-height:40px;font-size:12px;color:var(--muted);border-bottom:1px solid var(--line)}
+.rowhead button{background:none;border:0;padding:0;font-size:12px;color:var(--muted);display:inline-flex;align-items:center;gap:4px}
+.rowhead button:hover{color:var(--fg)}
+.rowhead .num{display:flex;justify-content:flex-end}
+.body:hover{background:var(--hover)}
+.cols-q{grid-template-columns:minmax(220px,2.4fr) 100px 90px 120px 90px 80px}
+.cols-p{grid-template-columns:minmax(300px,3fr) 100px 120px 90px 80px}
+.cols-g{grid-template-columns:minmax(280px,3fr) 100px 110px 120px 120px}
+.cols-t{grid-template-columns:minmax(170px,1.5fr) 190px minmax(220px,1.8fr) 80px 70px 60px 96px}
+.cell-clip{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pulse{animation:pulse 2s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(16,185,129,.55)}70%{box-shadow:0 0 0 6px rgba(16,185,129,0)}100%{box-shadow:0 0 0 0 rgba(16,185,129,0)}}
+.spin{animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.pulse,.spin{animation:none}}
+.search{height:40px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--fg);padding:0 12px 0 36px;font:inherit;width:100%}
+.search::placeholder{color:var(--faint)}
+</style>
+</helmet>
+
+<div class="root {{themeClass}}" style="min-height: 100vh; background: var(--bg); color: var(--fg); font-family: Inter, system-ui, sans-serif; font-size: 14px; line-height: 1.5; -webkit-font-smoothing: antialiased">
+
+  <!-- ============ 1. EXECUTIVE HEADER ============ -->
+  <header style="border-bottom: 1px solid var(--line)">
+    <div style="max-width: 1280px; margin: 0 auto; padding: 14px 24px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px">
+      <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px">
+        <div style="display: flex; align-items: center; gap: 10px">
+          <div style="width: 32px; height: 32px; border-radius: 8px; background: var(--sub); border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; color: var(--fg)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M2 12h20"></path><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+          </div>
+          <span style="font-weight: 600; font-size: 15px; letter-spacing: -0.01em">firstread.co.uk</span>
+        </div>
+        <div style="display: inline-flex; align-items: center; gap: 8px; height: 28px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--green-bg); font-size: 12px; font-weight: 500">
+          <span class="pulse" style="width: 8px; height: 8px; border-radius: 999px; background: #10b981; display: inline-block"></span>
+          <span style="color: var(--green)">Engine active</span>
+          <span style="color: var(--muted)">· 24/7</span>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px">
+        <div style="display: flex; align-items: center; gap: 10px; height: 40px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--line)" title="Google Indexing API daily quota">
+          <span style="font-size: 12px; color: var(--muted)">Indexing quota</span>
+          <svg width="56" height="6" aria-hidden="true"><rect width="100%" height="6" rx="3" class="f-line"></rect><rect width="{{quotaBar}}" height="6" rx="3" class="f-green"></rect></svg>
+          <span style="font-size: 12px; font-weight: 500; font-variant-numeric: tabular-nums">{{quota}}<span style="color: var(--muted)"> / 200</span></span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px; height: 40px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--line); font-size: 12px" title="Server response time (TTFB)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"></path></svg>
+          <span style="font-weight: 500; font-variant-numeric: tabular-nums">24 ms</span>
+          <span style="color: var(--muted)">Optimal</span>
+        </div>
+        <button class="icon-btn" onClick="{{toggleTheme}}" aria-label="Toggle light and dark theme">
+          <sc-if value="{{isDark}}" hint-placeholder-val="{{ true }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path></svg></sc-if>
+          <sc-if value="{{isLight}}" hint-placeholder-val="{{ false }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path></svg></sc-if>
+        </button>
+        <button class="icon-btn" onClick="{{refresh}}" aria-label="Refresh telemetry">
+          <svg class="{{refreshCls}}" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M8 16H3v5"></path></svg>
+        </button>
+        <button class="btn-primary" onClick="{{runCycle}}" disabled="{{running}}">
+          <sc-if value="{{running}}" hint-placeholder-val="{{ false }}"><svg class="spin" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg><span>Running…</span></sc-if>
+          <sc-if value="{{notRunning}}" hint-placeholder-val="{{ true }}"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><polygon points="6 3 20 12 6 21 6 3"></polygon></svg><span>Run optimization</span></sc-if>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div style="max-width: 1280px; margin: 0 auto; padding: 0 24px 48px">
+
+    <!-- Result banner (dismissible) -->
+    <sc-if value="{{hasBanner}}" hint-placeholder-val="{{ false }}">
+      <div style="margin-top: 20px; display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 10px; border: 1px solid var(--line); background: var(--green-bg)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><path d="m9 11 3 3L22 4"></path></svg>
+        <span style="flex: 1; min-width: 0">{{banner}}</span>
+        <button class="icon-btn" style="width: 32px; height: 32px; border: 0" onClick="{{dismissBanner}}" aria-label="Dismiss notification">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+        </button>
+      </div>
+    </sc-if>
+
+    <!-- ============ 2. TITLE + FILTERS ============ -->
+    <div style="padding: 32px 0 20px; display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px 24px">
+      <div style="min-width: 0">
+        <h1 style="margin: 0; font-size: 24px; font-weight: 600; letter-spacing: -0.02em">Search performance</h1>
+        <p style="margin: 4px 0 0; color: var(--muted)">{{scopeCaption}}</p>
+      </div>
+      <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px">
+        <div class="seg" role="group" aria-label="Scope">
+          <sc-for list="{{scopes}}" as="sc" hint-placeholder-count="2">
+            <button class="{{sc.cls}}" onClick="{{sc.pick}}" aria-pressed="{{sc.on}}">{{sc.label}}</button>
+          </sc-for>
+        </div>
+        <div class="seg" role="group" aria-label="Date range">
+          <sc-for list="{{periods}}" as="pd" hint-placeholder-count="4">
+            <button class="{{pd.cls}}" onClick="{{pd.pick}}" aria-pressed="{{pd.on}}">{{pd.label}}</button>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 3. KPI SCORECARDS ============ -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px">
+      <sc-for list="{{kpis}}" as="k" hint-placeholder-count="4">
+        <div class="card" style="padding: 20px; display: flex; flex-direction: column; gap: 12px">
+          <div style="display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 13px; font-weight: 500">
+            <span class="{{k.dot}}" style="width: 8px; height: 8px; border-radius: 2px; display: inline-block"></span>
+            <span>{{k.label}}</span>
+          </div>
+          <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 12px">
+            <div style="font-size: 32px; font-weight: 600; letter-spacing: -0.03em; line-height: 1; font-variant-numeric: tabular-nums">{{k.value}}</div>
+            <svg width="96" height="32" viewBox="0 0 96 32" aria-hidden="true" style="flex: none">
+              <polyline points="{{k.spark}}" fill="none" class="{{k.sp}}" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"></polyline>
+              <circle cx="{{k.cx}}" cy="{{k.cy}}" r="2.5" class="{{k.dt}}"></circle>
+            </svg>
+          </div>
+          <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; font-size: 12px; color: var(--muted)">
+            <span class="{{k.pillCls}}">
+              <sc-if value="{{k.good}}" hint-placeholder-val="{{ true }}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 7h10v10"></path><path d="M7 17 17 7"></path></svg></sc-if>
+              <sc-if value="{{k.bad}}" hint-placeholder-val="{{ false }}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 7l10 10"></path><path d="M17 7v10H7"></path></svg></sc-if>
+              {{k.delta}}
+            </span>
+            <span>{{deltaLabel}}</span>
+            <span style="color: var(--faint)">· {{k.foot}}</span>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+
+    <!-- ============ 4. TABS + SEARCH ============ -->
+    <div style="margin-top: 32px; display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 24px; border-bottom: 1px solid var(--line)">
+      <div class="tabs" style="border-bottom: 0" role="group" aria-label="Sections">
+        <sc-for list="{{tabs}}" as="t" hint-placeholder-count="4">
+          <button class="{{t.cls}}" onClick="{{t.pick}}" aria-pressed="{{t.on}}">{{t.label}}</button>
+        </sc-for>
+      </div>
+      <div style="position: relative; width: 280px; max-width: 100%; margin-bottom: 8px">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--faint)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="position: absolute; left: 12px; top: 12.5px"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+        <input class="search" type="search" placeholder="Filter rows…" aria-label="Filter rows" value="{{search}}" onChange="{{onSearch}}">
+      </div>
+    </div>
+
+    <!-- ============ 5A. OVERVIEW (AUTONOMOUS) ============ -->
+    <sc-if value="{{isOverview}}" hint-placeholder-val="{{ true }}">
+      <div style="margin-top: 24px; display: flex; flex-direction: column; gap: 24px">
+
+        <!-- Technical health strip (replaces Indexing Health tab) -->
+        <div class="card" style="padding: 12px 20px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 28px">
+          <span style="font-size: 12px; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em">Technical health</span>
+          <sc-for list="{{health}}" as="h" hint-placeholder-count="5">
+            <div style="display: flex; align-items: center; gap: 8px; font-size: 13px">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><path d="m9 11 3 3L22 4"></path></svg>
+              <span style="color: var(--muted)">{{h.label}}</span>
+              <span style="font-weight: 500">{{h.value}}</span>
+            </div>
+          </sc-for>
+          <div style="margin-left: auto; display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px; border-radius: 999px; background: var(--blue-bg); color: var(--blue); font-size: 12px; font-weight: 500">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path><path d="m9 12 2 2 4-4"></path></svg>
+            Read-only · zero content changes
+          </div>
+        </div>
+
+        <div style="display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start">
+
+          <!-- Targets & reroutes -->
+          <section class="card" style="flex: 999 1 640px; min-width: 0; overflow: hidden">
+            <div style="padding: 20px 20px 16px; display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 12px">
+              <div>
+                <h2 style="margin: 0; font-size: 16px; font-weight: 600; letter-spacing: -0.01em">Autonomous search targets &amp; reroutes</h2>
+                <p style="margin: 2px 0 0; color: var(--muted); font-size: 13px">Queries the engine is steering toward the right page or a higher rank. Projected +179 clicks / month.</p>
+              </div>
+              <div style="display: flex; flex-wrap: wrap; gap: 6px" role="group" aria-label="Filter by status">
+                <sc-for list="{{chips}}" as="c" hint-placeholder-count="4">
+                  <button class="{{c.cls}}" onClick="{{c.pick}}" aria-pressed="{{c.on}}">{{c.label}} <span style="opacity: 0.7">{{c.count}}</span></button>
+                </sc-for>
+              </div>
+            </div>
+            <div style="overflow-x: auto; border-top: 1px solid var(--line)">
+              <div role="table" aria-label="Autonomous search targets" style="min-width: 940px">
+                <div role="row" class="rowline rowhead cols-t">
+                  <div role="columnheader">Query</div>
+                  <div role="columnheader">Status</div>
+                  <div role="columnheader">Target</div>
+                  <div role="columnheader" class="num">Impr.</div>
+                  <div role="columnheader" class="num">CTR</div>
+                  <div role="columnheader" class="num">Pos.</div>
+                  <div role="columnheader"></div>
+                </div>
+                <sc-for list="{{targets}}" as="r" hint-placeholder-count="5">
+                  <div role="row" class="rowline body cols-t">
+                    <div role="cell" class="cell-clip" style="font-weight: 500">{{r.q}}</div>
+                    <div role="cell"><span class="{{r.tagCls}}">{{r.tagLabel}}</span></div>
+                    <div role="cell" class="cell-clip" style="display: flex; align-items: center; gap: 8px">
+                      <span class="mono" style="color: var(--muted)">{{r.from}}</span>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--faint)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+                      <span class="mono cell-clip" style="color: var(--fg)">{{r.to}}</span>
+                    </div>
+                    <div role="cell" class="num">{{r.i}}</div>
+                    <div role="cell" class="num">{{r.ctr}}</div>
+                    <div role="cell" class="num">{{r.pos}}</div>
+                    <div role="cell" style="display: flex; justify-content: flex-end">
+                      <button class="btn-ghost" onClick="{{r.reindex}}" disabled="{{r.isQueued}}">{{r.actionLabel}}</button>
+                    </div>
+                  </div>
+                </sc-for>
+                <sc-if value="{{noTargets}}" hint-placeholder-val="{{ false }}">
+                  <div style="padding: 32px 20px; text-align: center; color: var(--muted)">No targets match this filter.</div>
+                </sc-if>
+              </div>
+            </div>
+          </section>
+
+          <!-- Right rail -->
+          <div style="flex: 1 1 340px; min-width: 0; display: flex; flex-direction: column; gap: 24px">
+
+            <section class="card" style="padding: 20px; display: flex; flex-direction: column; gap: 16px">
+              <div>
+                <h2 style="margin: 0; font-size: 16px; font-weight: 600; letter-spacing: -0.01em">Unindexed backlog recovery</h2>
+                <p style="margin: 2px 0 0; color: var(--muted); font-size: 13px">Sitemap URLs not yet indexed by Google.</p>
+              </div>
+              <div style="display: flex; align-items: baseline; gap: 8px">
+                <span style="font-size: 32px; font-weight: 600; letter-spacing: -0.03em; line-height: 1; font-variant-numeric: tabular-nums">{{pending}}</span>
+                <span style="color: var(--muted)">pending of {{sitemapTotal}} posts</span>
+              </div>
+              <div>
+                <svg width="100%" height="8" aria-hidden="true"><rect width="100%" height="8" rx="4" class="f-line"></rect><rect width="{{indexedBar}}" height="8" rx="4" class="f-green"></rect></svg>
+                <div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 12px; color: var(--muted)">
+                  <span style="display: inline-flex; align-items: center; gap: 6px"><span class="bg-green" style="width: 8px; height: 8px; border-radius: 2px; display: inline-block"></span>Indexed {{indexed}} · {{indexedPct}}</span>
+                  <span>Pending {{pending}}</span>
+                </div>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 6px; padding-top: 12px; border-top: 1px solid var(--line2)">
+                <div style="display: flex; justify-content: space-between; font-size: 12px; color: var(--muted)">
+                  <span>Indexing API quota today</span>
+                  <span style="font-variant-numeric: tabular-nums">{{quota}} / 200 · {{quotaLeftPct}}% left</span>
+                </div>
+                <svg width="100%" height="4" aria-hidden="true"><rect width="100%" height="4" rx="2" class="f-line"></rect><rect width="{{quotaBar}}" height="4" rx="2" class="f-blue"></rect></svg>
+              </div>
+              <button class="btn-primary" style="width: 100%" onClick="{{recover}}" disabled="{{recoverDisabled}}">{{recoverLabel}}</button>
+            </section>
+
+            <section class="card" style="padding: 20px">
+              <h2 style="margin: 0 0 16px; font-size: 16px; font-weight: 600; letter-spacing: -0.01em">Recent autonomous events</h2>
+              <div style="position: relative; margin-left: 4px; padding-left: 20px; border-left: 1px solid var(--line); display: flex; flex-direction: column; gap: 18px">
+                <sc-for list="{{events}}" as="e" hint-placeholder-count="5">
+                  <div style="position: relative">
+                    <span class="{{e.dot}}" style="position: absolute; left: -25px; top: 6px; width: 9px; height: 9px; border-radius: 999px; border: 2px solid var(--card); display: block"></span>
+                    <div style="font-size: 13px; line-height: 1.45">{{e.text}}</div>
+                    <div style="font-size: 12px; color: var(--faint); margin-top: 2px">{{e.time}}</div>
+                  </div>
+                </sc-for>
+              </div>
+            </section>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ============ 5B. GA4 metric cards ============ -->
+    <sc-if value="{{isGa4}}" hint-placeholder-val="{{ false }}">
+      <div style="margin-top: 24px; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px">
+        <sc-for list="{{gcards}}" as="g" hint-placeholder-count="4">
+          <div class="card" style="padding: 20px; display: flex; flex-direction: column; gap: 10px">
+            <span style="color: var(--muted); font-size: 13px; font-weight: 500">{{g.label}}</span>
+            <span style="font-size: 28px; font-weight: 600; letter-spacing: -0.03em; line-height: 1; font-variant-numeric: tabular-nums">{{g.value}}</span>
+            <span><span class="pill up">{{g.delta}}</span> <span style="font-size: 12px; color: var(--muted)">{{deltaLabel}}</span></span>
+          </div>
+        </sc-for>
+      </div>
+    </sc-if>
+
+    <!-- ============ 5C. Shared data table (queries / pages / GA4) ============ -->
+    <sc-if value="{{isTable}}" hint-placeholder-val="{{ false }}">
+      <section class="card" style="margin-top: 24px; overflow: hidden">
+        <div style="padding: 16px 20px; display: flex; align-items: baseline; justify-content: space-between; gap: 12px">
+          <h2 style="margin: 0; font-size: 16px; font-weight: 600; letter-spacing: -0.01em">{{tableTitle}}</h2>
+          <span style="font-size: 13px; color: var(--muted)">{{totalText}}</span>
+        </div>
+        <div style="overflow-x: auto; border-top: 1px solid var(--line)">
+          <div role="table" aria-label="{{tableTitle}}" style="min-width: 760px">
+            <div role="row" class="rowline rowhead {{colsCls}}">
+              <sc-for list="{{heads}}" as="h" hint-placeholder-count="5">
+                <div role="columnheader" class="{{h.cls}}">
+                  <button onClick="{{h.sort}}" aria-label="{{h.aria}}">
+                    {{h.label}}
+                    <sc-if value="{{h.asc}}" hint-placeholder-val="{{ false }}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 15-6-6-6 6"></path></svg></sc-if>
+                    <sc-if value="{{h.desc}}" hint-placeholder-val="{{ false }}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg></sc-if>
+                  </button>
+                </div>
+              </sc-for>
+            </div>
+
+            <sc-if value="{{isQueries}}" hint-placeholder-val="{{ false }}">
+              <sc-for list="{{qrows}}" as="r" hint-placeholder-count="6">
+                <div role="row" class="rowline body cols-q">
+                  <div role="cell" class="cell-clip" style="font-weight: 500">{{r.name}}</div>
+                  <div role="cell"><span class="{{r.tagCls}}">{{r.type}}</span></div>
+                  <div role="cell" class="num">{{r.c}}</div>
+                  <div role="cell" class="num">{{r.i}}</div>
+                  <div role="cell" class="num">{{r.ctr}}</div>
+                  <div role="cell" class="num">{{r.pos}}</div>
+                </div>
+              </sc-for>
+            </sc-if>
+
+            <sc-if value="{{isPages}}" hint-placeholder-val="{{ false }}">
+              <sc-for list="{{prows}}" as="r" hint-placeholder-count="6">
+                <div role="row" class="rowline body cols-p">
+                  <div role="cell" class="cell-clip" style="display: flex; align-items: center; gap: 10px"><span class="mono cell-clip" style="color: var(--fg)">{{r.name}}</span><span class="{{r.tagCls}}">{{r.type}}</span></div>
+                  <div role="cell" class="num">{{r.c}}</div>
+                  <div role="cell" class="num">{{r.i}}</div>
+                  <div role="cell" class="num">{{r.ctr}}</div>
+                  <div role="cell" class="num">{{r.pos}}</div>
+                </div>
+              </sc-for>
+            </sc-if>
+
+            <sc-if value="{{isGa4}}" hint-placeholder-val="{{ false }}">
+              <sc-for list="{{grows}}" as="r" hint-placeholder-count="6">
+                <div role="row" class="rowline body cols-g">
+                  <div role="cell" class="cell-clip mono" style="color: var(--fg)">{{r.name}}</div>
+                  <div role="cell" class="num">{{r.s}}</div>
+                  <div role="cell" class="num">{{r.v}}</div>
+                  <div role="cell" class="num">{{r.e}}</div>
+                  <div role="cell" class="num">{{r.er}}</div>
+                </div>
+              </sc-for>
+            </sc-if>
+
+            <sc-if value="{{noRows}}" hint-placeholder-val="{{ false }}">
+              <div style="padding: 32px 20px; text-align: center; color: var(--muted)">Nothing matches “{{search}}”.</div>
+            </sc-if>
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 20px; border-top: 1px solid var(--line); font-size: 13px; color: var(--muted)">
+          <span>{{rangeText}}</span>
+          <div style="display: flex; align-items: center; gap: 8px">
+            <button class="btn-ghost" style="height: 34px" onClick="{{prevPage}}" disabled="{{noPrev}}">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>Previous
+            </button>
+            <button class="btn-ghost" style="height: 34px" onClick="{{nextPage}}" disabled="{{noNext}}">Next
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg>
+            </button>
+          </div>
+        </div>
+      </section>
+    </sc-if>
+
+    <!-- ============ FOOTER ============ -->
+    <footer style="margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line2); display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 16px; font-size: 12px; color: var(--faint)">
+      <span>Data from Google Search Console and GA4 · synced 2 min ago · site content is never modified</span>
+      <span class="mono">monitoring-history · 5082fa0</span>
+    </footer>
+  </div>
+</div>
+</x-dc>
+
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","default":"dark","options":["dark","light"],"section":"Appearance"}}'>
+const PERIODS = [
+  { id: '24h', label: '24h', days: 1, word: 'yesterday', factor: 0.14, n: 6 },
+  { id: '7d', label: '7 days', days: 7, word: 'prior 7 days', factor: 1, n: 8 },
+  { id: '28d', label: '28 days', days: 28, word: 'prior 28 days', factor: 4, n: 10 },
+  { id: '90d', label: '90 days', days: 90, word: 'prior 90 days', factor: 12.5, n: 12 }
+];
+
+const TOTALS = {
+  site: {
+    '24h': { c: 17, pc: 15, i: 4120, pi: 3710, ctr: 0.41, pctr: 0.40, pos: 7.2, ppos: 7.3 },
+    '7d': { c: 113, pc: 98, i: 28300, pi: 26100, ctr: 0.40, pctr: 0.38, pos: 7.2, ppos: 7.5 },
+    '28d': { c: 452, pc: 401, i: 112800, pi: 104900, ctr: 0.40, pctr: 0.38, pos: 7.4, ppos: 7.6 },
+    '90d': { c: 1410, pc: 1180, i: 351000, pi: 322000, ctr: 0.40, pctr: 0.37, pos: 7.9, ppos: 8.1 }
+  },
+  brand: {
+    '24h': { c: 9, pc: 8, i: 78, pi: 70, ctr: 11.5, pctr: 11.4, pos: 1.3, ppos: 1.3 },
+    '7d': { c: 61, pc: 55, i: 540, pi: 498, ctr: 11.3, pctr: 11.0, pos: 1.4, ppos: 1.4 },
+    '28d': { c: 244, pc: 221, i: 2210, pi: 2040, ctr: 11.0, pctr: 10.8, pos: 1.4, ppos: 1.5 },
+    '90d': { c: 760, pc: 690, i: 6900, pi: 6500, ctr: 11.0, pctr: 10.6, pos: 1.5, ppos: 1.5 }
+  }
+};
+
+const SP = {
+  c: [5, 7, 6, 8, 7, 9, 8, 11, 10, 12, 11, 14],
+  i: [20, 22, 21, 24, 23, 26, 25, 27, 26, 30, 29, 31],
+  ctr: [3.1, 3.4, 3.2, 3.6, 3.3, 3.5, 3.4, 3.7, 3.5, 3.8, 3.6, 3.9],
+  pos: [8.1, 7.9, 8.0, 7.7, 7.8, 7.5, 7.6, 7.4, 7.4, 7.3, 7.2, 7.2]
+};
+
+const QUERIES = [
+  { name: 'firstread', type: 'Brand', c: 31, i: 290, ctr: 10.7, pos: 1.2 },
+  { name: 'first read news', type: 'Brand', c: 14, i: 168, ctr: 8.3, pos: 1.8 },
+  { name: 'firstread.co.uk', type: 'Brand', c: 12, i: 74, ctr: 16.2, pos: 1.1 },
+  { name: 'first read newsletter', type: 'Brand', c: 5, i: 120, ctr: 4.2, pos: 3.1 },
+  { name: 'start @rivenisnet', type: 'Organic', c: 9, i: 2100, ctr: 0.43, pos: 6.8 },
+  { name: 'rivenisnet login', type: 'Organic', c: 7, i: 940, ctr: 0.74, pos: 5.6 },
+  { name: 'riven net start guide', type: 'Organic', c: 6, i: 1850, ctr: 0.32, pos: 8.1 },
+  { name: 'rivenisnet app review', type: 'Organic', c: 5, i: 1320, ctr: 0.38, pos: 9.4 },
+  { name: 'how to start rivenisnet', type: 'Organic', c: 4, i: 1760, ctr: 0.23, pos: 11.2 },
+  { name: 'rivenisnet download', type: 'Organic', c: 3, i: 1180, ctr: 0.25, pos: 10.3 },
+  { name: 'uk tech news today', type: 'Organic', c: 3, i: 2480, ctr: 0.12, pos: 12.6 },
+  { name: 'ai news summary', type: 'Organic', c: 2, i: 1610, ctr: 0.12, pos: 14.1 }
+];
+
+const PAGES = [
+  { name: '/', type: 'Homepage', c: 58, i: 9400, ctr: 0.62, pos: 5.9 },
+  { name: '/start-rivenisnet/', type: 'Article', c: 11, i: 3200, ctr: 0.34, pos: 7.4 },
+  { name: '/rivenisnet-review/', type: 'Article', c: 9, i: 2650, ctr: 0.34, pos: 8.2 },
+  { name: '/rivenisnet-login/', type: 'Article', c: 7, i: 1480, ctr: 0.47, pos: 6.1 },
+  { name: '/how-to-start-rivenisnet/', type: 'Article', c: 6, i: 2210, ctr: 0.27, pos: 11.2 },
+  { name: '/category/tech/', type: 'Category', c: 5, i: 3100, ctr: 0.16, pos: 12.4 },
+  { name: '/about/', type: 'About', c: 4, i: 820, ctr: 0.49, pos: 4.8 },
+  { name: '/uk-tech-news-today/', type: 'Article', c: 4, i: 2980, ctr: 0.13, pos: 12.6 },
+  { name: '/category/ai-news/', type: 'Category', c: 3, i: 2420, ctr: 0.12, pos: 13.8 }
+];
+
+const GA4 = [
+  { name: '/', s: 96, v: 142, e: 64 },
+  { name: '/start-rivenisnet/', s: 22, v: 41, e: 15 },
+  { name: '/rivenisnet-review/', s: 18, v: 34, e: 12 },
+  { name: '/rivenisnet-login/', s: 14, v: 22, e: 9 },
+  { name: '/how-to-start-rivenisnet/', s: 12, v: 25, e: 7 },
+  { name: '/category/tech/', s: 11, v: 24, e: 6 },
+  { name: '/about/', s: 9, v: 15, e: 6 },
+  { name: '/uk-tech-news-today/', s: 8, v: 14, e: 4 }
+];
+
+const TARGETS = [
+  { id: 1, q: 'start @rivenisnet', st: 'reroute', from: '/', to: '/start-rivenisnet/', i: 2100, ctr: '0.43%', pos: '6.8' },
+  { id: 2, q: 'rivenisnet login', st: 'reroute', from: '/', to: '/rivenisnet-login/', i: 940, ctr: '0.74%', pos: '5.6' },
+  { id: 3, q: 'how to start rivenisnet', st: 'striking', from: 'Pos 11.2', to: 'Top 3', i: 1760, ctr: '0.23%', pos: '11.2' },
+  { id: 4, q: 'rivenisnet download', st: 'striking', from: 'Pos 10.3', to: 'Top 3', i: 1180, ctr: '0.25%', pos: '10.3' },
+  { id: 5, q: 'rivenisnet app review', st: 'striking', from: 'Pos 9.4', to: 'Top 3', i: 1320, ctr: '0.38%', pos: '9.4' },
+  { id: 6, q: 'what is rivenisnet', st: 'question', from: 'Pos 6.1', to: 'Position 0', i: 1240, ctr: '0.31%', pos: '6.1' },
+  { id: 7, q: 'is rivenisnet safe', st: 'question', from: 'Pos 8.7', to: 'Position 0', i: 870, ctr: '0.23%', pos: '8.7' }
+];
+
+const ST = {
+  reroute: { label: 'Homepage trap resolved', cls: 'tag tag-green' },
+  striking: { label: 'Striking distance push', cls: 'tag tag-blue' },
+  question: { label: 'Position 0 question', cls: 'tag tag-violet' }
+};
+
+const EVENTS = [
+  { time: '12 min ago', text: 'Matched 2 homepage-trap queries to their dedicated articles', dot: 'bg-green' },
+  { time: '41 min ago', text: 'Pushed 14 URLs to the Google Indexing API', dot: 'bg-blue' },
+  { time: '2 h ago', text: 'Sitemap reconciled: 343 posts in post-sitemap.xml', dot: 'bg-faint' },
+  { time: '3 h ago', text: 'NewsArticle schema validated with 0 errors', dot: 'bg-faint' },
+  { time: '6 h ago', text: 'Flagged 3 striking-distance queries for a crawl boost', dot: 'bg-violet' },
+  { time: '9 h ago', text: 'TTFB re-tested at 24 ms; HTTP/2 and GZIP confirmed', dot: 'bg-faint' }
+];
+
+const TAG_PAGE = { Homepage: 'tag tag-green', Article: 'tag tag-blue', About: 'tag tag-violet', Category: 'tag tag-amber' };
+const PAGE_SIZE = 6;
+
+function fmt(n) { return Math.round(n).toLocaleString('en-GB'); }
+function sign(d) { return d < 0 ? '−' : '+'; }
+function pct(cur, prev) { return sign(cur - prev) + Math.abs((cur - prev) / prev * 100).toFixed(1) + '%'; }
+function spark(vals, n, invert) {
+  const v = vals.slice(-n);
+  const w = 96, h = 32, p = 4;
+  const mn = Math.min.apply(null, v), mx = Math.max.apply(null, v);
+  const r = (mx - mn) || 1;
+  const pts = v.map((x, i) => {
+    const px = (i / (v.length - 1)) * (w - 2 * p) + p;
+    let t = (x - mn) / r;
+    if (!invert) t = 1 - t;
+    const py = p + t * (h - 2 * p);
+    return [px.toFixed(1), py.toFixed(1)];
+  });
+  return { points: pts.map(a => a.join(',')).join(' '), cx: pts[pts.length - 1][0], cy: pts[pts.length - 1][1] };
+}
+function cmp(key, dir) {
+  return (a, b) => {
+    const x = a[key], y = b[key];
+    const r = typeof x === 'string' ? x.localeCompare(y) : x - y;
+    return dir === 'asc' ? r : -r;
+  };
+}
+
+class Component extends DCLogic {
+  constructor(...args) {
+    super(...args);
+    this.state = {
+      theme: null, scope: 'site', period: '7d', tab: 'overview', search: '',
+      sort: { key: 'c', dir: 'desc' }, page: 0, tFilter: 'all', queued: {},
+      running: false, refreshing: false, banner: '', pending: 207, quota: 14, extra: []
+    };
+  }
+
+  componentWillUnmount() {
+    clearTimeout(this._t1);
+    clearTimeout(this._t2);
+  }
+
+  setTab(id) {
+    this.setState({ tab: id, search: '', page: 0, sort: { key: id === 'ga4' ? 's' : 'c', dir: 'desc' } });
+  }
+
+  sortBy(key) {
+    const cur = this.state.sort;
+    let dir;
+    if (cur.key === key) dir = cur.dir === 'asc' ? 'desc' : 'asc';
+    else dir = (key === 'name' || key === 'pos') ? 'asc' : 'desc';
+    this.setState({ sort: { key: key, dir: dir }, page: 0 });
+  }
+
+  runCycle() {
+    if (this.state.running) return;
+    this.setState({ running: true });
+    this._t1 = setTimeout(() => {
+      this.setState({
+        running: false,
+        banner: 'Optimization cycle complete. 2 reroutes confirmed and 3 striking-distance queries queued. No site content was modified.',
+        extra: [{ time: 'just now', text: 'Optimization cycle completed: 2 reroutes confirmed', dot: 'bg-green' }].concat(this.state.extra)
+      });
+    }, 1600);
+  }
+
+  refresh() {
+    this.setState({ refreshing: true });
+    this._t2 = setTimeout(() => this.setState({ refreshing: false }), 900);
+  }
+
+  recover() {
+    const s = this.state;
+    const n = Math.min(35, s.pending);
+    if (n <= 0 || s.quota + n > 200) return;
+    this.setState({
+      pending: s.pending - n,
+      quota: s.quota + n,
+      banner: n + ' unindexed posts submitted to the Google Indexing API.',
+      extra: [{ time: 'just now', text: 'Queued ' + n + ' backlog URLs for indexing', dot: 'bg-blue' }].concat(s.extra)
+    });
+  }
+
+  renderVals() {
+    const s = this.state;
+    const theme = s.theme || this.props.theme || 'dark';
+    const P = PERIODS.find(p => p.id === s.period);
+    const T = TOTALS[s.scope][s.period];
+    const q = s.search.trim().toLowerCase();
+
+    // --- KPI cards ---
+    const sc = spark(SP.c, P.n, false), si = spark(SP.i, P.n, false), sr = spark(SP.ctr, P.n, false), sp = spark(SP.pos, P.n, true);
+    const ctrD = T.ctr - T.pctr;
+    const posD = T.ppos - T.pos;
+    const kpiDefs = [
+      { label: 'Total clicks', dot: 'bg-blue', sp: 'sp-blue', dt: 'dt-blue', value: fmt(T.c), delta: pct(T.c, T.pc), good: T.c >= T.pc, foot: '≈ ' + (T.c / P.days).toFixed(1) + ' / day', s: sc },
+      { label: 'Total impressions', dot: 'bg-violet', sp: 'sp-violet', dt: 'dt-violet', value: fmt(T.i), delta: pct(T.i, T.pi), good: T.i >= T.pi, foot: '≈ ' + fmt(T.i / P.days) + ' / day', s: si },
+      { label: 'Average CTR', dot: 'bg-green', sp: 'sp-green', dt: 'dt-green', value: T.ctr.toFixed(1) + '%', delta: ctrD === 0 ? 'No change' : sign(ctrD) + Math.abs(ctrD).toFixed(2) + ' pp', good: ctrD >= 0, foot: 'clicks ÷ impressions', s: sr },
+      { label: 'Average position', dot: 'bg-amber', sp: 'sp-amber', dt: 'dt-amber', value: T.pos.toFixed(1), delta: posD === 0 ? 'No change' : Math.abs(posD).toFixed(1) + (posD > 0 ? ' better' : ' worse'), good: posD >= 0, foot: 'lower is better', s: sp }
+    ];
+    const kpis = kpiDefs.map(k => ({
+      label: k.label, dot: k.dot, sp: k.sp, dt: k.dt, value: k.value, delta: k.delta, foot: k.foot,
+      good: k.good, bad: !k.good, pillCls: 'pill ' + (k.good ? 'up' : 'down'),
+      spark: k.s.points, cx: k.s.cx, cy: k.s.cy
+    }));
+
+    // --- filters ---
+    const scopes = [
+      { id: 'brand', label: 'Brand “firstread”' },
+      { id: 'site', label: 'Whole website' }
+    ].map(x => ({ label: x.label, on: s.scope === x.id, cls: s.scope === x.id ? 'on' : '', pick: () => this.setState({ scope: x.id, page: 0 }) }));
+    const periods = PERIODS.map(x => ({ label: x.label, on: s.period === x.id, cls: s.period === x.id ? 'on' : '', pick: () => this.setState({ period: x.id, page: 0 }) }));
+
+    const tabDefs = [
+      { id: 'overview', label: 'Autonomous' },
+      { id: 'queries', label: 'Search queries' },
+      { id: 'pages', label: 'Top pages' },
+      { id: 'ga4', label: 'GA4 traffic' }
+    ];
+    const tabs = tabDefs.map(x => ({ label: x.label, on: s.tab === x.id, cls: s.tab === x.id ? 'on' : '', pick: () => this.setTab(x.id) }));
+
+    // --- targets ---
+    const tAll = TARGETS.filter(r => !q || r.q.toLowerCase().indexOf(q) >= 0);
+    const count = (k) => TARGETS.filter(r => k === 'all' || r.st === k).length;
+    const chips = [
+      { id: 'all', label: 'All' }, { id: 'reroute', label: 'Reroutes' },
+      { id: 'striking', label: 'Striking distance' }, { id: 'question', label: 'Questions' }
+    ].map(x => ({ label: x.label, count: count(x.id), on: s.tFilter === x.id, cls: 'chip' + (s.tFilter === x.id ? ' on' : ''), pick: () => this.setState({ tFilter: x.id }) }));
+    const targets = tAll.filter(r => s.tFilter === 'all' || r.st === s.tFilter).map(r => {
+      const done = !!s.queued[r.id];
+      return {
+        q: r.q, from: r.from, to: r.to, i: fmt(r.i), ctr: r.ctr, pos: r.pos,
+        tagCls: ST[r.st].cls, tagLabel: ST[r.st].label,
+        isQueued: done, actionLabel: done ? 'Queued' : 'Re-index',
+        reindex: () => this.setState({ queued: Object.assign({}, this.state.queued, { [r.id]: true }) })
+      };
+    });
+
+    // --- table pipeline ---
+    const f = P.factor;
+    let base = [];
+    let colsCls = 'cols-q', heads = [], tableTitle = 'Search queries';
+    const mk = (defs) => defs.map(d => ({
+      label: d.l, cls: d.r ? 'num' : '', asc: s.sort.key === d.k && s.sort.dir === 'asc', desc: s.sort.key === d.k && s.sort.dir === 'desc',
+      sort: () => this.sortBy(d.k), aria: 'Sort by ' + d.l
+    }));
+    if (s.tab === 'queries') {
+      base = QUERIES.filter(r => s.scope === 'site' || r.type === 'Brand').map(r => ({
+        name: r.name, type: r.type, c: Math.max(1, Math.round(r.c * f)), i: Math.round(r.i * f), ctr: r.ctr, pos: r.pos
+      }));
+      heads = mk([{ l: 'Query', k: 'name' }, { l: 'Type', k: 'type' }, { l: 'Clicks', k: 'c', r: 1 }, { l: 'Impressions', k: 'i', r: 1 }, { l: 'CTR', k: 'ctr', r: 1 }, { l: 'Position', k: 'pos', r: 1 }]);
+      colsCls = 'cols-q'; tableTitle = 'Search queries';
+    } else if (s.tab === 'pages') {
+      base = PAGES.map(r => ({ name: r.name, type: r.type, c: Math.max(1, Math.round(r.c * f)), i: Math.round(r.i * f), ctr: r.ctr, pos: r.pos }));
+      heads = mk([{ l: 'Page', k: 'name' }, { l: 'Clicks', k: 'c', r: 1 }, { l: 'Impressions', k: 'i', r: 1 }, { l: 'CTR', k: 'ctr', r: 1 }, { l: 'Position', k: 'pos', r: 1 }]);
+      colsCls = 'cols-p'; tableTitle = 'Top pages';
+    } else if (s.tab === 'ga4') {
+      base = GA4.map(r => ({ name: r.name, s: Math.max(1, Math.round(r.s * f)), v: Math.max(1, Math.round(r.v * f)), e: Math.max(1, Math.round(r.e * f)), er: r.e / r.s * 100 }));
+      heads = mk([{ l: 'Landing page', k: 'name' }, { l: 'Sessions', k: 's', r: 1 }, { l: 'Pageviews', k: 'v', r: 1 }, { l: 'Engaged', k: 'e', r: 1 }, { l: 'Engagement', k: 'er', r: 1 }]);
+      colsCls = 'cols-g'; tableTitle = 'Organic landing pages';
+    }
+    const filtered = base.filter(r => !q || r.name.toLowerCase().indexOf(q) >= 0).sort(cmp(s.sort.key, s.sort.dir));
+    const total = filtered.length;
+    const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+    const page = Math.min(s.page, pages - 1);
+    const slice = filtered.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE);
+    const ctrFmt = (v) => v.toFixed(v >= 1 ? 1 : 2) + '%';
+
+    const qrows = s.tab === 'queries' ? slice.map(r => ({ name: r.name, type: r.type, tagCls: r.type === 'Brand' ? 'tag tag-violet' : 'tag tag-gray', c: fmt(r.c), i: fmt(r.i), ctr: ctrFmt(r.ctr), pos: r.pos.toFixed(1) })) : [];
+    const prows = s.tab === 'pages' ? slice.map(r => ({ name: r.name, type: r.type, tagCls: TAG_PAGE[r.type], c: fmt(r.c), i: fmt(r.i), ctr: ctrFmt(r.ctr), pos: r.pos.toFixed(1) })) : [];
+    const grows = s.tab === 'ga4' ? slice.map(r => ({ name: r.name, s: fmt(r.s), v: fmt(r.v), e: fmt(r.e), er: r.er.toFixed(1) + '%' })) : [];
+
+    const gcards = [
+      { label: 'Organic sessions', value: fmt(214 * f), delta: '+9.4%' },
+      { label: 'Total pageviews', value: fmt(391 * f), delta: '+7.1%' },
+      { label: 'Total users', value: fmt(187 * f), delta: '+8.2%' },
+      { label: 'Engagement rate', value: '63.4%', delta: '+1.2 pp' }
+    ];
+
+    // --- backlog / quota ---
+    const SITEMAP = 343;
+    const indexed = SITEMAP - s.pending;
+    const batch = Math.min(35, s.pending);
+    const quotaLeft = 200 - s.quota;
+    const events = s.extra.concat(EVENTS).slice(0, 7);
+
+    return {
+      themeClass: 'th-' + theme,
+      isDark: theme === 'dark', isLight: theme === 'light',
+      toggleTheme: () => this.setState({ theme: theme === 'dark' ? 'light' : 'dark' }),
+      quota: s.quota, quotaBar: (s.quota / 200 * 100).toFixed(1) + '%', quotaLeftPct: Math.round(quotaLeft / 200 * 100),
+      running: s.running, notRunning: !s.running, runCycle: () => this.runCycle(),
+      refresh: () => this.refresh(), refreshCls: s.refreshing ? 'spin' : '',
+      hasBanner: !!s.banner, banner: s.banner, dismissBanner: () => this.setState({ banner: '' }),
+      scopeCaption: s.scope === 'brand'
+        ? 'Showing only queries that contain “firstread”, which is your brand demand.'
+        : 'Showing all queries across the whole website.',
+      scopes: scopes, periods: periods, kpis: kpis,
+      deltaLabel: 'vs ' + P.word,
+      tabs: tabs, search: s.search,
+      onSearch: (e) => this.setState({ search: e.target.value, page: 0 }),
+      isOverview: s.tab === 'overview', isQueries: s.tab === 'queries', isPages: s.tab === 'pages', isGa4: s.tab === 'ga4',
+      isTable: s.tab !== 'overview',
+      health: [
+        { label: 'Homepage', value: 'Indexed' },
+        { label: 'Canonical', value: 'Protected' },
+        { label: 'Sitemap', value: 'HTTP 204 · 343 URLs' },
+        { label: 'Schema', value: 'NewsArticle valid' },
+        { label: 'Googlebot', value: 'HTTP/2 · GZIP' }
+      ],
+      chips: chips, targets: targets, noTargets: targets.length === 0,
+      pending: s.pending, sitemapTotal: SITEMAP, indexed: indexed,
+      indexedPct: (indexed / SITEMAP * 100).toFixed(1) + '%', indexedBar: (indexed / SITEMAP * 100).toFixed(1) + '%',
+      recover: () => this.recover(),
+      recoverDisabled: batch <= 0 || s.quota + batch > 200,
+      recoverLabel: batch <= 0 ? 'Backlog cleared' : (s.quota + batch > 200 ? 'Daily quota reached' : 'Recover next batch (' + batch + ' posts)'),
+      events: events,
+      gcards: gcards, tableTitle: tableTitle, colsCls: colsCls, heads: heads,
+      qrows: qrows, prows: prows, grows: grows, noRows: total === 0,
+      totalText: total + (total === 1 ? ' row' : ' rows'),
+      rangeText: total === 0 ? 'No rows' : (page * PAGE_SIZE + 1) + '–' + (page * PAGE_SIZE + slice.length) + ' of ' + total,
+      noPrev: page <= 0, noNext: page >= pages - 1,
+      prevPage: () => this.setState({ page: Math.max(0, page - 1) }),
+      nextPage: () => this.setState({ page: Math.min(pages - 1, page + 1) })
+    };
+  }
+}
+</script>
+</body>
+</html>
