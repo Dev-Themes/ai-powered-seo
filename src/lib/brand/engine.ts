@@ -422,9 +422,10 @@ export async function runAutonomousBrandGrowthCycle(options?: {
     const priorityUrls = Array.from(new Set([
       TARGET_DOMAIN,
       'https://firstread.co.uk/simpler-or-more-simple/',
-      ...recentArticleUrls,
-      'https://firstread.co.uk/about-us/',
-      'https://firstread.co.uk/category/news/'
+      'https://firstread.co.uk/start-rivenisnet/',
+      'https://firstread.co.uk/backpacking-advice-cwbiancavoyage/',
+      ...recentArticleUrls.filter(u => !u.includes('/category/') && !u.includes('/tag/')),
+      'https://firstread.co.uk/about-us/'
     ])).slice(0, 5);
 
     const { actions, inspections } = await executePermittedIndexingActions(sitemapStatus, priorityUrls);
@@ -455,9 +456,9 @@ export async function runAutonomousBrandGrowthCycle(options?: {
       console.warn('[Brand Engine] Homepage query rerouting notice:', err);
     }
 
-    // 5e. Autonomous Unindexed Backlog Recovery (Recovering 207 unindexed posts)
+    // 5e. Autonomous Unindexed Backlog Recovery (Recovering 207 unindexed posts in 35-url daily batches)
     try {
-      const recovery = await recoverUnindexedBacklog(10);
+      const recovery = await recoverUnindexedBacklog(35);
       if (recovery.batchProcessed > 0) {
         actionsExecuted.push({
           id: `act-unindexed-recover-${Date.now()}`,

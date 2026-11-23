@@ -429,7 +429,7 @@ export async function POST(
         }
         if (subAction === 'recover-unindexed') {
           const body = await request.json().catch(() => ({}));
-          const res = await recoverUnindexedBacklog(body.batchSize || 20);
+          const res = await recoverUnindexedBacklog(body.batchSize || 35);
           return NextResponse.json({ ok: true, ...res });
         }
       }

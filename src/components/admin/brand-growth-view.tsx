@@ -320,9 +320,9 @@ export function BrandGrowthView({
     setRecoveringUnindexed(true);
     setInspectMessage('');
     try {
-      const res = await api('brand/recover-unindexed', { batchSize: 20 });
+      const res = await api('brand/recover-unindexed', { batchSize: 35 });
       setRecoveryResult(res);
-      setInspectMessage(`Pushed ${res.batchProcessed || 20} unindexed articles to Google Indexing API (${res.remainingUnindexed || 0} remaining in backlog).`);
+      setInspectMessage(`Pushed ${res.batchProcessed || 35} unindexed articles to Google Indexing API (${res.remainingUnindexed || 0} remaining in backlog).`);
     } catch (err) {
       setInspectMessage(`Unindexed recovery failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
     } finally {
@@ -1836,10 +1836,10 @@ export function BrandGrowthView({
                     disabled={recoveringUnindexed}
                     onClick={handleRecoverUnindexedBatch}
                     className="text-[11px] h-8 px-3.5 bg-sky-600 hover:bg-sky-700 text-white font-medium shadow-xs"
-                    title="Push next batch of 20 unindexed articles to Google Indexing API"
+                    title="Push next batch of 35 unindexed articles to Google Indexing API"
                   >
                     <Zap className={`w-3 h-3 mr-1.5 ${recoveringUnindexed ? 'animate-spin' : ''}`} />
-                    {recoveringUnindexed ? 'Pushing 20 Posts…' : 'Recover Next Batch (20 Posts)'}
+                    {recoveringUnindexed ? 'Pushing 35 Posts…' : 'Recover Next Batch (35 Posts)'}
                   </Button>
                 </div>
               </div>

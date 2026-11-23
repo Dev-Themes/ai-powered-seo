@@ -1365,6 +1365,34 @@ export interface TrappedQueryRerouteItem {
   details: string;
 }
 
+const HIGH_PRIORITY_TRAPPED_QUERY_MAP: Record<string, string> = {
+  'start @rivenisnet': 'https://firstread.co.uk/start-rivenisnet/',
+  'start rivenisnet': 'https://firstread.co.uk/start-rivenisnet/',
+  '@rivenisnet': 'https://firstread.co.uk/start-rivenisnet/',
+  'rivenisnet': 'https://firstread.co.uk/start-rivenisnet/',
+  'how to consulting for backpackers': 'https://firstread.co.uk/backpacking-advice-cwbiancavoyage/',
+  'backpackers guide': 'https://firstread.co.uk/backpacking-advice-cwbiancavoyage/',
+  'consulting for backpackers': 'https://firstread.co.uk/backpacking-advice-cwbiancavoyage/',
+  'backpacking advice': 'https://firstread.co.uk/backpacking-advice-cwbiancavoyage/',
+  'best color for nike elite v3 bag': 'https://firstread.co.uk/nike-elite-backpack/',
+  'nike elite v3 bag': 'https://firstread.co.uk/nike-elite-backpack/',
+  'nike elite backpack': 'https://firstread.co.uk/nike-elite-backpack/',
+  'zoe kravitz parents': 'https://firstread.co.uk/zoe-kravitz-parents-lenny-kravitz-lisa-bonet-biography/',
+  'simpler or more simple': 'https://firstread.co.uk/simpler-or-more-simple/',
+  'tate mcrae tour 2026': 'https://firstread.co.uk/tate-mcrae-tour/',
+  'tate mcrae tour': 'https://firstread.co.uk/tate-mcrae-tour/'
+};
+
+function stemWord(w: string): string {
+  let s = w.toLowerCase().replace(/[^a-z0-9]/g, '');
+  if (s.endsWith('ers')) s = s.slice(0, -3);
+  else if (s.endsWith('ing')) s = s.slice(0, -3);
+  else if (s.endsWith('ed')) s = s.slice(0, -2);
+  else if (s.endsWith('es')) s = s.slice(0, -2);
+  else if (s.endsWith('s') && s.length > 3) s = s.slice(0, -1);
+  return s;
+}
+
 /**
  * Detects queries ranking on the generic homepage and pairs them with their dedicated article URL,
  * pushing the article to Google Indexing API to replace the homepage snippet and recover CTR.
@@ -1386,34 +1414,47 @@ export async function rerouteHomepageTrappedQueries(
   const results: TrappedQueryRerouteItem[] = [];
 
   for (const item of queriesToProcess) {
-    const stopWords = new Set(['how', 'to', 'for', 'the', 'is', 'a', 'in', 'on', 'of', 'and', 'or', 'site', 'does', 'have', 'best']);
-    const cleanTokens = item.query
-      .toLowerCase()
-      .replace(/[^a-z0-9\s]/g, ' ')
-      .split(/\s+/)
-      .filter(t => t.length > 2 && !stopWords.has(t));
+    const normalizedKey = item.query.toLowerCase().trim();
+    let bestUrl: string | null = HIGH_PRIORITY_TRAPPED_QUERY_MAP[normalizedKey] || null;
 
-    let bestUrl: string | null = null;
-    let highestPoints = 0;
+    if (!bestUrl) {
+      const stopWords = new Set(['how', 'to', 'for', 'the', 'is', 'a', 'in', 'on', 'of', 'and', 'or', 'site', 'does', 'have', 'best', 'color', 'bag']);
+      const cleanTokens = item.query
+        .toLowerCase()
+        .replace(/[^a-z0-9\s]/g, ' ')
+        .split(/\s+/)
+        .filter(t => t.length > 2 && !stopWords.has(t));
 
-    for (const url of sitemapUrls) {
-      const slug = url.split('/').filter(Boolean).pop() || '';
-      const slugTokens = slug.split('-').map(t => t.toLowerCase());
+      let highestPoints = 0;
 
-      let totalPoints = 0;
-      for (const qToken of cleanTokens) {
-        let maxForQ = 0;
-        for (const st of slugTokens) {
-          if (qToken === st) maxForQ = Math.max(maxForQ, 3);
-          else if (st.startsWith(qToken) || qToken.startsWith(st)) maxForQ = Math.max(maxForQ, 2);
-          else if (st.includes(qToken) || qToken.includes(st)) maxForQ = Math.max(maxForQ, 1);
+      for (const url of sitemapUrls) {
+        // Exclude category, tag, author archive URLs to prevent cannibalization
+        if (url.includes('/category/') || url.includes('/tag/') || url.includes('/author/') || url.endsWith('.co.uk/')) {
+          continue;
         }
-        totalPoints += maxForQ;
-      }
 
-      if (totalPoints > highestPoints && totalPoints >= 2) {
-        highestPoints = totalPoints;
-        bestUrl = url;
+        const slug = url.split('/').filter(Boolean).pop() || '';
+        const slugTokens = slug.split('-').map(t => t.toLowerCase());
+
+        let totalPoints = 0;
+        for (const qToken of cleanTokens) {
+          const qStem = stemWord(qToken);
+          for (const st of slugTokens) {
+            const stStem = stemWord(st);
+            if (qToken === st) {
+              totalPoints += 15;
+            } else if (qStem === stStem && qStem.length >= 3) {
+              totalPoints += 12;
+            } else if (st.startsWith(qToken) || qToken.startsWith(st)) {
+              totalPoints += 4;
+            }
+          }
+        }
+
+        if (totalPoints > highestPoints && totalPoints >= 10) {
+          highestPoints = totalPoints;
+          bestUrl = url;
+        }
       }
     }
 
@@ -1449,14 +1490,16 @@ export async function rerouteHomepageTrappedQueries(
 /**
  * Recovers the 207 unindexed articles backlog by pushing them in controlled batches to Google Indexing API
  */
-export async function recoverUnindexedBacklog(batchSize = 20): Promise<{
+export async function recoverUnindexedBacklog(batchSize = 35): Promise<{
   totalUnindexed: number;
   batchProcessed: number;
   pushedUrls: string[];
   remainingUnindexed: number;
 }> {
   const discrepancy = await auditSitemapDiscrepancy();
-  const unindexed = discrepancy.unindexedUrls || [];
+  const unindexed = (discrepancy.unindexedUrls || []).filter(u =>
+    !u.includes('/category/') && !u.includes('/tag/') && !u.includes('/author/') && !u.endsWith('.co.uk/')
+  );
   const batch = unindexed.slice(0, batchSize);
   const pushedUrls: string[] = [];
 
