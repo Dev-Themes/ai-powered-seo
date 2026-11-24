@@ -94,6 +94,85 @@ export interface BrandKeywordReport {
     isRankingNumberOne: boolean;
   };
   alerts: BrandAlert[];
+  topDomainQueries?: Array<{
+    query: string;
+    page: string;
+    clicks: number;
+    impressions: number;
+    ctr: number;
+    position: number;
+  }>;
+  strikingDistanceQueries?: Array<{
+    query: string;
+    page: string;
+    clicks: number;
+    impressions: number;
+    ctr: number;
+    position: number;
+  }>;
+  strikingDistanceOpportunities?: StrikingDistanceOpportunity[];
+  homepageTrappedQueries?: Array<{
+    query: string;
+    impressions: number;
+    clicks: number;
+    ctr: number;
+    position: number;
+    currentUrl: string;
+  }>;
+  velocityBreakouts?: VelocityBreakout[];
+  clickDeficit?: ClickDeficitSummary;
+  snippetPacks?: SnippetPack[];
+  quotaBudget?: EngineQuotaBudget;
+}
+
+export type IntentType = 'guide' | 'news_event' | 'commercial' | 'troubleshooting' | 'informational';
+
+export interface SnippetPack {
+  targetUrl: string;
+  slug: string;
+  primaryQuery: string;
+  intent: IntentType;
+  currentTitle: string;
+  optimizedTitle: string;
+  optimizedDescription: string;
+  faqSchemaJson?: string;
+  estimatedClickLiftMonth: number;
+}
+
+export interface EngineQuotaBudget {
+  dailyLimit: number;
+  safetyBuffer: number;
+  maxSubmissionsAllowed: number;
+  allocatedTiers: {
+    surgeBreakouts: number;
+    trappedReroutes: number;
+    strikingDistance: number;
+    backlogRecovery: number;
+  };
+  totalSubmissionsExecuted: number;
+}
+
+export interface VelocityBreakout {
+  query: string;
+  page: string;
+  impressions: number;
+  previousImpressions: number;
+  growthRatePct: number;
+}
+
+export interface StrikingDistanceOpportunity {
+  query: string;
+  page: string;
+  clicks: number;
+  impressions: number;
+  ctr: number;
+  position: number;
+  clickPotentialScore: number;
+}
+
+export interface ClickDeficitSummary {
+  estimatedLostClicksMonth: number;
+  highImpressionLowCtrQueriesCount: number;
 }
 
 export interface GA4BrandOrganicCorrelation {
@@ -186,7 +265,9 @@ export interface AutonomousActionRecord {
     | 'verify_robots'
     | 'verify_canonical'
     | 'audit_schema'
-    | 'recheck_indexing';
+    | 'recheck_indexing'
+    | 'latency_audit'
+    | 'sitemap_audit';
   target: string;
   status: 'success' | 'failed' | 'skipped';
   details: string;
@@ -216,6 +297,8 @@ export interface AutonomousExecutionRecord {
   brandImpressions: number;
   homepageIndexed: boolean;
   summary: string;
+  clickDeficit?: ClickDeficitSummary;
+  quotaBudget?: EngineQuotaBudget;
   storageStatus?: StorageSyncStatus;
 }
 

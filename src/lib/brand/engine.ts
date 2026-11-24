@@ -13,8 +13,10 @@ import {
   measureServerCrawlLatency,
   auditSitemapDiscrepancy,
   rerouteHomepageTrappedQueries,
-  recoverUnindexedBacklog
+  recoverUnindexedBacklog,
+  publishUrlToGoogleIndexingApi
 } from './indexing';
+import { generateAutonomousSnippetPacks } from './snippet-engine';
 import {
   fetchRemoteStateFromGitHub,
   saveRemoteStateToGitHub,
@@ -30,7 +32,8 @@ import {
 import type {
   BrandGrowthEngineState,
   AutonomousExecutionRecord,
-  AutonomousActionRecord
+  AutonomousActionRecord,
+  EngineQuotaBudget
 } from './types';
 
 export { getBrandCacheDir, getBrandCacheFile, getBundledFallbackFile };
@@ -365,6 +368,10 @@ export async function runAutonomousBrandGrowthCycle(options?: {
   try {
     // 1. Collect Data & Analyze Brand Queries
     const brandReport = await runBrandKeywordTracking();
+
+    // 1b. Autonomously generate SERP snippet packs for high-impression, low-CTR queries
+    const snippetPacks = generateAutonomousSnippetPacks(brandReport);
+    brandReport.snippetPacks = snippetPacks;
     state.latestReport = brandReport;
 
     // 2. Correlate with GA4 Organic Search traffic
@@ -386,7 +393,7 @@ export async function runAutonomousBrandGrowthCycle(options?: {
       actionsExecuted.push({
         id: `act-latency-${Date.now()}`,
         timestamp: new Date().toISOString(),
-        actionType: 'latency_audit' as any,
+        actionType: 'latency_audit',
         target: TARGET_DOMAIN,
         status: crawlHealth.accessible ? 'success' : 'failed',
         details: `Crawl response latency: ${crawlHealth.latencyMs}ms (${crawlHealth.ratingLabel}). HTTP ${crawlHealth.httpStatus}`,
@@ -400,7 +407,7 @@ export async function runAutonomousBrandGrowthCycle(options?: {
       actionsExecuted.push({
         id: `act-sitemap-reconcile-${Date.now()}`,
         timestamp: new Date().toISOString(),
-        actionType: 'sitemap_audit' as any,
+        actionType: 'sitemap_audit',
         target: sitemapAudit.sitemapUrl,
         status: sitemapAudit.missingCount === 0 ? 'success' : 'failed',
         details: `Sitemap coverage: ${sitemapAudit.coveragePct}% (${sitemapAudit.coveredCount}/${sitemapAudit.totalPostsChecked} posts indexed). Missing: ${sitemapAudit.missingCount}`,
@@ -431,16 +438,63 @@ export async function runAutonomousBrandGrowthCycle(options?: {
     const { actions, inspections } = await executePermittedIndexingActions(sitemapStatus, priorityUrls);
     actionsExecuted.push(...actions);
 
-    // 5d. Autonomous Homepage Trap Query Rerouting (CTR Acceleration)
+    // 4-Tier Google Indexing API Daily Quota Allocator
+    // Strict Invariant: Google limit = 200/day. Safety buffer = 10. Max allowed submissions = 190/day.
+    const DAILY_INDEXING_QUOTA_LIMIT = 200;
+    const INDEXING_SAFETY_BUFFER = 10;
+    const MAX_ALLOWED_INDEXING_SUBMISSIONS = DAILY_INDEXING_QUOTA_LIMIT - INDEXING_SAFETY_BUFFER; // 190
+
+    let currentTotalSubmissions = actionsExecuted.filter(a => a.actionType === 'google_indexing_publish').length;
+
+    // Tier 1: Autonomous Impression-Velocity Breakout Acceleration (Surging interest capture, up to 10 submissions)
+    let surgeBreakoutsPushed = 0;
     try {
-      const candidateTrapped = [
+      const remainingForSurge = Math.max(0, Math.min(10, MAX_ALLOWED_INDEXING_SUBMISSIONS - currentTotalSubmissions));
+      const breakouts = (brandReport?.velocityBreakouts || []).slice(0, remainingForSurge);
+      for (const bo of breakouts) {
+        if (currentTotalSubmissions >= MAX_ALLOWED_INDEXING_SUBMISSIONS) break;
+        if (bo.page && bo.page !== TARGET_DOMAIN && !bo.page.endsWith('.co.uk/')) {
+          const pushRes = await publishUrlToGoogleIndexingApi(bo.page, 'URL_UPDATED');
+          if (pushRes.success || pushRes.status === 200 || pushRes.status === 403 || pushRes.status === 401) {
+            surgeBreakoutsPushed++;
+            currentTotalSubmissions++;
+            actionsExecuted.push({
+              id: `act-breakout-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+              timestamp: new Date().toISOString(),
+              actionType: 'google_indexing_publish',
+              target: bo.page,
+              status: pushRes.success ? 'success' : 'skipped',
+              details: `Pushed velocity breakout article to Google Indexing API (+${bo.growthRatePct}% impr growth, ${bo.impressions} imp for query "${bo.query}").`,
+              reason: `Autonomous surge capture: Accelerating crawl budget for breakout query "${bo.query}".`
+            });
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('[Brand Engine] Velocity breakout notice:', err);
+    }
+
+    // Tier 2: Autonomous Homepage Trap Query Rerouting (CTR Acceleration, up to 15 submissions)
+    let trappedReroutesPushed = 0;
+    try {
+      const remainingForTrapped = Math.max(0, Math.min(15, MAX_ALLOWED_INDEXING_SUBMISSIONS - currentTotalSubmissions));
+      const liveTrapped = (brandReport?.homepageTrappedQueries || []).map(q => ({
+        query: q.query,
+        impressions: q.impressions,
+        currentUrl: q.currentUrl || TARGET_DOMAIN
+      }));
+      const fallbackTrapped = [
         { query: 'start @rivenisnet', impressions: 223, currentUrl: TARGET_DOMAIN },
         { query: 'how to consulting for backpackers', impressions: 11, currentUrl: TARGET_DOMAIN },
         { query: 'best color for nike elite v3 bag', impressions: 1, currentUrl: TARGET_DOMAIN }
       ];
-      const rerouted = await rerouteHomepageTrappedQueries(candidateTrapped);
+      const candidateTrapped = liveTrapped.length > 0 ? liveTrapped : fallbackTrapped;
+      const rerouted = await rerouteHomepageTrappedQueries(candidateTrapped.slice(0, remainingForTrapped));
       for (const r of rerouted) {
+        if (currentTotalSubmissions >= MAX_ALLOWED_INDEXING_SUBMISSIONS) break;
         if (r.status === 'rerouted') {
+          trappedReroutesPushed++;
+          currentTotalSubmissions++;
           actionsExecuted.push({
             id: `act-reroute-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
             timestamp: new Date().toISOString(),
@@ -456,23 +510,84 @@ export async function runAutonomousBrandGrowthCycle(options?: {
       console.warn('[Brand Engine] Homepage query rerouting notice:', err);
     }
 
-    // 5e. Autonomous Unindexed Backlog Recovery (Recovering 207 unindexed posts in 35-url daily batches)
+    // Tier 3: Autonomous Striking-Distance & Click-Potential Acceleration (Boost Rank 4-15 into Top 3, up to 25 submissions)
+    let strikingDistancePushed = 0;
     try {
-      const recovery = await recoverUnindexedBacklog(35);
-      if (recovery.batchProcessed > 0) {
-        actionsExecuted.push({
-          id: `act-unindexed-recover-${Date.now()}`,
-          timestamp: new Date().toISOString(),
-          actionType: 'google_indexing_publish',
-          target: `${recovery.batchProcessed} unindexed posts`,
-          status: 'success',
-          details: `Processed ${recovery.batchProcessed} unindexed posts from the 207 backlog (${recovery.remainingUnindexed} remaining). URLs: ${recovery.pushedUrls.slice(0, 3).join(', ')}...`,
-          reason: 'Autonomous Google Indexing API submission to resolve "Crawled - currently not indexed" backlog.'
-        });
+      const remainingForStriking = Math.max(0, Math.min(25, MAX_ALLOWED_INDEXING_SUBMISSIONS - currentTotalSubmissions));
+      const strikingOpps = (brandReport?.strikingDistanceOpportunities && brandReport.strikingDistanceOpportunities.length > 0)
+        ? brandReport.strikingDistanceOpportunities.slice(0, remainingForStriking)
+        : (brandReport?.strikingDistanceQueries || []).slice(0, remainingForStriking).map(sq => ({
+            query: sq.query,
+            page: sq.page,
+            clicks: sq.clicks,
+            impressions: sq.impressions,
+            ctr: sq.ctr,
+            position: sq.position,
+            clickPotentialScore: Math.round(sq.impressions * (15 - sq.position))
+          }));
+
+      for (const opp of strikingOpps) {
+        if (currentTotalSubmissions >= MAX_ALLOWED_INDEXING_SUBMISSIONS) break;
+        if (opp.page && opp.page !== TARGET_DOMAIN && !opp.page.endsWith('.co.uk/')) {
+          const pushRes = await publishUrlToGoogleIndexingApi(opp.page, 'URL_UPDATED');
+          if (pushRes.success || pushRes.status === 200 || pushRes.status === 403 || pushRes.status === 401) {
+            strikingDistancePushed++;
+            currentTotalSubmissions++;
+            actionsExecuted.push({
+              id: `act-striking-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+              timestamp: new Date().toISOString(),
+              actionType: 'google_indexing_publish',
+              target: opp.page,
+              status: pushRes.success ? 'success' : 'skipped',
+              details: `Pushed top striking-distance URL to Google Indexing API for query "${opp.query}" (pos ${opp.position.toFixed(1)}, ${opp.impressions} imp, potential score ${opp.clickPotentialScore}).`,
+              reason: `Autonomous rank & CTR boost: Accelerating striking-distance query "${opp.query}" into Top 3.`
+            });
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('[Brand Engine] Striking-distance acceleration notice:', err);
+    }
+
+    // Tier 4: Autonomous Unindexed Backlog Recovery (Dynamic remainder up to 35, never exceeding 190 total submissions)
+    let backlogPushed = 0;
+    try {
+      const remainingForBacklog = Math.max(0, Math.min(35, MAX_ALLOWED_INDEXING_SUBMISSIONS - currentTotalSubmissions));
+      if (remainingForBacklog > 0) {
+        const recovery = await recoverUnindexedBacklog(remainingForBacklog);
+        backlogPushed = recovery.batchProcessed;
+        currentTotalSubmissions += backlogPushed;
+        if (recovery.batchProcessed > 0) {
+          actionsExecuted.push({
+            id: `act-unindexed-recover-${Date.now()}`,
+            timestamp: new Date().toISOString(),
+            actionType: 'google_indexing_publish',
+            target: `${recovery.batchProcessed} unindexed posts`,
+            status: 'success',
+            details: `Processed ${recovery.batchProcessed} unindexed posts from the backlog (${recovery.remainingUnindexed} remaining). URLs: ${recovery.pushedUrls.slice(0, 3).join(', ')}...`,
+            reason: 'Autonomous Google Indexing API submission to resolve "Crawled - currently not indexed" backlog.'
+          });
+        }
       }
     } catch (err) {
       console.warn('[Brand Engine] Unindexed backlog recovery notice:', err);
     }
+
+    // Compute final quota budget audit
+    const totalSubmissionsExecuted = actionsExecuted.filter(a => a.actionType === 'google_indexing_publish').length;
+    const quotaBudget: EngineQuotaBudget = {
+      dailyLimit: DAILY_INDEXING_QUOTA_LIMIT,
+      safetyBuffer: INDEXING_SAFETY_BUFFER,
+      maxSubmissionsAllowed: MAX_ALLOWED_INDEXING_SUBMISSIONS,
+      allocatedTiers: {
+        surgeBreakouts: surgeBreakoutsPushed,
+        trappedReroutes: trappedReroutesPushed,
+        strikingDistance: strikingDistancePushed,
+        backlogRecovery: backlogPushed
+      },
+      totalSubmissionsExecuted
+    };
+    brandReport.quotaBudget = quotaBudget;
 
     const hpInspection = inspections.find(i => i.url === TARGET_DOMAIN) || inspections[0] || null;
     state.homepageInspection = hpInspection;
@@ -487,7 +602,12 @@ export async function runAutonomousBrandGrowthCycle(options?: {
     const hasFailures = actions.some(a => a.status === 'failed');
     const executionStatus: 'success' | 'warning' | 'failed' = hasFailures ? 'warning' : 'success';
 
-    const summary = `Completed autonomous cycle in ${durationMs}ms: Tracked ${brandReport.totalBrandedSummary.clicks} brand clicks (${brandReport.totalBrandedSummary.impressions} impressions). Homepage indexing verdict: ${hpInspection?.verdict || 'N/A'}. Executed ${actions.length} action(s).`;
+    const clickDeficit = brandReport.clickDeficit;
+    const deficitInfo = clickDeficit && clickDeficit.estimatedLostClicksMonth > 0
+      ? ` Click deficit: ~${clickDeficit.estimatedLostClicksMonth} lost clicks/mo across ${clickDeficit.highImpressionLowCtrQueriesCount} low-CTR queries.`
+      : '';
+
+    const summary = `Completed autonomous cycle in ${durationMs}ms: Tracked ${brandReport.totalBrandedSummary.clicks} brand clicks (${brandReport.totalBrandedSummary.impressions} impressions). Homepage indexing verdict: ${hpInspection?.verdict || 'N/A'}.${deficitInfo} Executed ${actionsExecuted.length} action(s).`;
 
     const executionRecord: AutonomousExecutionRecord = {
       id: `exec-${startTime}`,
@@ -501,6 +621,8 @@ export async function runAutonomousBrandGrowthCycle(options?: {
       brandClicks: brandReport.totalBrandedSummary.clicks,
       brandImpressions: brandReport.totalBrandedSummary.impressions,
       homepageIndexed: isHpIndexed,
+      clickDeficit,
+      quotaBudget,
       summary
     };
 

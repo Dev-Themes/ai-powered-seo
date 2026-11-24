@@ -1,22 +1,22 @@
 {
-  "id": "exec-1795415512563",
-  "startedAt": "2026-11-23T06:31:52.563Z",
-  "completedAt": "2026-11-23T06:32:34.447Z",
-  "durationMs": 41884,
+  "id": "exec-1795501912754",
+  "startedAt": "2026-11-24T06:31:52.754Z",
+  "completedAt": "2026-11-24T06:32:40.362Z",
+  "durationMs": 47608,
   "status": "success",
   "actionsExecuted": [
     {
-      "id": "act-latency-1795415515957",
-      "timestamp": "2026-11-23T06:31:55.957Z",
+      "id": "act-latency-1795501918383",
+      "timestamp": "2026-11-24T06:31:58.383Z",
       "actionType": "latency_audit",
       "target": "https://firstread.co.uk/",
       "status": "success",
-      "details": "Crawl response latency: 24ms (Optimal (<400ms) — Googlebot crawl budget prioritized). HTTP 200",
+      "details": "Crawl response latency: 22ms (Optimal (<400ms) — Googlebot crawl budget prioritized). HTTP 200",
       "reason": "Autonomous crawl budget latency check for Googlebot."
     },
     {
-      "id": "act-sitemap-reconcile-1795415517950",
-      "timestamp": "2026-11-23T06:31:57.950Z",
+      "id": "act-sitemap-reconcile-1795501920884",
+      "timestamp": "2026-11-24T06:32:00.884Z",
       "actionType": "sitemap_audit",
       "target": "https://firstread.co.uk/post-sitemap.xml",
       "status": "failed",
@@ -24,8 +24,8 @@
       "reason": "Autonomous verification of XML sitemap sync against WordPress published posts."
     },
     {
-      "id": "act-index-pub-1795415518659",
-      "timestamp": "2026-11-23T06:31:58.659Z",
+      "id": "act-index-pub-1795501921726",
+      "timestamp": "2026-11-24T06:32:01.726Z",
       "actionType": "google_indexing_publish",
       "target": "https://firstread.co.uk/",
       "status": "success",
@@ -33,8 +33,8 @@
       "reason": "Autonomous Google Indexing API notification to accelerate brand visibility for \"firstread\"."
     },
     {
-      "id": "act-sitemap-skip-1795415518659",
-      "timestamp": "2026-11-23T06:31:58.450Z",
+      "id": "act-sitemap-skip-1795501921726",
+      "timestamp": "2026-11-24T06:32:01.494Z",
       "actionType": "sitemap_submit",
       "target": "https://firstread.co.uk/sitemap_index.xml",
       "status": "skipped",
@@ -42,8 +42,8 @@
       "reason": "No sitemap changes detected."
     },
     {
-      "id": "act-ping-1795415518756",
-      "timestamp": "2026-11-23T06:31:58.756Z",
+      "id": "act-ping-1795501921819",
+      "timestamp": "2026-11-24T06:32:01.819Z",
       "actionType": "sitemap_ping",
       "target": "https://firstread.co.uk/sitemap_index.xml",
       "status": "success",
@@ -51,8 +51,8 @@
       "reason": "Autonomous crawler ping for updated sitemap."
     },
     {
-      "id": "act-schema-1795415518781",
-      "timestamp": "2026-11-23T06:31:58.781Z",
+      "id": "act-schema-1795501921843",
+      "timestamp": "2026-11-24T06:32:01.843Z",
       "actionType": "audit_schema",
       "target": "https://firstread.co.uk/",
       "status": "success",
@@ -60,8 +60,8 @@
       "reason": "Autonomous verification of brand knowledge graph schema for \"firstread\"."
     },
     {
-      "id": "act-inspect-1795415524917-oha1",
-      "timestamp": "2026-11-23T06:32:04.917Z",
+      "id": "act-inspect-1795501928269-kh0s",
+      "timestamp": "2026-11-24T06:32:08.269Z",
       "actionType": "inspect_homepage",
       "target": "https://firstread.co.uk/",
       "status": "success",
@@ -69,8 +69,8 @@
       "reason": "Autonomous URL indexing inspection."
     },
     {
-      "id": "act-index-pub-1795415525117-s0s1",
-      "timestamp": "2026-11-23T06:32:05.117Z",
+      "id": "act-index-pub-1795501928442-ew4a",
+      "timestamp": "2026-11-24T06:32:08.442Z",
       "actionType": "google_indexing_publish",
       "target": "https://firstread.co.uk/simpler-or-more-simple/",
       "status": "success",
@@ -78,8 +78,8 @@
       "reason": "Automated Google Indexing API notification to accelerate search visibility for recent article."
     },
     {
-      "id": "act-inspect-1795415531268-mcr3",
-      "timestamp": "2026-11-23T06:32:11.268Z",
+      "id": "act-inspect-1795501934821-hhyo",
+      "timestamp": "2026-11-24T06:32:14.821Z",
       "actionType": "inspect_url",
       "target": "https://firstread.co.uk/simpler-or-more-simple/",
       "status": "success",
@@ -87,8 +87,53 @@
       "reason": "Autonomous URL indexing inspection."
     },
     {
-      "id": "act-index-pub-1795415531371-exgm",
-      "timestamp": "2026-11-23T06:32:11.371Z",
+      "id": "act-index-pub-1795501935012-ww95",
+      "timestamp": "2026-11-24T06:32:15.013Z",
+      "actionType": "google_indexing_publish",
+      "target": "https://firstread.co.uk/start-rivenisnet/",
+      "status": "success",
+      "details": "Google Indexing API accepted notification for \"https://firstread.co.uk/start-rivenisnet/\" (URL_UPDATED).",
+      "reason": "Automated Google Indexing API notification to accelerate search visibility for recent article."
+    },
+    {
+      "id": "act-inspect-1795501941478-k277",
+      "timestamp": "2026-11-24T06:32:21.478Z",
+      "actionType": "inspect_url",
+      "target": "https://firstread.co.uk/start-rivenisnet/",
+      "status": "success",
+      "details": "Google Inspection: verdict=NEUTRAL, state=\"Discovered - currently not indexed\", robots=ROBOTS_TXT_STATE_UNSPECIFIED",
+      "reason": "Autonomous URL indexing inspection."
+    },
+    {
+      "id": "act-recheck-1795501941671-hxuk",
+      "timestamp": "2026-11-24T06:32:21.671Z",
+      "actionType": "google_indexing_publish",
+      "target": "https://firstread.co.uk/start-rivenisnet/",
+      "status": "success",
+      "details": "Reactive indexing requested because status was \"Discovered - currently not indexed\". Response: Google Indexing API accepted notification for \"https://firstread.co.uk/start-rivenisnet/\" (URL_UPDATED).",
+      "reason": "Autonomous re-indexing request for unindexed brand URL."
+    },
+    {
+      "id": "act-index-pub-1795501941798-wqm4",
+      "timestamp": "2026-11-24T06:32:21.798Z",
+      "actionType": "google_indexing_publish",
+      "target": "https://firstread.co.uk/backpacking-advice-cwbiancavoyage/",
+      "status": "success",
+      "details": "Google Indexing API accepted notification for \"https://firstread.co.uk/backpacking-advice-cwbiancavoyage/\" (URL_UPDATED).",
+      "reason": "Automated Google Indexing API notification to accelerate search visibility for recent article."
+    },
+    {
+      "id": "act-inspect-1795501947992-x8ib",
+      "timestamp": "2026-11-24T06:32:27.992Z",
+      "actionType": "inspect_url",
+      "target": "https://firstread.co.uk/backpacking-advice-cwbiancavoyage/",
+      "status": "success",
+      "details": "Google Inspection: verdict=PASS, state=\"Submitted and indexed\", robots=ALLOWED",
+      "reason": "Autonomous URL indexing inspection."
+    },
+    {
+      "id": "act-index-pub-1795501948162-hfvt",
+      "timestamp": "2026-11-24T06:32:28.162Z",
       "actionType": "google_indexing_publish",
       "target": "https://firstread.co.uk/tate-mcrae-tour/",
       "status": "success",
@@ -96,8 +141,8 @@
       "reason": "Automated Google Indexing API notification to accelerate search visibility for recent article."
     },
     {
-      "id": "act-inspect-1795415537730-smsy",
-      "timestamp": "2026-11-23T06:32:17.730Z",
+      "id": "act-inspect-1795501954441-clck",
+      "timestamp": "2026-11-24T06:32:34.441Z",
       "actionType": "inspect_url",
       "target": "https://firstread.co.uk/tate-mcrae-tour/",
       "status": "success",
@@ -105,44 +150,8 @@
       "reason": "Autonomous URL indexing inspection."
     },
     {
-      "id": "act-index-pub-1795415537897-55t0",
-      "timestamp": "2026-11-23T06:32:17.897Z",
-      "actionType": "google_indexing_publish",
-      "target": "https://firstread.co.uk/zoe-kravitz-parents-lenny-kravitz-lisa-bonet-biography/",
-      "status": "success",
-      "details": "Google Indexing API accepted notification for \"https://firstread.co.uk/zoe-kravitz-parents-lenny-kravitz-lisa-bonet-biography/\" (URL_UPDATED).",
-      "reason": "Automated Google Indexing API notification to accelerate search visibility for recent article."
-    },
-    {
-      "id": "act-inspect-1795415544043-mj33",
-      "timestamp": "2026-11-23T06:32:24.043Z",
-      "actionType": "inspect_url",
-      "target": "https://firstread.co.uk/zoe-kravitz-parents-lenny-kravitz-lisa-bonet-biography/",
-      "status": "success",
-      "details": "Google Inspection: verdict=PASS, state=\"Submitted and indexed\", robots=ALLOWED",
-      "reason": "Autonomous URL indexing inspection."
-    },
-    {
-      "id": "act-index-pub-1795415544180-rt1y",
-      "timestamp": "2026-11-23T06:32:24.180Z",
-      "actionType": "google_indexing_publish",
-      "target": "https://firstread.co.uk/jackson-foo-wong-biography-family-life-facts/",
-      "status": "success",
-      "details": "Google Indexing API accepted notification for \"https://firstread.co.uk/jackson-foo-wong-biography-family-life-facts/\" (URL_UPDATED).",
-      "reason": "Automated Google Indexing API notification to accelerate search visibility for recent article."
-    },
-    {
-      "id": "act-inspect-1795415550578-z25h",
-      "timestamp": "2026-11-23T06:32:30.578Z",
-      "actionType": "inspect_url",
-      "target": "https://firstread.co.uk/jackson-foo-wong-biography-family-life-facts/",
-      "status": "success",
-      "details": "Google Inspection: verdict=PASS, state=\"Submitted and indexed\", robots=ALLOWED",
-      "reason": "Autonomous URL indexing inspection."
-    },
-    {
-      "id": "act-reroute-1795415551892-dajj",
-      "timestamp": "2026-11-23T06:32:31.892Z",
+      "id": "act-reroute-1795501955760-mfvp",
+      "timestamp": "2026-11-24T06:32:35.760Z",
       "actionType": "google_indexing_publish",
       "target": "https://firstread.co.uk/start-rivenisnet/",
       "status": "success",
@@ -150,17 +159,17 @@
       "reason": "Autonomous CTR boost: Rerouting query \"start @rivenisnet\" (223 imp) from homepage to dedicated article."
     },
     {
-      "id": "act-reroute-1795415551892-odk5",
-      "timestamp": "2026-11-23T06:32:31.892Z",
+      "id": "act-reroute-1795501955760-5rb6",
+      "timestamp": "2026-11-24T06:32:35.760Z",
       "actionType": "google_indexing_publish",
-      "target": "https://firstread.co.uk/top-10-tips-for-securing-a-rental-property-faster-in-canterburys-competitive-market/",
+      "target": "https://firstread.co.uk/backpacking-advice-cwbiancavoyage/",
       "status": "success",
-      "details": "Auto-matched query to dedicated article. Pushed https://firstread.co.uk/top-10-tips-for-securing-a-rental-property-faster-in-canterburys-competitive-market/ to Google Indexing API to replace homepage snippet.",
+      "details": "Auto-matched query to dedicated article. Pushed https://firstread.co.uk/backpacking-advice-cwbiancavoyage/ to Google Indexing API to replace homepage snippet.",
       "reason": "Autonomous CTR boost: Rerouting query \"how to consulting for backpackers\" (11 imp) from homepage to dedicated article."
     },
     {
-      "id": "act-reroute-1795415551892-jqdt",
-      "timestamp": "2026-11-23T06:32:31.892Z",
+      "id": "act-reroute-1795501955760-5266",
+      "timestamp": "2026-11-24T06:32:35.760Z",
       "actionType": "google_indexing_publish",
       "target": "https://firstread.co.uk/nike-elite-backpack/",
       "status": "success",
@@ -168,19 +177,19 @@
       "reason": "Autonomous CTR boost: Rerouting query \"best color for nike elite v3 bag\" (1 imp) from homepage to dedicated article."
     },
     {
-      "id": "act-unindexed-recover-1795415554447",
-      "timestamp": "2026-11-23T06:32:34.447Z",
+      "id": "act-unindexed-recover-1795501960362",
+      "timestamp": "2026-11-24T06:32:40.362Z",
       "actionType": "google_indexing_publish",
-      "target": "10 unindexed posts",
+      "target": "35 unindexed posts",
       "status": "success",
-      "details": "Processed 10 unindexed posts from the 207 backlog (326 remaining). URLs: https://firstread.co.uk/is-2579xao6-easy-to-learn/, https://firstread.co.uk/zoe-telford/, https://firstread.co.uk/bitesolgemokz/...",
+      "details": "Processed 35 unindexed posts from the 207 backlog (301 remaining). URLs: https://firstread.co.uk/is-2579xao6-easy-to-learn/, https://firstread.co.uk/zoe-telford/, https://firstread.co.uk/bitesolgemokz/...",
       "reason": "Autonomous Google Indexing API submission to resolve \"Crawled - currently not indexed\" backlog."
     }
   ],
   "alertsCount": 4,
   "discoveryIssuesCount": 0,
   "brandClicks": 4,
-  "brandImpressions": 158,
+  "brandImpressions": 148,
   "homepageIndexed": true,
-  "summary": "Completed autonomous cycle in 41884ms: Tracked 4 brand clicks (158 impressions). Homepage indexing verdict: PASS. Executed 13 action(s)."
+  "summary": "Completed autonomous cycle in 47608ms: Tracked 4 brand clicks (148 impressions). Homepage indexing verdict: PASS. Executed 14 action(s)."
 }

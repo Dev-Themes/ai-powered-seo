@@ -5,7 +5,10 @@ import {
   sanitizeGoogleError,
   publishUrlToGoogleIndexingApi
 } from '../integrations/google';
+
+export { publishUrlToGoogleIndexingApi };
 import { fetchPublishedPosts } from '../wordpress/client';
+import type { WordPressPost } from '../wordpress/types';
 import { assertNoContentModification } from '../wordpress/security';
 import type {
   UrlInspectionResult,
@@ -957,7 +960,7 @@ export async function auditSitemapDiscrepancy(): Promise<SitemapDiscrepancyResul
   const locMatches = [...sitemapXml.matchAll(/<loc>([^<]+)<\/loc>/g)].map(m => m[1].trim());
   const sitemapUrls = new Set(locMatches);
 
-  let posts: any[] = [];
+  let posts: WordPressPost[] = [];
   try {
     const postsRes = await fetchPublishedPosts(1, 20);
     posts = postsRes.posts || [];
@@ -1380,7 +1383,12 @@ const HIGH_PRIORITY_TRAPPED_QUERY_MAP: Record<string, string> = {
   'zoe kravitz parents': 'https://firstread.co.uk/zoe-kravitz-parents-lenny-kravitz-lisa-bonet-biography/',
   'simpler or more simple': 'https://firstread.co.uk/simpler-or-more-simple/',
   'tate mcrae tour 2026': 'https://firstread.co.uk/tate-mcrae-tour/',
-  'tate mcrae tour': 'https://firstread.co.uk/tate-mcrae-tour/'
+  'tate mcrae tour': 'https://firstread.co.uk/tate-mcrae-tour/',
+  'monkey app leaks': 'https://firstread.co.uk/monkey-app-leaks/',
+  'monkey app': 'https://firstread.co.uk/monkey-app-leaks/',
+  'how python 2579xao6 can be used for data analysis': 'https://firstread.co.uk/how-python-2579xao6-can-be-used-for-data-analysis/',
+  'python 2579xao6 data analysis': 'https://firstread.co.uk/how-python-2579xao6-can-be-used-for-data-analysis/',
+  'is 2579xao6 easy to learn': 'https://firstread.co.uk/is-2579xao6-easy-to-learn/'
 };
 
 function stemWord(w: string): string {
@@ -1407,9 +1415,9 @@ export async function rerouteHomepageTrappedQueries(
     { query: 'best color for nike elite v3 bag', impressions: 1, currentUrl: 'https://firstread.co.uk/' }
   ];
 
-  const queriesToProcess = (candidateQueries && candidateQueries.length > 0)
+  const queriesToProcess = ((candidateQueries && candidateQueries.length > 0)
     ? candidateQueries.filter(q => !q.currentUrl || q.currentUrl === 'https://firstread.co.uk/' || q.currentUrl.endsWith('.co.uk/'))
-    : defaultTrappedQueries;
+    : defaultTrappedQueries).sort((a, b) => b.impressions - a.impressions);
 
   const results: TrappedQueryRerouteItem[] = [];
 
@@ -1488,7 +1496,37 @@ export async function rerouteHomepageTrappedQueries(
 }
 
 /**
- * Recovers the 207 unindexed articles backlog by pushing them in controlled batches to Google Indexing API
+ * Computes a demand relevance score for an article slug based on high-intent SERP keywords.
+ * Prioritizes high-value editorial verticals (tech, guides, travel, tools, comparisons).
+ */
+export function scoreArticleSlugDemand(url: string): number {
+  const slug = (url || '').toLowerCase().replace(/https?:\/\/[^\/]+\//, '').replace(/\/$/, '');
+  let score = 0;
+
+  // High-demand topical triggers (tech, news, software, tutorials, reviews, guides)
+  const highDemandTerms = [
+    'how', 'guide', 'tutorial', 'tips', 'best', 'top', 'review', 'comparison',
+    'app', 'software', 'tech', 'ai', 'digital', 'tool', 'code', 'data',
+    'backpack', 'travel', 'tour', 'advice', 'news', 'start', 'simple', 'update'
+  ];
+
+  for (const term of highDemandTerms) {
+    if (slug.includes(term)) {
+      score += 15;
+    }
+  }
+
+  // Slugs with structured length (neither too cryptic nor too long)
+  if (slug.length >= 10 && slug.length <= 45) {
+    score += 5;
+  }
+
+  return score;
+}
+
+/**
+ * Recovers the 207 unindexed articles backlog by pushing them in controlled batches to Google Indexing API,
+ * prioritized dynamically by organic search demand relevance score.
  */
 export async function recoverUnindexedBacklog(batchSize = 35): Promise<{
   totalUnindexed: number;
@@ -1500,6 +1538,10 @@ export async function recoverUnindexedBacklog(batchSize = 35): Promise<{
   const unindexed = (discrepancy.unindexedUrls || []).filter(u =>
     !u.includes('/category/') && !u.includes('/tag/') && !u.includes('/author/') && !u.endsWith('.co.uk/')
   );
+
+  // Demand-weighted sort so high-intent, trending topic articles are submitted first
+  unindexed.sort((a, b) => scoreArticleSlugDemand(b) - scoreArticleSlugDemand(a));
+
   const batch = unindexed.slice(0, batchSize);
   const pushedUrls: string[] = [];
 

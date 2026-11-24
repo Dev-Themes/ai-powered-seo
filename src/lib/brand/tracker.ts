@@ -10,7 +10,10 @@ import type {
   BrandPerformanceSummary,
   PeriodComparison,
   BrandAlert,
-  GA4BrandOrganicCorrelation
+  GA4BrandOrganicCorrelation,
+  VelocityBreakout,
+  StrikingDistanceOpportunity,
+  ClickDeficitSummary
 } from './types';
 
 export const TARGET_DOMAIN = 'https://firstread.co.uk/';
@@ -512,6 +515,103 @@ export async function runBrandKeywordTracking(): Promise<BrandKeywordReport> {
     current28d.homepagePerformance
   );
 
+  // Extract top domain queries, striking distance opportunities, and homepage-trapped queries from live GSC data
+  const topDomainQueries = rows28d
+    .map(r => ({
+      query: r.keys[0] || '',
+      page: r.keys[1] || TARGET_DOMAIN,
+      clicks: r.clicks || 0,
+      impressions: r.impressions || 0,
+      ctr: r.ctr || 0,
+      position: r.position || 0
+    }))
+    .filter(r => Boolean(r.query))
+    .sort((a, b) => b.impressions - a.impressions);
+
+  // Homepage trapped queries: queries landing on root homepage where impressions >= 1, and not pure brand nav query
+  const homepageTrappedQueries = topDomainQueries
+    .filter(r => {
+      const isHp = r.page === TARGET_DOMAIN || r.page === 'https://firstread.co.uk' || r.page.endsWith('.co.uk/') || r.page === '/';
+      const isBrand = isBrandQuery(r.query);
+      return isHp && !isBrand && r.impressions >= 1;
+    })
+    .map(r => ({
+      query: r.query,
+      impressions: r.impressions,
+      clicks: r.clicks,
+      ctr: r.ctr,
+      position: r.position,
+      currentUrl: r.page
+    }));
+
+  // Striking distance queries: positions 4.0 to 15.0 with impressions >= 1
+  const strikingDistanceQueries = topDomainQueries
+    .filter(r => r.position >= 4.0 && r.position <= 15.0 && r.impressions >= 1);
+
+  // 1. Velocity Breakouts (queries experiencing ≥100% impression growth in the last 7 days)
+  const prev7dImprMap = new Map<string, number>();
+  for (const r of prevRows7d) {
+    const qKey = normalizeQuery(r.keys[0] || '');
+    prev7dImprMap.set(qKey, (prev7dImprMap.get(qKey) || 0) + (r.impressions || 0));
+  }
+
+  const velocityBreakouts: VelocityBreakout[] = [];
+  for (const r of rows7d) {
+    const query = r.keys[0] || '';
+    const qKey = normalizeQuery(query);
+    const currImpr = r.impressions || 0;
+    if (currImpr >= 15) {
+      const prevImpr = prev7dImprMap.get(qKey) || 0;
+      const growthRatePct = prevImpr > 0
+        ? Math.round(((currImpr - prevImpr) / prevImpr) * 100)
+        : (currImpr >= 25 ? 200 : 0);
+      if (growthRatePct >= 100) {
+        velocityBreakouts.push({
+          query,
+          page: r.keys[1] || TARGET_DOMAIN,
+          impressions: currImpr,
+          previousImpressions: prevImpr,
+          growthRatePct
+        });
+      }
+    }
+  }
+  velocityBreakouts.sort((a, b) => b.impressions - a.impressions);
+
+  // 2. Striking distance opportunities with Click-Potential Score
+  const strikingDistanceOpportunities: StrikingDistanceOpportunity[] = topDomainQueries
+    .filter(r => r.position >= 4.0 && r.position <= 15.0 && r.impressions >= 5)
+    .map(r => {
+      const clickPotentialScore = Math.round(r.impressions * (15 - r.position) * Math.max(0.1, 1 - r.ctr));
+      return {
+        query: r.query,
+        page: r.page,
+        clicks: r.clicks,
+        impressions: r.impressions,
+        ctr: r.ctr,
+        position: r.position,
+        clickPotentialScore
+      };
+    })
+    .sort((a, b) => b.clickPotentialScore - a.clickPotentialScore);
+
+  // 3. Click Deficit Accounting (Lost clicks from high-impression queries with CTR < 3.5%)
+  let lostClicksMonthTotal = 0;
+  let deficitCount = 0;
+  for (const q of topDomainQueries) {
+    if (q.impressions >= 10 && q.ctr < 0.035) {
+      const benchmarkClicks = q.impressions * 0.035;
+      const actualClicks = q.clicks;
+      const lost = Math.max(0, benchmarkClicks - actualClicks);
+      lostClicksMonthTotal += Math.round(lost * 4.3);
+      deficitCount++;
+    }
+  }
+  const clickDeficit: ClickDeficitSummary = {
+    estimatedLostClicksMonth: lostClicksMonthTotal,
+    highImpressionLowCtrQueriesCount: deficitCount
+  };
+
   return {
     targetDomain: TARGET_DOMAIN,
     primaryBrandKeyword: PRIMARY_BRAND_KEYWORD,
@@ -527,7 +627,13 @@ export async function runBrandKeywordTracking(): Promise<BrandKeywordReport> {
     comparison7d,
     comparison28d,
     homepagePerformance: current28d.homepagePerformance,
-    alerts
+    alerts,
+    topDomainQueries: topDomainQueries.slice(0, 100),
+    strikingDistanceQueries: strikingDistanceQueries.slice(0, 50),
+    strikingDistanceOpportunities: strikingDistanceOpportunities.slice(0, 50),
+    homepageTrappedQueries: homepageTrappedQueries.slice(0, 50),
+    velocityBreakouts: velocityBreakouts.slice(0, 20),
+    clickDeficit
   };
 }
 

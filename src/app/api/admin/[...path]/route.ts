@@ -369,6 +369,24 @@ export async function POST(
           const res = await publishUrlToGoogleIndexingApi(publishUrl, body.type || 'URL_UPDATED');
           return NextResponse.json(res);
         }
+        if (subAction === 'recover') {
+          let body: { batchSize?: number } = {};
+          try {
+            body = await request.json();
+          } catch {}
+          const batchSize = Math.min(35, Math.max(1, body.batchSize || 35));
+          const res = await recoverUnindexedBacklog(batchSize);
+          return NextResponse.json({
+            ok: true,
+            success: true,
+            count: res.batchProcessed,
+            remainingUnindexed: res.remainingUnindexed,
+            urls: res.pushedUrls,
+            message: res.batchProcessed > 0
+              ? `Successfully submitted ${res.batchProcessed} unindexed posts to Google Indexing API (${res.remainingUnindexed} remaining in backlog).`
+              : 'Unindexed backlog is currently cleared (0 URLs pending).'
+          });
+        }
         if (subAction === 'sitemap-ping') {
           const res = await pingGoogleSitemap();
           return NextResponse.json(res);

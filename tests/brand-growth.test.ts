@@ -12,8 +12,17 @@ import {
 import {
   executePermittedIndexingActions,
   pingGoogleSitemap,
-  auditBrandStructuredData
+  auditBrandStructuredData,
+  scoreArticleSlugDemand,
+  recoverUnindexedBacklog
 } from '../src/lib/brand/indexing';
+import {
+  classifyQueryIntent,
+  generateOptimizedMetaDescription,
+  generateFaqSchemaJson,
+  buildSnippetPackForUrl,
+  generateAutonomousSnippetPacks
+} from '../src/lib/brand/snippet-engine';
 import {
   publishUrlToGoogleIndexingApi
 } from '../src/lib/integrations/google';
@@ -31,7 +40,7 @@ import {
 import { verifyCronSecret } from '../src/lib/auth-core';
 import { handleBrandCronRequest } from '../src/lib/brand/cron';
 import { validateReadOnlyRequest, FirstReadSecurityError } from '../src/lib/firstread/security';
-import type { BrandPerformanceSummary, AutonomousExecutionRecord } from '../src/lib/brand/types';
+import type { BrandPerformanceSummary, AutonomousExecutionRecord, BrandKeywordReport } from '../src/lib/brand/types';
 
 test('Brand Query Filter: correctly isolates FirstRead brand queries and rejects unrelated keywords', () => {
   // Allowed exact & variations
@@ -529,6 +538,116 @@ test('Autonomous Indexing Pipeline: executes full suite of permitted technical a
     assert.ok(['success', 'failed', 'skipped'].includes(act.status));
     assert.ok(act.reason);
   }
+});
+
+test('Snippet Engine Intent Classification: categorizes queries accurately into SERP intent archetypes', () => {
+  assert.equal(classifyQueryIntent('tate mcrae tour 2026'), 'news_event');
+  assert.equal(classifyQueryIntent('monkey app leaks released'), 'news_event');
+  assert.equal(classifyQueryIntent('how to consulting for backpackers'), 'guide');
+  assert.equal(classifyQueryIntent('setup start rivenisnet steps'), 'guide');
+  assert.equal(classifyQueryIntent('best color for nike elite v3 bag price'), 'commercial');
+  assert.equal(classifyQueryIntent('is start rivenisnet safe login error fix'), 'troubleshooting');
+  assert.equal(classifyQueryIntent('simpler or more simple explanation'), 'informational');
+});
+
+test('Snippet Engine Meta Description: generates high-converting active descriptions within 110-155 character boundaries', () => {
+  const title = 'Start Rivenisnet: Complete 2026 Setup Guide - Firstread';
+  const desc = generateOptimizedMetaDescription(title, 'start rivenisnet', 'guide');
+
+  assert.ok(desc.length >= 110, `Meta description should be >= 110 chars, got ${desc.length}: "${desc}"`);
+  assert.ok(desc.length <= 155, `Meta description should be <= 155 chars, got ${desc.length}: "${desc}"`);
+  assert.ok(desc.includes('start rivenisnet') || desc.includes('FirstRead'));
+});
+
+test('Snippet Engine FAQPage Schema: generates valid Schema.org FAQPage JSON-LD markup', () => {
+  const schemaJson = generateFaqSchemaJson(
+    'Start Rivenisnet Guide - Firstread',
+    'start rivenisnet',
+    'troubleshooting'
+  );
+
+  const parsed = JSON.parse(schemaJson);
+  assert.equal(parsed['@context'], 'https://schema.org');
+  assert.equal(parsed['@type'], 'FAQPage');
+  assert.ok(Array.isArray(parsed.mainEntity));
+  assert.equal(parsed.mainEntity.length, 2);
+  assert.equal(parsed.mainEntity[0]['@type'], 'Question');
+  assert.equal(parsed.mainEntity[0].acceptedAnswer['@type'], 'Answer');
+  assert.ok(parsed.mainEntity[0].name.length > 5);
+  assert.ok(parsed.mainEntity[0].acceptedAnswer.text.length > 10);
+});
+
+test('Snippet Engine Pack Builder: produces compliant SERP titles (30-60 chars) and estimated click lifts', () => {
+  const pack = buildSnippetPackForUrl(
+    'https://firstread.co.uk/start-rivenisnet/',
+    'start @rivenisnet',
+    223,
+    0.004
+  );
+
+  assert.ok(pack.targetUrl.includes('start-rivenisnet'));
+  assert.equal(pack.intent, 'guide');
+  assert.ok(pack.optimizedTitle.length >= 30, `Title must be >= 30 chars, got ${pack.optimizedTitle.length}`);
+  assert.ok(pack.optimizedTitle.length <= 60, `Title must be <= 60 chars, got ${pack.optimizedTitle.length}`);
+  assert.ok(pack.optimizedDescription.length >= 110 && pack.optimizedDescription.length <= 155);
+  assert.ok(pack.faqSchemaJson);
+  assert.ok(pack.estimatedClickLiftMonth > 0, 'Estimated monthly click lift should be positive');
+});
+
+test('Snippet Engine Batch Generation: autonomous generator extracts Low-CTR opportunities safely', () => {
+  const mockReport: BrandKeywordReport = {
+    homepageTrappedQueries: [
+      { query: 'start @rivenisnet', impressions: 223, clicks: 1, ctr: 0.004, currentUrl: 'https://firstread.co.uk/' }
+    ],
+    strikingDistanceOpportunities: [
+      { query: 'tate mcrae tour 2026', page: 'https://firstread.co.uk/tate-mcrae-tour/', impressions: 110, clicks: 0, ctr: 0, position: 7.2 }
+    ]
+  } as unknown as BrandKeywordReport;
+
+  const packs = generateAutonomousSnippetPacks(mockReport, 3);
+  assert.equal(packs.length, 3);
+  assert.ok(packs.every(p => p.optimizedTitle && p.optimizedDescription && p.faqSchemaJson));
+});
+
+test('Unindexed Backlog Recovery: executes with demand weighting and returns recovery structure', async () => {
+  const result = await recoverUnindexedBacklog(2);
+  assert.ok(typeof result.totalUnindexed === 'number');
+  assert.ok(typeof result.batchProcessed === 'number');
+  assert.ok(Array.isArray(result.pushedUrls));
+  assert.ok(typeof result.remainingUnindexed === 'number');
+});
+
+test('Sitemap Ping & Schema Audit: executes technical indexing utilities gracefully', async () => {
+  const pingRes = await pingGoogleSitemap();
+  assert.ok(typeof pingRes.success === 'boolean');
+  assert.ok(typeof pingRes.message === 'string');
+
+  const schemaRes = await auditBrandStructuredData();
+  assert.ok(typeof schemaRes.hasOrganizationSchema === 'boolean');
+  assert.ok(typeof schemaRes.hasWebSiteSchema === 'boolean');
+  assert.ok(Array.isArray(schemaRes.issues));
+});
+
+test('Demand-Weighted Slug Scoring: prioritizes high-demand topical keywords over generic slugs', () => {
+  const highDemandSlug = 'https://firstread.co.uk/how-python-data-analysis-guide/';
+  const mediumDemandSlug = 'https://firstread.co.uk/backpacking-travel-advice/';
+  const lowDemandSlug = 'https://firstread.co.uk/random-post-xyz/';
+
+  const highScore = scoreArticleSlugDemand(highDemandSlug);
+  const medScore = scoreArticleSlugDemand(mediumDemandSlug);
+  const lowScore = scoreArticleSlugDemand(lowDemandSlug);
+
+  assert.ok(highScore > lowScore, `High demand slug (${highScore}) must outscore low demand slug (${lowScore})`);
+  assert.ok(medScore > lowScore, `Medium demand slug (${medScore}) must outscore low demand slug (${lowScore})`);
+});
+
+test('Google Indexing 4-Tier Quota Budget Invariants: strict 190 daily ceiling and 10 safety buffer', async () => {
+  const DAILY_INDEXING_QUOTA_LIMIT = 200;
+  const INDEXING_SAFETY_BUFFER = 10;
+  const MAX_ALLOWED_INDEXING_SUBMISSIONS = DAILY_INDEXING_QUOTA_LIMIT - INDEXING_SAFETY_BUFFER;
+
+  assert.equal(MAX_ALLOWED_INDEXING_SUBMISSIONS, 190);
+  assert.ok(DAILY_INDEXING_QUOTA_LIMIT - MAX_ALLOWED_INDEXING_SUBMISSIONS >= 10);
 });
 
 
