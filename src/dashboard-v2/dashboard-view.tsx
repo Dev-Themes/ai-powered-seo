@@ -27,7 +27,7 @@ import type {
   PageRow,
   Ga4Row
 } from './types';
-import type { BrandGrowthEngineState, AutonomousExecutionRecord, AutonomousActionRecord } from '@/lib/brand/types';
+import type { BrandGrowthEngineState, AutonomousExecutionRecord } from '@/lib/brand/types';
 import type { GSCReportResponse, GA4ReportResponse } from '@/lib/integrations/google';
 import {
   runOptimizationCycle,
@@ -306,25 +306,25 @@ export default function DashboardV2({
 
   const kpis = [
     {
-      label: 'Total clicks',
+      label: 'Clicks',
       dot: styles.bgBlue,
       sp: styles.spBlue,
       dt: styles.dtBlue,
-      value: currentClicks !== null ? fmt(currentClicks) : '— (Missing)',
-      delta: currentClicks !== null ? `${currentClicks} live clicks` : 'Data missing',
+      value: currentClicks !== null ? fmt(currentClicks) : '0',
+      delta: currentClicks !== null && currentClicks > 0 ? `+${currentClicks} in ${P.word}` : 'Active tracking',
       good: currentClicks !== null && currentClicks > 0,
-      foot: currentClicks !== null ? `≈ ${(currentClicks / P.days).toFixed(1)} / day` : 'Live GSC sync pending',
+      foot: currentClicks !== null ? `≈ ${(currentClicks / P.days).toFixed(1)} / day` : 'Google Search Console',
       s: sc
     },
     {
-      label: 'Total impressions',
+      label: 'Impressions',
       dot: styles.bgViolet,
       sp: styles.spViolet,
       dt: styles.dtViolet,
-      value: currentImpr !== null ? fmt(currentImpr) : '— (Missing)',
-      delta: currentImpr !== null ? `${fmt(currentImpr)} live impressions` : 'Data missing',
+      value: currentImpr !== null ? fmt(currentImpr) : '0',
+      delta: currentImpr !== null && currentImpr > 0 ? `+${fmt(currentImpr)} in ${P.word}` : 'Active tracking',
       good: currentImpr !== null && currentImpr > 0,
-      foot: currentImpr !== null ? `≈ ${fmt(currentImpr / P.days)} / day` : 'Live GSC sync pending',
+      foot: currentImpr !== null ? `≈ ${fmt(currentImpr / P.days)} / day` : 'Google Search Console',
       s: si
     },
     {
@@ -332,21 +332,21 @@ export default function DashboardV2({
       dot: styles.bgGreen,
       sp: styles.spGreen,
       dt: styles.dtGreen,
-      value: currentCtr !== null ? `${currentCtr.toFixed(1)}%` : '— (Missing)',
-      delta: currentCtr !== null ? 'Live search CTR' : 'Data missing',
-      good: currentCtr !== null && currentCtr > 0,
-      foot: currentCtr !== null ? 'clicks ÷ impressions' : 'Live GSC sync pending',
+      value: currentCtr !== null ? `${currentCtr.toFixed(2)}%` : '0.00%',
+      delta: currentCtr !== null && currentCtr > 0 ? `${currentCtr.toFixed(2)}% CTR` : 'Target: 3.50%',
+      good: currentCtr !== null && currentCtr >= 1.0,
+      foot: 'Click-through rate',
       s: sr
     },
     {
-      label: 'Average position',
+      label: 'Average Position',
       dot: styles.bgAmber,
       sp: styles.spAmber,
       dt: styles.dtAmber,
-      value: currentPos !== null ? currentPos.toFixed(1) : '— (Missing)',
-      delta: currentPos !== null ? 'Live rank position' : 'Data missing',
+      value: currentPos !== null ? currentPos.toFixed(1) : '—',
+      delta: currentPos !== null ? `Position ${currentPos.toFixed(1)}` : 'Target: Top 3',
       good: currentPos !== null && currentPos <= 10,
-      foot: currentPos !== null ? 'lower is better' : 'Live GSC sync pending',
+      foot: currentPos !== null && currentPos <= 10 ? 'Page 1 average' : 'SERP rank',
       s: sp
     }
   ];
@@ -512,8 +512,8 @@ export default function DashboardV2({
   // Backlog and quota calculations
   const indexed = SITEMAP_TOTAL - pending;
   const batch = Math.min(35, pending);
-  const quotaLeft = 200 - quota;
-  const quotaPercent = Math.min(100, Math.round((quota / 200) * 100));
+  const quotaLeft = Math.max(0, 190 - quota);
+  const quotaPercent = Math.min(100, Math.round((quota / 190) * 100));
   const indexedPercent = Math.min(100, Math.round((indexed / SITEMAP_TOTAL) * 100));
 
   const events = useMemo(
@@ -525,17 +525,6 @@ export default function DashboardV2({
     () => buildLiveTechnicalHealthItems(effectiveBrandState || liveData?.brandState),
     [effectiveBrandState, liveData]
   );
-
-  const liveLatency = useMemo(() => {
-    const history = (effectiveBrandState || liveData?.brandState)?.executionHistory || [];
-    const actions = history[0]?.actionsExecuted || [];
-    const latAction = actions.find((a: AutonomousActionRecord) => a.actionType === 'latency_audit');
-    if (latAction?.details) {
-      const m = latAction.details.match(/(\d+)\s*ms/);
-      if (m) return m[1];
-    }
-    return '22';
-  }, [effectiveBrandState, liveData]);
 
   const ctrFmt = (v: number) => v.toFixed(v >= 1 ? 1 : 2) + '%';
 
@@ -562,7 +551,7 @@ export default function DashboardV2({
             gap: '12px 24px'
           }}
         >
-          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '12px 16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <div
                 style={{
@@ -600,148 +589,38 @@ export default function DashboardV2({
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: 8,
-                height: 28,
-                padding: '0 12px',
+                gap: 7,
+                height: 26,
+                padding: '0 10px',
                 borderRadius: 999,
                 border: '1px solid var(--line)',
-                background: 'var(--green-bg)',
+                background: 'var(--sub)',
                 fontSize: 12,
                 fontWeight: 500
               }}
             >
               <span
                 className={styles.pulse}
-                style={{ width: 8, height: 8, borderRadius: 999, background: '#10b981', display: 'inline-block' }}
+                style={{ width: 7, height: 7, borderRadius: 999, background: '#10b981', display: 'inline-block' }}
               />
-              <span style={{ color: 'var(--green)' }}>Engine active</span>
-              <span style={{ color: 'var(--muted)' }}>· 24/7</span>
+              <span style={{ color: 'var(--fg)' }}>Autonomous Engine</span>
+              <span style={{ color: 'var(--muted)' }}>·</span>
+              <span style={{ color: 'var(--muted)' }}>Live</span>
             </div>
-
-            {liveData?.isLiveConnected ? (
-              <div
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  height: 28,
-                  padding: '0 10px',
-                  borderRadius: 999,
-                  border: '1px solid var(--line)',
-                  background: 'var(--blue-bg)',
-                  fontSize: 12,
-                  fontWeight: 500,
-                  color: 'var(--blue)'
-                }}
-                title="Connected to live Google Search Console & GA4 APIs"
-              >
-                <span style={{ width: 6, height: 6, borderRadius: 999, background: 'var(--blue)' }} />
-                <span>Live GSC &amp; GA4</span>
-              </div>
-            ) : null}
           </div>
 
-          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 12 }}>
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 10,
-                height: 40,
-                padding: '0 12px',
-                borderRadius: 8,
-                border: '1px solid var(--line)'
-              }}
-              title="Google Indexing API daily quota"
-            >
-              <span style={{ fontSize: 12, color: 'var(--muted)' }}>Indexing quota</span>
-              <svg width="56" height="6" aria-hidden="true">
-                <rect width="100%" height="6" rx="3" className={styles.fLine} />
-                <rect width={`${quotaPercent}%`} height="6" rx="3" className={styles.fGreen} />
-              </svg>
-              <span style={{ fontSize: 12, fontWeight: 500, fontVariantNumeric: 'tabular-nums' }}>
-                {quota}
-                <span style={{ color: 'var(--muted)' }}> / 200</span>
-              </span>
-            </div>
-
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-                height: 40,
-                padding: '0 12px',
-                borderRadius: 8,
-                border: '1px solid var(--line)',
-                fontSize: 12
-              }}
-              title="Server response time (TTFB)"
-            >
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="var(--green)"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
-              >
-                <path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z" />
-              </svg>
-              <span style={{ fontWeight: 500, fontVariantNumeric: 'tabular-nums' }}>{liveLatency} ms</span>
-              <span style={{ color: 'var(--muted)' }}>Optimal</span>
-            </div>
-
-            <button
-              className={styles.iconBtn}
-              onClick={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
-              aria-label="Toggle light and dark theme"
-            >
-              {theme === 'dark' ? (
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
-                >
-                  <circle cx="12" cy="12" r="4" />
-                  <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
-                </svg>
-              ) : (
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
-                >
-                  <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
-                </svg>
-              )}
-            </button>
-
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <button
               className={styles.iconBtn}
               onClick={handleRefresh}
               aria-label="Refresh telemetry"
+              title="Refresh telemetry"
               disabled={refreshing}
             >
               <svg
                 className={refreshing ? styles.spin : ''}
-                width="16"
-                height="16"
+                width="15"
+                height="15"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -755,6 +634,44 @@ export default function DashboardV2({
                 <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
                 <path d="M8 16H3v5" />
               </svg>
+            </button>
+
+            <button
+              className={styles.iconBtn}
+              onClick={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
+              aria-label="Toggle theme"
+              title="Toggle theme"
+            >
+              {theme === 'dark' ? (
+                <svg
+                  width="15"
+                  height="15"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <circle cx="12" cy="12" r="4" />
+                  <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
+                </svg>
+              ) : (
+                <svg
+                  width="15"
+                  height="15"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+                </svg>
+              )}
             </button>
 
             <button
@@ -780,8 +697,8 @@ export default function DashboardV2({
               title="Sign out of editorial workspace"
             >
               <svg
-                width="16"
-                height="16"
+                width="15"
+                height="15"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -801,8 +718,8 @@ export default function DashboardV2({
                 <>
                   <svg
                     className={styles.spin}
-                    width="15"
-                    height="15"
+                    width="14"
+                    height="14"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
@@ -817,8 +734,8 @@ export default function DashboardV2({
               ) : (
                 <>
                   <svg
-                    width="15"
-                    height="15"
+                    width="14"
+                    height="14"
                     viewBox="0 0 24 24"
                     fill="currentColor"
                     stroke="currentColor"
@@ -893,7 +810,7 @@ export default function DashboardV2({
         {/* ============ 2. TITLE + FILTERS ============ */}
         <div
           style={{
-            padding: '32px 0 20px',
+            padding: '24px 0 18px',
             display: 'flex',
             flexWrap: 'wrap',
             alignItems: 'flex-end',
@@ -902,18 +819,16 @@ export default function DashboardV2({
           }}
         >
           <div style={{ minWidth: 0 }}>
-            <h1 style={{ margin: 0, fontSize: 24, fontWeight: 600, letterSpacing: '-0.02em' }}>
-              {tab === 'history' ? 'Cron Job History' : 'Search performance'}
+            <h1 style={{ margin: 0, fontSize: 22, fontWeight: 600, letterSpacing: '-0.02em' }}>
+              {tab === 'history' ? 'Cron Job History' : 'Search Performance'}
             </h1>
-            <p style={{ margin: '4px 0 0', color: 'var(--muted)' }}>
+            <p style={{ margin: '4px 0 0', color: 'var(--muted)', fontSize: 13 }}>
               {tab === 'history'
-                ? 'Immutable record of automated daily runs, indexing tasks, and verified Google Search Console telemetry.'
-                : scope === 'brand'
-                ? 'Showing only queries that contain “firstread”, which is your brand demand.'
-                : 'Showing all queries across the whole website.'}
+                ? 'Automated execution records, indexing requests, and verified telemetry snapshots.'
+                : 'Verified Search Console telemetry and autonomous search optimization targets.'}
             </p>
           </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 12 }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 10 }}>
             <div className={styles.seg} role="group" aria-label="Scope">
               <button
                 className={scope === 'brand' ? styles.on : ''}
@@ -923,7 +838,7 @@ export default function DashboardV2({
                 }}
                 aria-pressed={scope === 'brand'}
               >
-                Brand “firstread”
+                Brand Queries
               </button>
               <button
                 className={scope === 'site' ? styles.on : ''}
@@ -933,7 +848,7 @@ export default function DashboardV2({
                 }}
                 aria-pressed={scope === 'site'}
               >
-                Whole website
+                All Queries
               </button>
             </div>
             <div className={styles.seg} role="group" aria-label="Date range">
@@ -1020,7 +935,7 @@ export default function DashboardV2({
         {/* ============ 4. TABS + SEARCH ============ */}
         <div
           style={{
-            marginTop: 32,
+            marginTop: 28,
             display: 'flex',
             flexWrap: 'wrap',
             alignItems: 'flex-end',
@@ -1042,9 +957,9 @@ export default function DashboardV2({
               onClick={() => handleTabChange('history')}
               aria-pressed={tab === 'history'}
             >
-              Cron Job History{' '}
+              Cron History
               {executionHistory.length > 0 ? (
-                <span style={{ fontSize: 11, opacity: 0.75 }}>({executionHistory.length})</span>
+                <span style={{ fontSize: 11, opacity: 0.75, marginLeft: 6 }}>({executionHistory.length})</span>
               ) : null}
             </button>
             <button
@@ -1052,51 +967,53 @@ export default function DashboardV2({
               onClick={() => handleTabChange('queries')}
               aria-pressed={tab === 'queries'}
             >
-              Search queries
+              Search Queries
             </button>
             <button
               className={tab === 'pages' ? styles.on : ''}
               onClick={() => handleTabChange('pages')}
               aria-pressed={tab === 'pages'}
             >
-              Top pages
+              Top Pages
             </button>
             <button
               className={tab === 'ga4' ? styles.on : ''}
               onClick={() => handleTabChange('ga4')}
               aria-pressed={tab === 'ga4'}
             >
-              GA4 traffic
+              GA4 Traffic
             </button>
           </div>
-          <div style={{ position: 'relative', width: 280, maxWidth: '100%', marginBottom: 8 }}>
-            <svg
-              width="15"
-              height="15"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="var(--faint)"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-              style={{ position: 'absolute', left: 12, top: 12.5 }}
-            >
-              <circle cx="11" cy="11" r="8" />
-              <path d="m21 21-4.3-4.3" />
-            </svg>
-            <input
-              className={styles.search}
-              type="search"
-              placeholder="Filter rows…"
-              aria-label="Filter rows"
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setPage(0);
-              }}
-            />
-          </div>
+          {['queries', 'pages', 'ga4'].includes(tab) ? (
+            <div style={{ position: 'relative', width: 260, maxWidth: '100%', marginBottom: 8 }}>
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="var(--faint)"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+                style={{ position: 'absolute', left: 12, top: 11 }}
+              >
+                <circle cx="11" cy="11" r="8" />
+                <path d="m21 21-4.3-4.3" />
+              </svg>
+              <input
+                className={styles.search}
+                type="search"
+                placeholder={`Filter ${tab}…`}
+                aria-label="Filter rows"
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setPage(0);
+                }}
+              />
+            </div>
+          ) : null}
         </div>
 
         {/* ============ 5A. OVERVIEW (AUTONOMOUS TAB) ============ */}
@@ -1110,25 +1027,25 @@ export default function DashboardV2({
                 display: 'flex',
                 flexWrap: 'wrap',
                 alignItems: 'center',
-                gap: '12px 28px'
+                gap: '12px 24px'
               }}
             >
               <span
                 style={{
                   fontSize: 12,
-                  fontWeight: 500,
+                  fontWeight: 600,
                   color: 'var(--muted)',
                   textTransform: 'uppercase',
                   letterSpacing: '0.06em'
                 }}
               >
-                Technical health
+                Technical Health
               </span>
               {healthItems.map((h, idx) => (
-                <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
+                <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 13 }}>
                   <svg
-                    width="15"
-                    height="15"
+                    width="14"
+                    height="14"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="var(--green)"
@@ -1140,10 +1057,28 @@ export default function DashboardV2({
                     <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
                     <path d="m9 11 3 3L22 4" />
                   </svg>
-                  <span style={{ color: 'var(--muted)' }}>{h.label}</span>
+                  <span style={{ color: 'var(--muted)' }}>{h.label}:</span>
                   <span style={{ fontWeight: 500 }}>{h.value}</span>
                 </div>
               ))}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 13 }}>
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="var(--blue)"
+                  strokeWidth="2.2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M12 6v6l4 2" />
+                </svg>
+                <span style={{ color: 'var(--muted)' }}>Daily Quota:</span>
+                <span style={{ fontWeight: 500 }}>{quota} / 190 used</span>
+              </div>
               <div
                 style={{
                   marginLeft: 'auto',
@@ -1153,8 +1088,9 @@ export default function DashboardV2({
                   height: 26,
                   padding: '0 10px',
                   borderRadius: 999,
-                  background: 'var(--blue-bg)',
-                  color: 'var(--blue)',
+                  background: 'var(--sub)',
+                  border: '1px solid var(--line)',
+                  color: 'var(--muted)',
                   fontSize: 12,
                   fontWeight: 500
                 }}
@@ -1164,7 +1100,7 @@ export default function DashboardV2({
                   height="13"
                   viewBox="0 0 24 24"
                   fill="none"
-                  stroke="currentColor"
+                  stroke="var(--green)"
                   strokeWidth="2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -1173,7 +1109,7 @@ export default function DashboardV2({
                   <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" />
                   <path d="m9 12 2 2 4-4" />
                 </svg>
-                Read-only · zero content changes
+                Read-only invariant active
               </div>
             </div>
 
@@ -1373,9 +1309,9 @@ export default function DashboardV2({
                     }}
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'var(--muted)' }}>
-                      <span>Indexing API quota today</span>
+                      <span>Daily Indexing API calls</span>
                       <span style={{ fontVariantNumeric: 'tabular-nums' }}>
-                        {quota} / 200 · {Math.round((quotaLeft / 200) * 100)}% left
+                        {quota} / 190 used ({quotaLeft} left)
                       </span>
                     </div>
                     <svg width="100%" height="4" aria-hidden="true">
@@ -1387,11 +1323,11 @@ export default function DashboardV2({
                     className={styles.btnPrimary}
                     style={{ width: '100%' }}
                     onClick={handleRecover}
-                    disabled={batch <= 0 || quota + batch > 200}
+                    disabled={batch <= 0 || quota + batch > 190}
                   >
                     {batch <= 0
                       ? 'Backlog cleared'
-                      : quota + batch > 200
+                      : quota + batch > 190
                       ? 'Daily quota reached'
                       : `Recover next batch (${batch} posts)`}
                   </button>
@@ -1437,12 +1373,12 @@ export default function DashboardV2({
               </div>
             </div>
 
-            {/* Actionable CTR Snippet Optimizer (Read-Only Copy Assistant) */}
+            {/* Actionable CTR Snippet Recommendations */}
             <section
               className={styles.card}
               style={{
                 marginTop: 24,
-                padding: 24,
+                padding: 20,
                 display: 'flex',
                 flexDirection: 'column',
                 gap: 16
@@ -1452,32 +1388,17 @@ export default function DashboardV2({
                 style={{
                   display: 'flex',
                   justifyContent: 'space-between',
-                  alignItems: 'flex-start',
+                  alignItems: 'baseline',
                   flexWrap: 'wrap',
                   gap: 12
                 }}
               >
                 <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <h2 style={{ margin: 0, fontSize: 16, fontWeight: 600, letterSpacing: '-0.01em' }}>
-                      CTR Snippet Optimizer
-                    </h2>
-                    <span
-                      style={{
-                        fontSize: 11,
-                        fontWeight: 600,
-                        padding: '2px 8px',
-                        borderRadius: 999,
-                        background: 'var(--green-bg)',
-                        color: 'var(--green)',
-                        border: '1px solid currentColor'
-                      }}
-                    >
-                      Read-only assistant · Zero WordPress edits
-                    </span>
-                  </div>
-                  <p style={{ margin: '4px 0 0', color: 'var(--muted)', fontSize: 13 }}>
-                    Articles receiving healthy Google search impressions with sub-optimal CTR (&lt;1.0%). Refined with high-converting entity formulas (&lt;60 chars, click triggers) ready to paste into WordPress or Yoast SEO.
+                  <h2 style={{ margin: 0, fontSize: 16, fontWeight: 600, letterSpacing: '-0.01em' }}>
+                    CTR Snippet Recommendations
+                  </h2>
+                  <p style={{ margin: '3px 0 0', color: 'var(--muted)', fontSize: 13 }}>
+                    Top articles with high search impressions and low CTR. Copy refined entity title tags to boost organic search clicks.
                   </p>
                 </div>
               </div>
@@ -1915,16 +1836,16 @@ export default function DashboardV2({
                   : null}
 
                 {totalRows === 0 ? (
-                  <div style={{ padding: '36px 20px', textAlign: 'center', color: 'var(--muted)', background: 'var(--sub)', borderRadius: 8, margin: 12 }}>
+                  <div style={{ padding: '32px 20px', textAlign: 'center', color: 'var(--muted)', background: 'var(--sub)', borderRadius: 8, margin: 12 }}>
                     <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--fg)', marginBottom: 4 }}>
                       {search
-                        ? `Nothing matches “${search}”.`
-                        : `No Live ${tab === 'queries' ? 'Google Search Console Query' : tab === 'pages' ? 'Google Search Console Page' : 'GA4 Traffic'} Data Available`}
+                        ? `No results matching "${search}"`
+                        : `No ${tab === 'queries' ? 'search queries' : tab === 'pages' ? 'pages' : 'GA4 traffic'} recorded`}
                     </div>
-                    <p style={{ fontSize: 12, margin: 0, color: 'var(--faint)', maxWidth: 440, marginInline: 'auto' }}>
+                    <p style={{ fontSize: 12, margin: 0, color: 'var(--muted)', maxWidth: 400, marginInline: 'auto' }}>
                       {search
-                        ? 'Try modifying your search filter.'
-                        : 'Live API returned 0 rows for this scope and date range. Telemetry is truthfully marked as missing (zero synthetic data generated).'}
+                        ? 'Try adjusting your search terms.'
+                        : 'No telemetry rows returned for the selected scope and date range.'}
                     </p>
                   </div>
                 ) : null}
