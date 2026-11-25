@@ -1,18 +1,18 @@
 {
   "status": "idle",
   "paused": false,
-  "lastRunAt": "2026-11-24T06:32:40.362Z",
+  "lastRunAt": "2026-11-25T06:32:38.403Z",
   "runningSince": null,
-  "nextScheduledRunAt": "2026-11-25T06:32:40.362Z",
+  "nextScheduledRunAt": "2026-11-26T06:32:38.403Z",
   "safeRetryCount": 0,
   "safeRetryLimit": 3,
   "latestReport": {
     "targetDomain": "https://firstread.co.uk/",
     "primaryBrandKeyword": "firstread",
-    "generatedAt": "2026-11-24T06:31:52.998Z",
+    "generatedAt": "2026-11-25T06:31:53.144Z",
     "dateRange": {
-      "startDate": "2026-10-27",
-      "endDate": "2026-11-23"
+      "startDate": "2026-10-28",
+      "endDate": "2026-11-24"
     },
     "exactBrand": null,
     "variations": [
@@ -80,58 +80,65 @@
         "query": "site:firstread.co.uk",
         "isExactBrand": false,
         "clicks": 1,
-        "impressions": 140,
-        "ctr": 0.0071,
-        "position": 12.64,
+        "impressions": 150,
+        "ctr": 0.0067,
+        "position": 12.17,
         "landingPages": [
           {
             "page": "https://firstread.co.uk/cartetach/",
             "clicks": 1,
-            "impressions": 6,
-            "ctr": 0.1667,
-            "position": 1
+            "impressions": 7,
+            "ctr": 0.1429,
+            "position": 1.14
           },
           {
             "page": "https://firstread.co.uk/cdiphone/",
             "clicks": 0,
-            "impressions": 10,
+            "impressions": 11,
             "ctr": 0,
-            "position": 6.1
+            "position": 6.09
           },
           {
             "page": "https://firstread.co.uk/dihward/",
             "clicks": 0,
-            "impressions": 10,
+            "impressions": 11,
             "ctr": 0,
-            "position": 3.4
+            "position": 3.36
           },
           {
             "page": "https://firstread.co.uk/echostreamhub/",
             "clicks": 0,
-            "impressions": 10,
+            "impressions": 11,
             "ctr": 0,
-            "position": 4.4
+            "position": 4.36
           },
           {
             "page": "https://firstread.co.uk/jyokyo/",
             "clicks": 0,
-            "impressions": 10,
+            "impressions": 11,
             "ctr": 0,
-            "position": 7.7
+            "position": 7.64
           },
           {
             "page": "https://firstread.co.uk/onionplay/",
             "clicks": 0,
-            "impressions": 9,
+            "impressions": 10,
             "ctr": 0,
-            "position": 9.11
+            "position": 9
           },
           {
             "page": "https://firstread.co.uk/totalsportek/",
             "clicks": 0,
+            "impressions": 8,
+            "ctr": 0,
+            "position": 5.25
+          },
+          {
+            "page": "https://firstread.co.uk/movies123/",
+            "clicks": 0,
             "impressions": 7,
             "ctr": 0,
-            "position": 5.29
+            "position": 9.57
           },
           {
             "page": "https://firstread.co.uk/viltnemnda/",
@@ -146,13 +153,6 @@
             "impressions": 6,
             "ctr": 0,
             "position": 8.83
-          },
-          {
-            "page": "https://firstread.co.uk/movies123/",
-            "clicks": 0,
-            "impressions": 6,
-            "ctr": 0,
-            "position": 9.67
           },
           {
             "page": "https://firstread.co.uk/ontpresscom/",
@@ -176,6 +176,13 @@
             "position": 1
           },
           {
+            "page": "https://firstread.co.uk/thehrwp/",
+            "clicks": 0,
+            "impressions": 4,
+            "ctr": 0,
+            "position": 10.25
+          },
+          {
             "page": "https://firstread.co.uk/eporer/",
             "clicks": 0,
             "impressions": 3,
@@ -183,11 +190,11 @@
             "position": 2
           },
           {
-            "page": "https://firstread.co.uk/thehrwp/",
+            "page": "https://firstread.co.uk/",
             "clicks": 0,
-            "impressions": 3,
+            "impressions": 1,
             "ctr": 0,
-            "position": 10.33
+            "position": 1
           },
           {
             "page": "https://firstread.co.uk/2408362119-2/",
@@ -477,9 +484,9 @@
     ],
     "totalBrandedSummary": {
       "clicks": 4,
-      "impressions": 148,
-      "ctr": 0.027,
-      "averagePosition": 12.61
+      "impressions": 158,
+      "ctr": 0.0253,
+      "averagePosition": 12.16
     },
     "comparison7d": {
       "clicks": {
@@ -490,24 +497,24 @@
         "trend": "improving"
       },
       "impressions": {
-        "current": 5,
+        "current": 15,
         "previous": 40,
-        "absoluteChange": -35,
-        "percentageChange": -87.5,
+        "absoluteChange": -25,
+        "percentageChange": -62.5,
         "trend": "declining"
       },
       "ctr": {
-        "current": 0.6,
+        "current": 0.2,
         "previous": 0,
-        "absoluteChange": 0.6,
+        "absoluteChange": 0.2,
         "percentageChange": null,
         "trend": "improving"
       },
       "position": {
-        "current": 3.2,
+        "current": 4.73,
         "previous": 5.5,
-        "absoluteChange": -2.3,
-        "percentageChange": -41.82,
+        "absoluteChange": -0.77,
+        "percentageChange": -14,
         "trend": "improving"
       }
     },
@@ -520,49 +527,49 @@
         "trend": "declining"
       },
       "impressions": {
-        "current": 148,
+        "current": 158,
         "previous": 2696,
-        "absoluteChange": -2548,
-        "percentageChange": -94.51,
+        "absoluteChange": -2538,
+        "percentageChange": -94.14,
         "trend": "declining"
       },
       "ctr": {
-        "current": 0.027,
+        "current": 0.0253,
         "previous": 0.5657,
-        "absoluteChange": -0.5387,
-        "percentageChange": -95.23,
+        "absoluteChange": -0.5404,
+        "percentageChange": -95.53,
         "trend": "declining"
       },
       "position": {
-        "current": 12.61,
+        "current": 12.16,
         "previous": 4.58,
-        "absoluteChange": 8.03,
-        "percentageChange": 175.33,
+        "absoluteChange": 7.58,
+        "percentageChange": 165.5,
         "trend": "declining"
       }
     },
     "homepagePerformance": {
       "clicks": 1,
-      "impressions": 2,
-      "ctr": 0.5,
+      "impressions": 3,
+      "ctr": 0.3333,
       "position": 1,
       "isRankingNumberOne": true
     },
     "alerts": [
       {
-        "id": "alert-imp-decline-1795501913957",
+        "id": "alert-imp-decline-1795588314328",
         "severity": "critical",
         "type": "declining_impressions",
         "title": "Declining Brand Impressions",
-        "description": "Branded search impressions dropped 94.5% compared to the prior 28-day window (148 vs 2696).",
+        "description": "Branded search impressions dropped 94.1% compared to the prior 28-day window (158 vs 2696).",
         "metric": "impressions",
-        "currentValue": 148,
+        "currentValue": 158,
         "previousValue": 2696,
         "recommendation": "Verify homepage indexing status, sitemap freshness, and schema markup to restore brand search appearance.",
-        "detectedAt": "2026-11-24T06:31:53.957Z"
+        "detectedAt": "2026-11-25T06:31:54.328Z"
       },
       {
-        "id": "alert-clicks-decline-1795501913957",
+        "id": "alert-clicks-decline-1795588314328",
         "severity": "critical",
         "type": "declining_clicks",
         "title": "Declining Brand Clicks",
@@ -571,54 +578,1218 @@
         "currentValue": 4,
         "previousValue": 1525,
         "recommendation": "Check whether third-party or sub-page results are cannibalising clicks away from the homepage.",
-        "detectedAt": "2026-11-24T06:31:53.957Z"
+        "detectedAt": "2026-11-25T06:31:54.328Z"
       },
       {
-        "id": "alert-pos-deterioration-1795501913957",
+        "id": "alert-pos-deterioration-1795588314328",
         "severity": "critical",
         "type": "ranking_deterioration",
         "title": "Brand Ranking Deterioration",
-        "description": "Average branded search position is 12.6 (expected top position 1.0 - 2.0).",
+        "description": "Average branded search position is 12.2 (expected top position 1.0 - 2.0).",
         "metric": "position",
-        "currentValue": 12.61,
+        "currentValue": 12.16,
         "previousValue": 4.58,
         "recommendation": "Inspect brand entity signals, homepage canonical declaration, and robots.txt accessibility.",
-        "detectedAt": "2026-11-24T06:31:53.957Z"
+        "detectedAt": "2026-11-25T06:31:54.328Z"
       },
       {
-        "id": "alert-low-ctr-1795501913957",
+        "id": "alert-low-ctr-1795588314328",
         "severity": "warning",
         "type": "low_ctr",
         "title": "Low Branded CTR",
-        "description": "Branded search CTR is 2.7%, which is below the expected benchmark of 25%+ for navigational brand queries.",
+        "description": "Branded search CTR is 2.5%, which is below the expected benchmark of 25%+ for navigational brand queries.",
         "metric": "ctr",
-        "currentValue": "2.7%",
+        "currentValue": "2.5%",
         "recommendation": "Review SERP snippet appearance in Google Search Console to confirm title and description relevance.",
-        "detectedAt": "2026-11-24T06:31:53.957Z"
+        "detectedAt": "2026-11-25T06:31:54.328Z"
       }
-    ]
+    ],
+    "topDomainQueries": [
+      {
+        "query": "mollie benedict",
+        "page": "https://firstread.co.uk/mollie-benedict/",
+        "clicks": 4,
+        "impressions": 1837,
+        "ctr": 0.002177463255307567,
+        "position": 1.0566140446379968
+      },
+      {
+        "query": "start @rivenisnet",
+        "page": "https://firstread.co.uk/",
+        "clicks": 0,
+        "impressions": 1140,
+        "ctr": 0,
+        "position": 9.835964912280701
+      },
+      {
+        "query": "how to consulting for backpackers",
+        "page": "https://firstread.co.uk/backpacking-advice-cwbiancavoyage/",
+        "clicks": 0,
+        "impressions": 11,
+        "ctr": 0,
+        "position": 3.8181818181818183
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/cdiphone/",
+        "clicks": 0,
+        "impressions": 11,
+        "ctr": 0,
+        "position": 6.090909090909091
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/dihward/",
+        "clicks": 0,
+        "impressions": 11,
+        "ctr": 0,
+        "position": 3.3636363636363638
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/echostreamhub/",
+        "clicks": 0,
+        "impressions": 11,
+        "ctr": 0,
+        "position": 4.363636363636363
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/jyokyo/",
+        "clicks": 0,
+        "impressions": 11,
+        "ctr": 0,
+        "position": 7.636363636363637
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/onionplay/",
+        "clicks": 0,
+        "impressions": 10,
+        "ctr": 0,
+        "position": 9
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/totalsportek/",
+        "clicks": 0,
+        "impressions": 8,
+        "ctr": 0,
+        "position": 5.25
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/cartetach/",
+        "clicks": 1,
+        "impressions": 7,
+        "ctr": 0.14285714285714285,
+        "position": 1.1428571428571428
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/movies123/",
+        "clicks": 0,
+        "impressions": 7,
+        "ctr": 0,
+        "position": 9.571428571428571
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/viltnemnda/",
+        "clicks": 0,
+        "impressions": 7,
+        "ctr": 0,
+        "position": 2
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/korpenpelloz/",
+        "clicks": 0,
+        "impressions": 6,
+        "ctr": 0,
+        "position": 8.833333333333332
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/ontpresscom/",
+        "clicks": 0,
+        "impressions": 6,
+        "ctr": 0,
+        "position": 7
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/baddiehub/",
+        "clicks": 0,
+        "impressions": 5,
+        "ctr": 0,
+        "position": 8.4
+      },
+      {
+        "query": "firstread.co.uk",
+        "page": "https://firstread.co.uk/about-us/",
+        "clicks": 2,
+        "impressions": 4,
+        "ctr": 0.5,
+        "position": 1.75
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/tate-mcrae-tour/",
+        "clicks": 0,
+        "impressions": 4,
+        "ctr": 0,
+        "position": 1
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/thehrwp/",
+        "clicks": 0,
+        "impressions": 4,
+        "ctr": 0,
+        "position": 10.25
+      },
+      {
+        "query": "\"katie pavlich\" (address or home or house or office or kids or wife or husband or family) site:reddit.com",
+        "page": "https://firstread.co.uk/katie-pavlich/",
+        "clicks": 0,
+        "impressions": 3,
+        "ctr": 0,
+        "position": 20.333333333333332
+      },
+      {
+        "query": "erykah badu children",
+        "page": "https://firstread.co.uk/erykah-badu-kids/",
+        "clicks": 0,
+        "impressions": 3,
+        "ctr": 0,
+        "position": 74
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/eporer/",
+        "clicks": 0,
+        "impressions": 3,
+        "ctr": 0,
+        "position": 2
+      },
+      {
+        "query": "firstread.co.uk",
+        "page": "https://firstread.co.uk/",
+        "clicks": 1,
+        "impressions": 2,
+        "ctr": 0.5,
+        "position": 1
+      },
+      {
+        "query": "\"katie pavlich\" (address or home or house or office or kids or wife or husband or family) site:bsky.app",
+        "page": "https://firstread.co.uk/katie-pavlich/",
+        "clicks": 0,
+        "impressions": 2,
+        "ctr": 0,
+        "position": 23.5
+      },
+      {
+        "query": "classroom 10 x",
+        "page": "https://firstread.co.uk/classroom-10x/",
+        "clicks": 0,
+        "impressions": 2,
+        "ctr": 0,
+        "position": 66
+      },
+      {
+        "query": "aneliz aguilar",
+        "page": "https://firstread.co.uk/aneliz-aguilar/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 90
+      },
+      {
+        "query": "backpackers guide",
+        "page": "https://firstread.co.uk/backpacking-advice-cwbiancavoyage/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 67
+      },
+      {
+        "query": "best color for nike elite v3 bag",
+        "page": "https://firstread.co.uk/nike-elite-backpack/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 58
+      },
+      {
+        "query": "black men temple fade haircut",
+        "page": "https://firstread.co.uk/temp-fade-black-men/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 75
+      },
+      {
+        "query": "classroom 10x lessons",
+        "page": "https://firstread.co.uk/classroom-10x/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 31
+      },
+      {
+        "query": "daddy yankee net worth",
+        "page": "https://firstread.co.uk/daddy-yankee-net-worth/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 13
+      },
+      {
+        "query": "daddy yankee's net worth",
+        "page": "https://firstread.co.uk/daddy-yankee-net-worth/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 13
+      },
+      {
+        "query": "does bcpack.ch have a blog",
+        "page": "https://firstread.co.uk/backpacking-advice-cwbiancavoyage/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 2
+      },
+      {
+        "query": "does upwork give free connects every month",
+        "page": "https://firstread.co.uk/upwork-promo-code/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 76
+      },
+      {
+        "query": "erykah badu daughter",
+        "page": "https://firstread.co.uk/puma-badu/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 4
+      },
+      {
+        "query": "erykah badu daughters",
+        "page": "https://firstread.co.uk/erykah-badu-kids/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 7
+      },
+      {
+        "query": "erykah badu daughters",
+        "page": "https://firstread.co.uk/puma-badu/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 4
+      },
+      {
+        "query": "first reader",
+        "page": "https://firstread.co.uk/about-us/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 78
+      },
+      {
+        "query": "firstread.co.uk",
+        "page": "https://firstread.co.uk/category/news/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 10
+      },
+      {
+        "query": "georgia kreischer age",
+        "page": "https://firstread.co.uk/georgia-kreischer/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 12
+      },
+      {
+        "query": "how did snoop dogg meet his wife?",
+        "page": "https://firstread.co.uk/snoop-dogg-wife/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 2
+      },
+      {
+        "query": "kenya kinski-jones",
+        "page": "https://firstread.co.uk/kenya-kinski-jones/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 57
+      },
+      {
+        "query": "kristina dourif",
+        "page": "https://firstread.co.uk/kristina-dourif-tanoue/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 21
+      },
+      {
+        "query": "nerovet ai dentistry",
+        "page": "https://firstread.co.uk/nerovet-ai-dentistry/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 11
+      },
+      {
+        "query": "nicole bronish",
+        "page": "https://firstread.co.uk/nicole-bronish/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 1
+      },
+      {
+        "query": "nike bag elite",
+        "page": "https://firstread.co.uk/nike-elite-backpack/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 67
+      },
+      {
+        "query": "onionplay.co.uk",
+        "page": "https://firstread.co.uk/onionplay/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 13
+      },
+      {
+        "query": "puma badu ass",
+        "page": "https://firstread.co.uk/puma-badu/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 12
+      },
+      {
+        "query": "rob benedict divorce",
+        "page": "https://firstread.co.uk/mollie-benedict/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 17
+      },
+      {
+        "query": "sarah hadley",
+        "page": "https://firstread.co.uk/sarah-hadley-age/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 58
+      },
+      {
+        "query": "sarah hadley strictly",
+        "page": "https://firstread.co.uk/sarah-hadley-age/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 18
+      },
+      {
+        "query": "sasha fox",
+        "page": "https://firstread.co.uk/sasha-fox/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 69
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 1
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/2408362119-2/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 23
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/aneliz-aguilar/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 48
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/bayard-martensen/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 32
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/billy-bernthal/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 44
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/blooket-host/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 43
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/classroom-10x/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 36
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/darah-trang/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 21
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/devin-hervey/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 39
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/erin-angle/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 29
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/fapello-su/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 18
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/faroer-inseln/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 20
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/fmybrainsout/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 13
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/georgia-kreischer/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 47
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/jalynn-elordi/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 49
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/jordy-bahl/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 16
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/katherine-sanborn/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 33
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/katie-goodland/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 37
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/katie-pavlich/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 15
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/laurie-holmond/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 40
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/leahhannahbentley/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 12
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/mac-racunala/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 34
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/nicole-bronish/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 35
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/oliver-tress/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 41
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/olympus-scanlation/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 50
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/otelia-cox/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 25
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/patrick-stewart/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 31
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/prostavive-colibrim/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 26
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/quikernews-com/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 45
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/rebecca-williamson/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 22
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/sarah-hadley/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 14
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/sasha-fox/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 17
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/shayne-murphy/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 42
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/sightwive-com/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 27
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/snapjotz-com/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 24
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/torchys-tacos/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 28
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/ukulele-history/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 19
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/usaenlinea-com/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 46
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/weakspurn-com/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 38
+      },
+      {
+        "query": "the big read",
+        "page": "https://firstread.co.uk/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 62
+      },
+      {
+        "query": "tom vanderford",
+        "page": "https://firstread.co.uk/austin-vanderford/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 55
+      },
+      {
+        "query": "tulip victoria khaury 2022",
+        "page": "https://firstread.co.uk/tulip-victoria-khaury/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 21
+      },
+      {
+        "query": "upwork promo code",
+        "page": "https://firstread.co.uk/upwork-promo-code/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 61
+      },
+      {
+        "query": "zoe kravitz mother",
+        "page": "https://firstread.co.uk/zoe-kravitz-parents-lenny-kravitz-lisa-bonet-biography/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 82
+      },
+      {
+        "query": "zoe telford",
+        "page": "https://firstread.co.uk/zoe-telford/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 2
+      }
+    ],
+    "strikingDistanceQueries": [
+      {
+        "query": "start @rivenisnet",
+        "page": "https://firstread.co.uk/",
+        "clicks": 0,
+        "impressions": 1140,
+        "ctr": 0,
+        "position": 9.835964912280701
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/cdiphone/",
+        "clicks": 0,
+        "impressions": 11,
+        "ctr": 0,
+        "position": 6.090909090909091
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/echostreamhub/",
+        "clicks": 0,
+        "impressions": 11,
+        "ctr": 0,
+        "position": 4.363636363636363
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/jyokyo/",
+        "clicks": 0,
+        "impressions": 11,
+        "ctr": 0,
+        "position": 7.636363636363637
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/onionplay/",
+        "clicks": 0,
+        "impressions": 10,
+        "ctr": 0,
+        "position": 9
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/totalsportek/",
+        "clicks": 0,
+        "impressions": 8,
+        "ctr": 0,
+        "position": 5.25
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/movies123/",
+        "clicks": 0,
+        "impressions": 7,
+        "ctr": 0,
+        "position": 9.571428571428571
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/korpenpelloz/",
+        "clicks": 0,
+        "impressions": 6,
+        "ctr": 0,
+        "position": 8.833333333333332
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/ontpresscom/",
+        "clicks": 0,
+        "impressions": 6,
+        "ctr": 0,
+        "position": 7
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/baddiehub/",
+        "clicks": 0,
+        "impressions": 5,
+        "ctr": 0,
+        "position": 8.4
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/thehrwp/",
+        "clicks": 0,
+        "impressions": 4,
+        "ctr": 0,
+        "position": 10.25
+      },
+      {
+        "query": "daddy yankee net worth",
+        "page": "https://firstread.co.uk/daddy-yankee-net-worth/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 13
+      },
+      {
+        "query": "daddy yankee's net worth",
+        "page": "https://firstread.co.uk/daddy-yankee-net-worth/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 13
+      },
+      {
+        "query": "erykah badu daughter",
+        "page": "https://firstread.co.uk/puma-badu/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 4
+      },
+      {
+        "query": "erykah badu daughters",
+        "page": "https://firstread.co.uk/erykah-badu-kids/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 7
+      },
+      {
+        "query": "erykah badu daughters",
+        "page": "https://firstread.co.uk/puma-badu/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 4
+      },
+      {
+        "query": "firstread.co.uk",
+        "page": "https://firstread.co.uk/category/news/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 10
+      },
+      {
+        "query": "georgia kreischer age",
+        "page": "https://firstread.co.uk/georgia-kreischer/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 12
+      },
+      {
+        "query": "nerovet ai dentistry",
+        "page": "https://firstread.co.uk/nerovet-ai-dentistry/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 11
+      },
+      {
+        "query": "onionplay.co.uk",
+        "page": "https://firstread.co.uk/onionplay/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 13
+      },
+      {
+        "query": "puma badu ass",
+        "page": "https://firstread.co.uk/puma-badu/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 12
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/fmybrainsout/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 13
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/katie-pavlich/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 15
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/leahhannahbentley/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 12
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/sarah-hadley/",
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 14
+      }
+    ],
+    "strikingDistanceOpportunities": [
+      {
+        "query": "start @rivenisnet",
+        "page": "https://firstread.co.uk/",
+        "clicks": 0,
+        "impressions": 1140,
+        "ctr": 0,
+        "position": 9.835964912280701,
+        "clickPotentialScore": 5887
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/echostreamhub/",
+        "clicks": 0,
+        "impressions": 11,
+        "ctr": 0,
+        "position": 4.363636363636363,
+        "clickPotentialScore": 117
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/cdiphone/",
+        "clicks": 0,
+        "impressions": 11,
+        "ctr": 0,
+        "position": 6.090909090909091,
+        "clickPotentialScore": 98
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/jyokyo/",
+        "clicks": 0,
+        "impressions": 11,
+        "ctr": 0,
+        "position": 7.636363636363637,
+        "clickPotentialScore": 81
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/totalsportek/",
+        "clicks": 0,
+        "impressions": 8,
+        "ctr": 0,
+        "position": 5.25,
+        "clickPotentialScore": 78
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/onionplay/",
+        "clicks": 0,
+        "impressions": 10,
+        "ctr": 0,
+        "position": 9,
+        "clickPotentialScore": 60
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/ontpresscom/",
+        "clicks": 0,
+        "impressions": 6,
+        "ctr": 0,
+        "position": 7,
+        "clickPotentialScore": 48
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/movies123/",
+        "clicks": 0,
+        "impressions": 7,
+        "ctr": 0,
+        "position": 9.571428571428571,
+        "clickPotentialScore": 38
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/korpenpelloz/",
+        "clicks": 0,
+        "impressions": 6,
+        "ctr": 0,
+        "position": 8.833333333333332,
+        "clickPotentialScore": 37
+      },
+      {
+        "query": "site:firstread.co.uk",
+        "page": "https://firstread.co.uk/baddiehub/",
+        "clicks": 0,
+        "impressions": 5,
+        "ctr": 0,
+        "position": 8.4,
+        "clickPotentialScore": 33
+      }
+    ],
+    "homepageTrappedQueries": [
+      {
+        "query": "start @rivenisnet",
+        "impressions": 1140,
+        "clicks": 0,
+        "ctr": 0,
+        "position": 9.835964912280701,
+        "currentUrl": "https://firstread.co.uk/"
+      },
+      {
+        "query": "the big read",
+        "impressions": 1,
+        "clicks": 0,
+        "ctr": 0,
+        "position": 62,
+        "currentUrl": "https://firstread.co.uk/"
+      }
+    ],
+    "velocityBreakouts": [
+      {
+        "query": "start @rivenisnet",
+        "page": "https://firstread.co.uk/",
+        "impressions": 1140,
+        "previousImpressions": 0,
+        "growthRatePct": 200
+      }
+    ],
+    "clickDeficit": {
+      "estimatedLostClicksMonth": 443,
+      "highImpressionLowCtrQueriesCount": 8
+    },
+    "snippetPacks": [
+      {
+        "targetUrl": "https://firstread.co.uk/",
+        "slug": "/article/",
+        "primaryQuery": "start @rivenisnet",
+        "intent": "guide",
+        "currentTitle": "Article - Firstread",
+        "optimizedTitle": "Article: 2026 Guide & Updates - Firstread",
+        "optimizedDescription": "Step-by-step 2026 guide on start rivenisnet. Learn key steps, expert tips, setup advice, and how to get started easily. Read the full guide on FirstRead.",
+        "faqSchemaJson": "{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"FAQPage\",\n  \"mainEntity\": [\n    {\n      \"@type\": \"Question\",\n      \"name\": \"What is start rivenisnet?\",\n      \"acceptedAnswer\": {\n        \"@type\": \"Answer\",\n        \"text\": \"start rivenisnet is covered comprehensively on FirstRead, featuring verified details, background context, and practical takeaways.\"\n      }\n    },\n    {\n      \"@type\": \"Question\",\n      \"name\": \"How do I get started with start rivenisnet?\",\n      \"acceptedAnswer\": {\n        \"@type\": \"Answer\",\n        \"text\": \"Follow the step-by-step walkthrough in our full guide on FirstRead to easily get started with verified instructions.\"\n      }\n    }\n  ]\n}",
+        "estimatedClickLiftMonth": 186
+      },
+      {
+        "targetUrl": "https://firstread.co.uk/echostreamhub/",
+        "slug": "/echostreamhub/",
+        "primaryQuery": "site:firstread.co.uk",
+        "intent": "informational",
+        "currentTitle": "Echostreamhub - Firstread",
+        "optimizedTitle": "Echostreamhub: 2026 Guide & Updates - Firstread",
+        "optimizedDescription": "Comprehensive overview and key facts about sitefirstreadcouk. Discover analysis, verified insights, and background details. Read the full article on...",
+        "faqSchemaJson": "{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"FAQPage\",\n  \"mainEntity\": [\n    {\n      \"@type\": \"Question\",\n      \"name\": \"What is sitefirstreadcouk?\",\n      \"acceptedAnswer\": {\n        \"@type\": \"Answer\",\n        \"text\": \"sitefirstreadcouk is covered comprehensively on FirstRead, featuring verified details, background context, and practical takeaways.\"\n      }\n    },\n    {\n      \"@type\": \"Question\",\n      \"name\": \"How do I get started with sitefirstreadcouk?\",\n      \"acceptedAnswer\": {\n        \"@type\": \"Answer\",\n        \"text\": \"Follow the step-by-step walkthrough in our full guide on FirstRead to easily get started with verified instructions.\"\n      }\n    }\n  ]\n}",
+        "estimatedClickLiftMonth": 1
+      },
+      {
+        "targetUrl": "https://firstread.co.uk/cdiphone/",
+        "slug": "/cdiphone/",
+        "primaryQuery": "site:firstread.co.uk",
+        "intent": "informational",
+        "currentTitle": "Cdiphone - Firstread",
+        "optimizedTitle": "Cdiphone: 2026 Guide & Updates - Firstread",
+        "optimizedDescription": "Comprehensive overview and key facts about sitefirstreadcouk. Discover analysis, verified insights, and background details. Read the full article on...",
+        "faqSchemaJson": "{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"FAQPage\",\n  \"mainEntity\": [\n    {\n      \"@type\": \"Question\",\n      \"name\": \"What is sitefirstreadcouk?\",\n      \"acceptedAnswer\": {\n        \"@type\": \"Answer\",\n        \"text\": \"sitefirstreadcouk is covered comprehensively on FirstRead, featuring verified details, background context, and practical takeaways.\"\n      }\n    },\n    {\n      \"@type\": \"Question\",\n      \"name\": \"How do I get started with sitefirstreadcouk?\",\n      \"acceptedAnswer\": {\n        \"@type\": \"Answer\",\n        \"text\": \"Follow the step-by-step walkthrough in our full guide on FirstRead to easily get started with verified instructions.\"\n      }\n    }\n  ]\n}",
+        "estimatedClickLiftMonth": 1
+      },
+      {
+        "targetUrl": "https://firstread.co.uk/jyokyo/",
+        "slug": "/jyokyo/",
+        "primaryQuery": "site:firstread.co.uk",
+        "intent": "informational",
+        "currentTitle": "Jyokyo - Firstread",
+        "optimizedTitle": "Jyokyo: 2026 Guide & Updates - Firstread",
+        "optimizedDescription": "Comprehensive overview and key facts about sitefirstreadcouk. Discover analysis, verified insights, and background details. Read the full article on...",
+        "faqSchemaJson": "{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"FAQPage\",\n  \"mainEntity\": [\n    {\n      \"@type\": \"Question\",\n      \"name\": \"What is sitefirstreadcouk?\",\n      \"acceptedAnswer\": {\n        \"@type\": \"Answer\",\n        \"text\": \"sitefirstreadcouk is covered comprehensively on FirstRead, featuring verified details, background context, and practical takeaways.\"\n      }\n    },\n    {\n      \"@type\": \"Question\",\n      \"name\": \"How do I get started with sitefirstreadcouk?\",\n      \"acceptedAnswer\": {\n        \"@type\": \"Answer\",\n        \"text\": \"Follow the step-by-step walkthrough in our full guide on FirstRead to easily get started with verified instructions.\"\n      }\n    }\n  ]\n}",
+        "estimatedClickLiftMonth": 1
+      },
+      {
+        "targetUrl": "https://firstread.co.uk/onionplay/",
+        "slug": "/onionplay/",
+        "primaryQuery": "site:firstread.co.uk",
+        "intent": "informational",
+        "currentTitle": "Onionplay - Firstread",
+        "optimizedTitle": "Onionplay: 2026 Guide & Updates - Firstread",
+        "optimizedDescription": "Comprehensive overview and key facts about sitefirstreadcouk. Discover analysis, verified insights, and background details. Read the full article on...",
+        "faqSchemaJson": "{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"FAQPage\",\n  \"mainEntity\": [\n    {\n      \"@type\": \"Question\",\n      \"name\": \"What is sitefirstreadcouk?\",\n      \"acceptedAnswer\": {\n        \"@type\": \"Answer\",\n        \"text\": \"sitefirstreadcouk is covered comprehensively on FirstRead, featuring verified details, background context, and practical takeaways.\"\n      }\n    },\n    {\n      \"@type\": \"Question\",\n      \"name\": \"How do I get started with sitefirstreadcouk?\",\n      \"acceptedAnswer\": {\n        \"@type\": \"Answer\",\n        \"text\": \"Follow the step-by-step walkthrough in our full guide on FirstRead to easily get started with verified instructions.\"\n      }\n    }\n  ]\n}",
+        "estimatedClickLiftMonth": 1
+      }
+    ],
+    "quotaBudget": {
+      "dailyLimit": 200,
+      "safetyBuffer": 10,
+      "maxSubmissionsAllowed": 190,
+      "allocatedTiers": {
+        "surgeBreakouts": 0,
+        "trappedReroutes": 2,
+        "strikingDistance": 9,
+        "backlogRecovery": 35
+      },
+      "totalSubmissionsExecuted": 17
+    }
   },
   "latestGa4Correlation": {
     "period": {
-      "startDate": "2026-10-27",
-      "endDate": "2026-11-23"
+      "startDate": "2026-10-28",
+      "endDate": "2026-11-24"
     },
-    "totalOrganicSessions": 85,
-    "totalOrganicUsers": 81,
-    "totalOrganicPageviews": 123,
-    "averageEngagementRate": 0.4,
+    "totalOrganicSessions": 83,
+    "totalOrganicUsers": 79,
+    "totalOrganicPageviews": 121,
+    "averageEngagementRate": 0.4096,
     "homepageOrganicSessions": 1,
     "homepageShareOfOrganic": 1.2,
-    "nonHomepageOrganicSessions": 84,
+    "nonHomepageOrganicSessions": 82,
     "correlatedGscBrandClicks": 4,
     "brandToOrganicHomepageRatio": 4,
     "landingPages": [
       {
         "landingPage": "/monkey-app-leaks",
-        "sessions": 38,
-        "pageviews": 44,
-        "users": 37,
-        "engagementRate": 0.2368,
+        "sessions": 37,
+        "pageviews": 43,
+        "users": 36,
+        "engagementRate": 0.2432,
         "isHomepage": false
       },
       {
@@ -675,14 +1846,6 @@
         "pageviews": 4,
         "users": 2,
         "engagementRate": 1,
-        "isHomepage": false
-      },
-      {
-        "landingPage": "/vipleague",
-        "sessions": 2,
-        "pageviews": 4,
-        "users": 2,
-        "engagementRate": 0.5,
         "isHomepage": false
       },
       {
@@ -814,6 +1977,14 @@
         "isHomepage": false
       },
       {
+        "landingPage": "/vipleague",
+        "sessions": 1,
+        "pageviews": 3,
+        "users": 1,
+        "engagementRate": 1,
+        "isHomepage": false
+      },
+      {
         "landingPage": "/which-sarah-j-maas-series-to-read-first",
         "sessions": 1,
         "pageviews": 8,
@@ -825,7 +1996,7 @@
   },
   "homepageInspection": {
     "url": "https://firstread.co.uk/",
-    "inspectedAt": "2026-11-24T06:32:01.843Z",
+    "inspectedAt": "2026-11-25T06:31:59.690Z",
     "verdict": "PASS",
     "coverageState": "Submitted and indexed",
     "robotsTxtState": "ALLOWED",
@@ -843,7 +2014,7 @@
   "recentInspections": [
     {
       "url": "https://firstread.co.uk/",
-      "inspectedAt": "2026-11-24T06:32:01.843Z",
+      "inspectedAt": "2026-11-25T06:31:59.690Z",
       "verdict": "PASS",
       "coverageState": "Submitted and indexed",
       "robotsTxtState": "ALLOWED",
@@ -860,7 +2031,7 @@
     },
     {
       "url": "https://firstread.co.uk/simpler-or-more-simple/",
-      "inspectedAt": "2026-11-24T06:32:08.442Z",
+      "inspectedAt": "2026-11-25T06:32:06.073Z",
       "verdict": "PASS",
       "coverageState": "Submitted and indexed",
       "robotsTxtState": "ALLOWED",
@@ -877,23 +2048,20 @@
     },
     {
       "url": "https://firstread.co.uk/start-rivenisnet/",
-      "inspectedAt": "2026-11-24T06:32:15.013Z",
+      "inspectedAt": "2026-11-25T06:32:12.550Z",
       "verdict": "NEUTRAL",
-      "coverageState": "Discovered - currently not indexed",
+      "coverageState": "URL is unknown to Google",
       "robotsTxtState": "ROBOTS_TXT_STATE_UNSPECIFIED",
       "indexingState": "INDEXING_STATE_UNSPECIFIED",
       "pageFetchState": "PAGE_FETCH_STATE_UNSPECIFIED",
       "canonicalMatches": false,
-      "crawledAs": "CRAWLING_USER_AGENT_UNSPECIFIED",
-      "isDiscoveredNotIndexed": true,
+      "isDiscoveredNotIndexed": false,
       "isCrawledNotIndexed": false,
-      "issues": [
-        "Google discovered URL but has not yet crawled/indexed it (backlog/budget)."
-      ]
+      "issues": []
     },
     {
       "url": "https://firstread.co.uk/backpacking-advice-cwbiancavoyage/",
-      "inspectedAt": "2026-11-24T06:32:21.798Z",
+      "inspectedAt": "2026-11-25T06:32:18.860Z",
       "verdict": "PASS",
       "coverageState": "Submitted and indexed",
       "robotsTxtState": "ALLOWED",
@@ -910,7 +2078,7 @@
     },
     {
       "url": "https://firstread.co.uk/tate-mcrae-tour/",
-      "inspectedAt": "2026-11-24T06:32:28.162Z",
+      "inspectedAt": "2026-11-25T06:32:25.231Z",
       "verdict": "PASS",
       "coverageState": "Submitted and indexed",
       "robotsTxtState": "ALLOWED",
@@ -966,6 +2134,280 @@
   },
   "discoveryIssues": [],
   "executionHistory": [
+    {
+      "id": "exec-1795588312868",
+      "startedAt": "2026-11-25T06:31:52.868Z",
+      "completedAt": "2026-11-25T06:32:38.403Z",
+      "durationMs": 45535,
+      "status": "success",
+      "actionsExecuted": [
+        {
+          "id": "act-latency-1795588316630",
+          "timestamp": "2026-11-25T06:31:56.630Z",
+          "actionType": "latency_audit",
+          "target": "https://firstread.co.uk/",
+          "status": "success",
+          "details": "Crawl response latency: 22ms (Optimal (<400ms) — Googlebot crawl budget prioritized). HTTP 200",
+          "reason": "Autonomous crawl budget latency check for Googlebot."
+        },
+        {
+          "id": "act-sitemap-reconcile-1795588318840",
+          "timestamp": "2026-11-25T06:31:58.840Z",
+          "actionType": "sitemap_audit",
+          "target": "https://firstread.co.uk/post-sitemap.xml",
+          "status": "failed",
+          "details": "Sitemap coverage: 40% (136/343 posts indexed). Missing: 207",
+          "reason": "Autonomous verification of XML sitemap sync against WordPress published posts."
+        },
+        {
+          "id": "act-index-pub-1795588319573",
+          "timestamp": "2026-11-25T06:31:59.573Z",
+          "actionType": "google_indexing_publish",
+          "target": "https://firstread.co.uk/",
+          "status": "success",
+          "details": "Google Indexing API accepted notification for \"https://firstread.co.uk/\" (URL_UPDATED).",
+          "reason": "Autonomous Google Indexing API notification to accelerate brand visibility for \"firstread\"."
+        },
+        {
+          "id": "act-sitemap-skip-1795588319573",
+          "timestamp": "2026-11-25T06:31:59.339Z",
+          "actionType": "sitemap_submit",
+          "target": "https://firstread.co.uk/sitemap_index.xml",
+          "status": "skipped",
+          "details": "Sitemap already submitted and active in GSC with no reported errors; repeated submission omitted to prevent API spam.",
+          "reason": "No sitemap changes detected."
+        },
+        {
+          "id": "act-ping-1795588319663",
+          "timestamp": "2026-11-25T06:31:59.663Z",
+          "actionType": "sitemap_ping",
+          "target": "https://firstread.co.uk/sitemap_index.xml",
+          "status": "success",
+          "details": "Google sitemap ping endpoint is retired by Google (HTTP 404); sitemap is actively managed via Google Search Console API.",
+          "reason": "Autonomous crawler ping for updated sitemap."
+        },
+        {
+          "id": "act-schema-1795588319689",
+          "timestamp": "2026-11-25T06:31:59.689Z",
+          "actionType": "audit_schema",
+          "target": "https://firstread.co.uk/",
+          "status": "success",
+          "details": "Brand schema verified: Organization (Firstread), WebSite, and SearchAction intact.",
+          "reason": "Autonomous verification of brand knowledge graph schema for \"firstread\"."
+        },
+        {
+          "id": "act-inspect-1795588325866-dl6j",
+          "timestamp": "2026-11-25T06:32:05.866Z",
+          "actionType": "inspect_homepage",
+          "target": "https://firstread.co.uk/",
+          "status": "success",
+          "details": "Google Inspection: verdict=PASS, state=\"Submitted and indexed\", robots=ALLOWED",
+          "reason": "Autonomous URL indexing inspection."
+        },
+        {
+          "id": "act-index-pub-1795588326073-mi3q",
+          "timestamp": "2026-11-25T06:32:06.073Z",
+          "actionType": "google_indexing_publish",
+          "target": "https://firstread.co.uk/simpler-or-more-simple/",
+          "status": "success",
+          "details": "Google Indexing API accepted notification for \"https://firstread.co.uk/simpler-or-more-simple/\" (URL_UPDATED).",
+          "reason": "Automated Google Indexing API notification to accelerate search visibility for recent article."
+        },
+        {
+          "id": "act-inspect-1795588332364-qr0i",
+          "timestamp": "2026-11-25T06:32:12.364Z",
+          "actionType": "inspect_url",
+          "target": "https://firstread.co.uk/simpler-or-more-simple/",
+          "status": "success",
+          "details": "Google Inspection: verdict=PASS, state=\"Submitted and indexed\", robots=ALLOWED",
+          "reason": "Autonomous URL indexing inspection."
+        },
+        {
+          "id": "act-index-pub-1795588332549-lpsw",
+          "timestamp": "2026-11-25T06:32:12.550Z",
+          "actionType": "google_indexing_publish",
+          "target": "https://firstread.co.uk/start-rivenisnet/",
+          "status": "success",
+          "details": "Google Indexing API accepted notification for \"https://firstread.co.uk/start-rivenisnet/\" (URL_UPDATED).",
+          "reason": "Automated Google Indexing API notification to accelerate search visibility for recent article."
+        },
+        {
+          "id": "act-inspect-1795588338700-6qwd",
+          "timestamp": "2026-11-25T06:32:18.700Z",
+          "actionType": "inspect_url",
+          "target": "https://firstread.co.uk/start-rivenisnet/",
+          "status": "success",
+          "details": "Google Inspection: verdict=NEUTRAL, state=\"URL is unknown to Google\", robots=ROBOTS_TXT_STATE_UNSPECIFIED",
+          "reason": "Autonomous URL indexing inspection."
+        },
+        {
+          "id": "act-index-pub-1795588338860-w9f9",
+          "timestamp": "2026-11-25T06:32:18.860Z",
+          "actionType": "google_indexing_publish",
+          "target": "https://firstread.co.uk/backpacking-advice-cwbiancavoyage/",
+          "status": "success",
+          "details": "Google Indexing API accepted notification for \"https://firstread.co.uk/backpacking-advice-cwbiancavoyage/\" (URL_UPDATED).",
+          "reason": "Automated Google Indexing API notification to accelerate search visibility for recent article."
+        },
+        {
+          "id": "act-inspect-1795588345074-qeij",
+          "timestamp": "2026-11-25T06:32:25.074Z",
+          "actionType": "inspect_url",
+          "target": "https://firstread.co.uk/backpacking-advice-cwbiancavoyage/",
+          "status": "success",
+          "details": "Google Inspection: verdict=PASS, state=\"Submitted and indexed\", robots=ALLOWED",
+          "reason": "Autonomous URL indexing inspection."
+        },
+        {
+          "id": "act-index-pub-1795588345230-qqm5",
+          "timestamp": "2026-11-25T06:32:25.230Z",
+          "actionType": "google_indexing_publish",
+          "target": "https://firstread.co.uk/tate-mcrae-tour/",
+          "status": "success",
+          "details": "Google Indexing API accepted notification for \"https://firstread.co.uk/tate-mcrae-tour/\" (URL_UPDATED).",
+          "reason": "Automated Google Indexing API notification to accelerate search visibility for recent article."
+        },
+        {
+          "id": "act-inspect-1795588351456-80xh",
+          "timestamp": "2026-11-25T06:32:31.456Z",
+          "actionType": "inspect_url",
+          "target": "https://firstread.co.uk/tate-mcrae-tour/",
+          "status": "success",
+          "details": "Google Inspection: verdict=PASS, state=\"Submitted and indexed\", robots=ALLOWED",
+          "reason": "Autonomous URL indexing inspection."
+        },
+        {
+          "id": "act-reroute-1795588352838-en1n",
+          "timestamp": "2026-11-25T06:32:32.838Z",
+          "actionType": "google_indexing_publish",
+          "target": "https://firstread.co.uk/start-rivenisnet/",
+          "status": "success",
+          "details": "Auto-matched query to dedicated article. Pushed https://firstread.co.uk/start-rivenisnet/ to Google Indexing API to replace homepage snippet.",
+          "reason": "Autonomous CTR boost: Rerouting query \"start @rivenisnet\" (1140 imp) from homepage to dedicated article."
+        },
+        {
+          "id": "act-reroute-1795588352838-n7ou",
+          "timestamp": "2026-11-25T06:32:32.838Z",
+          "actionType": "google_indexing_publish",
+          "target": "https://firstread.co.uk/which-sarah-j-maas-series-to-read-first/",
+          "status": "success",
+          "details": "Auto-matched query to dedicated article. Pushed https://firstread.co.uk/which-sarah-j-maas-series-to-read-first/ to Google Indexing API to replace homepage snippet.",
+          "reason": "Autonomous CTR boost: Rerouting query \"the big read\" (1 imp) from homepage to dedicated article."
+        },
+        {
+          "id": "act-striking-1795588352960-ty6v",
+          "timestamp": "2026-11-25T06:32:32.960Z",
+          "actionType": "google_indexing_publish",
+          "target": "https://firstread.co.uk/echostreamhub/",
+          "status": "success",
+          "details": "Pushed top striking-distance URL to Google Indexing API for query \"site:firstread.co.uk\" (pos 4.4, 11 imp, potential score 117).",
+          "reason": "Autonomous rank & CTR boost: Accelerating striking-distance query \"site:firstread.co.uk\" into Top 3."
+        },
+        {
+          "id": "act-striking-1795588353087-dmex",
+          "timestamp": "2026-11-25T06:32:33.087Z",
+          "actionType": "google_indexing_publish",
+          "target": "https://firstread.co.uk/cdiphone/",
+          "status": "success",
+          "details": "Pushed top striking-distance URL to Google Indexing API for query \"site:firstread.co.uk\" (pos 6.1, 11 imp, potential score 98).",
+          "reason": "Autonomous rank & CTR boost: Accelerating striking-distance query \"site:firstread.co.uk\" into Top 3."
+        },
+        {
+          "id": "act-striking-1795588353179-ovp3",
+          "timestamp": "2026-11-25T06:32:33.179Z",
+          "actionType": "google_indexing_publish",
+          "target": "https://firstread.co.uk/jyokyo/",
+          "status": "success",
+          "details": "Pushed top striking-distance URL to Google Indexing API for query \"site:firstread.co.uk\" (pos 7.6, 11 imp, potential score 81).",
+          "reason": "Autonomous rank & CTR boost: Accelerating striking-distance query \"site:firstread.co.uk\" into Top 3."
+        },
+        {
+          "id": "act-striking-1795588353294-d9ml",
+          "timestamp": "2026-11-25T06:32:33.294Z",
+          "actionType": "google_indexing_publish",
+          "target": "https://firstread.co.uk/totalsportek/",
+          "status": "success",
+          "details": "Pushed top striking-distance URL to Google Indexing API for query \"site:firstread.co.uk\" (pos 5.3, 8 imp, potential score 78).",
+          "reason": "Autonomous rank & CTR boost: Accelerating striking-distance query \"site:firstread.co.uk\" into Top 3."
+        },
+        {
+          "id": "act-striking-1795588353378-vq0j",
+          "timestamp": "2026-11-25T06:32:33.378Z",
+          "actionType": "google_indexing_publish",
+          "target": "https://firstread.co.uk/onionplay/",
+          "status": "success",
+          "details": "Pushed top striking-distance URL to Google Indexing API for query \"site:firstread.co.uk\" (pos 9.0, 10 imp, potential score 60).",
+          "reason": "Autonomous rank & CTR boost: Accelerating striking-distance query \"site:firstread.co.uk\" into Top 3."
+        },
+        {
+          "id": "act-striking-1795588353466-vdyc",
+          "timestamp": "2026-11-25T06:32:33.466Z",
+          "actionType": "google_indexing_publish",
+          "target": "https://firstread.co.uk/ontpresscom/",
+          "status": "success",
+          "details": "Pushed top striking-distance URL to Google Indexing API for query \"site:firstread.co.uk\" (pos 7.0, 6 imp, potential score 48).",
+          "reason": "Autonomous rank & CTR boost: Accelerating striking-distance query \"site:firstread.co.uk\" into Top 3."
+        },
+        {
+          "id": "act-striking-1795588353567-buc7",
+          "timestamp": "2026-11-25T06:32:33.567Z",
+          "actionType": "google_indexing_publish",
+          "target": "https://firstread.co.uk/movies123/",
+          "status": "success",
+          "details": "Pushed top striking-distance URL to Google Indexing API for query \"site:firstread.co.uk\" (pos 9.6, 7 imp, potential score 38).",
+          "reason": "Autonomous rank & CTR boost: Accelerating striking-distance query \"site:firstread.co.uk\" into Top 3."
+        },
+        {
+          "id": "act-striking-1795588353685-4asr",
+          "timestamp": "2026-11-25T06:32:33.685Z",
+          "actionType": "google_indexing_publish",
+          "target": "https://firstread.co.uk/korpenpelloz/",
+          "status": "success",
+          "details": "Pushed top striking-distance URL to Google Indexing API for query \"site:firstread.co.uk\" (pos 8.8, 6 imp, potential score 37).",
+          "reason": "Autonomous rank & CTR boost: Accelerating striking-distance query \"site:firstread.co.uk\" into Top 3."
+        },
+        {
+          "id": "act-striking-1795588353758-ki6a",
+          "timestamp": "2026-11-25T06:32:33.758Z",
+          "actionType": "google_indexing_publish",
+          "target": "https://firstread.co.uk/baddiehub/",
+          "status": "success",
+          "details": "Pushed top striking-distance URL to Google Indexing API for query \"site:firstread.co.uk\" (pos 8.4, 5 imp, potential score 33).",
+          "reason": "Autonomous rank & CTR boost: Accelerating striking-distance query \"site:firstread.co.uk\" into Top 3."
+        },
+        {
+          "id": "act-unindexed-recover-1795588358403",
+          "timestamp": "2026-11-25T06:32:38.403Z",
+          "actionType": "google_indexing_publish",
+          "target": "35 unindexed posts",
+          "status": "success",
+          "details": "Processed 35 unindexed posts from the backlog (301 remaining). URLs: https://firstread.co.uk/rico-nasty-tour-2026-dates-updates-guide/, https://firstread.co.uk/backpacking-advice-cwbiancavoyage/, https://firstread.co.uk/betechit-com-ai/...",
+          "reason": "Autonomous Google Indexing API submission to resolve \"Crawled - currently not indexed\" backlog."
+        }
+      ],
+      "alertsCount": 4,
+      "discoveryIssuesCount": 0,
+      "brandClicks": 4,
+      "brandImpressions": 158,
+      "homepageIndexed": true,
+      "clickDeficit": {
+        "estimatedLostClicksMonth": 443,
+        "highImpressionLowCtrQueriesCount": 8
+      },
+      "quotaBudget": {
+        "dailyLimit": 200,
+        "safetyBuffer": 10,
+        "maxSubmissionsAllowed": 190,
+        "allocatedTiers": {
+          "surgeBreakouts": 0,
+          "trappedReroutes": 2,
+          "strikingDistance": 9,
+          "backlogRecovery": 35
+        },
+        "totalSubmissionsExecuted": 17
+      },
+      "summary": "Completed autonomous cycle in 45535ms: Tracked 4 brand clicks (158 impressions). Homepage indexing verdict: PASS. Click deficit: ~443 lost clicks/mo across 8 low-CTR queries. Executed 27 action(s)."
+    },
     {
       "id": "exec-1795501912754",
       "startedAt": "2026-11-24T06:31:52.754Z",
@@ -3001,7 +4443,7 @@
     "durable": true,
     "provider": "github",
     "branch": "monitoring-history",
-    "sha": "89d719fc37f45e4f56c7106c87910c6d6819e8ff",
-    "lastSyncAt": "2026-11-24T06:31:52.992Z"
+    "sha": "5e705ccff89eb96b70e0996d9c80ebef8c5d02e9",
+    "lastSyncAt": "2026-11-25T06:31:53.139Z"
   }
 }
